@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Missing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #fff;
+        }
+
+        header {
+            width: 100%;
+            padding: 10px 20px;
+            background: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: #016b5b;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li {
+            position: relative;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 5px 10px;
+        }
+
+        nav ul li a:hover {
+            color: #ffa500;
+        }
+
+        nav ul li:hover ul {
+            display: block;
+        }
+
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 30px;
+            left: 0;
+            background: #f9f9f9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        nav ul li ul li a {
+            padding: 5px 15px;
+            display: block;
+        }
+
+        .error-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .error-container .ghost {
+            font-size: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-container .ghost span {
+            font-size: 6rem;
+            font-weight: bold;
+        }
+
+        .error-container p {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            color: #555;
+        }
+
+        .error-container small {
+            color: #888;
+        }
+
+        .error-container button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #00b050;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .error-container button:hover {
+            background: #008b3f;
+        }
+    </style>
+</head>
+<body>
+    <%-include("../../views/partials/user/partialHeader.ejs")%>
+    <div class="error-container">
+        <div class="ghost">
+            <span>4</span>
+            <img src="https://i.imgur.com/yW2W9SC.png" alt="Ghost" width="80">
+            <span>4</span>
+        </div>
+        <p>Boo! Page missing!</p>
+        <small>Whoops! This page must be a ghost - it's not here!</small>
+        <br>
+        <button onclick="goToHomePage()">FIND MY HOME!!</button>
+    </div>
+
+    <script>
+        function goToHomePage() {
+            // Redirect to the home page
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

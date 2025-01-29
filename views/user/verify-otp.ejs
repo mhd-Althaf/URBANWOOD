@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OTP Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .heading h3 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .heading p {
+            color: #718096;
+            font-size: 15px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .otp-inputs input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .otp-inputs input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .timer-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .timer-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timer-circle::before {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            border: 3px solid #e2e8f0;
+        }
+
+        #timerValue {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-verify {
+            background: #667eea;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .btn-verify:hover {
+            background: #5a6ddd;
+        }
+
+        .btn-resend {
+            background: #718096;
+            color: white;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-resend.active {
+            opacity: 1;
+            cursor: pointer;
+            background: #4a5568;
+        }
+
+        .btn-resend.active:hover {
+            background: #2d3748;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="heading">
+            <h3>Verify Your Email</h3>
+            <p>Please enter the 6-digit code sent to your email</p>
+        </div>
+        
+        <form id="otpForm" onsubmit="return validateOTP()">
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" pattern="\d" required />
+                <input type="text" maxlength="1" pattern="\d" required />
+                <input type="text" maxlength="1" pattern="\d" required />
+                <input type="text" maxlength="1" pattern="\d" required />
+                <input type="text" maxlength="1" pattern="\d" required />
+                <input type="text" maxlength="1" pattern="\d" required />
+            </div>
+
+            <div class="timer-container">
+                <div class="timer-circle">
+                    <span id="timerValue">60</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-verify">
+                <i class="fas fa-check-circle"></i> Verify Email
+            </button>
+            
+            <button type="button" class="btn btn-resend" id="resendBtn" disabled>
+                <i class="fas fa-redo-alt"></i> Resend Code
+            </button>
+        </form>
+
+        <div class="login-link">
+            Already verified? <a href="/login">Login now</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Swal.fire("helooo")
+        // Handle OTP input
+        const inputs = document.querySelectorAll('.otp-inputs input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('keyup', (e) => {
+                if (e.key >= 0 && e.key <= 9) {
+                    if (index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                } else if (e.key === 'Backspace') {
+                    if (index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                }
+            });
+        });
+
+        // Timer functionality
+        let timer = 60;
+        let timerInterval;
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById("timerValue").textContent = timer;
+                
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("timerValue").textContent = "0";
+                    document.getElementById("resendBtn").classList.add("active");
+                    document.getElementById("resendBtn").disabled = false;
+                }
+            }, 1000);
+        }
+
+        startTimer();
+
+        function validateOTP() {
+            const otp = [...inputs].map(input => input.value).join('');
+            
+            if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+                document.querySelector('.otp-inputs').classList.add('shake');
+                setTimeout(() => {
+                    document.querySelector('.otp-inputs').classList.remove('shake');
+                }, 500);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid OTP',
+                    text: 'Please enter a valid 6-digit code.',
+                    confirmButtonColor: '#667eea'
+                });
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/verify-otp",
+                data: { otp },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Verification Successful',
+                            text: 'Redirecting you...',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = response.redirectUrl;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Verification Failed',
+                            text: response.message,
+                            confirmButtonColor: '#667eea'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong. Please try again.',
+                        confirmButtonColor: '#667eea'
+                    });
+                }
+            });
+            return false;
+        }
+
+        document.getElementById("resendBtn").addEventListener("click", function() {
+            if (!this.classList.contains('active')) return;
+            
+            this.disabled = true;
+            this.classList.remove("active");
+            timer = 60;
+            startTimer();
+
+            $.ajax({
+                type: "POST",
+                url: "/resend-otp",
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Code Resent',
+                            text: 'A new verification code has been sent to your email.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        // Clear inputs
+                        inputs.forEach(input => input.value = '');
+                        inputs[0].focus();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to resend code. Please try again.',
+                            confirmButtonColor: '#667eea'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to resend code. Please try again.',
+                        confirmButtonColor: '#667eea'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<%-include("../../views/partials/user/header")%>
+<style>
+	.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+    display: none;
+}
+
+.form-control.error {
+    border-color: red;
+}
+
+#error {
+    background-color: #f8d7da; /* Light red background */
+    border: 1px solid #f5c6cb; /* Light red border */
+    color: #721c24; /* Dark red text color */
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#error p {
+    margin: 0;
+    font-weight: bold;
+}
+
+</style>
+<section class="login_box_area section_gap">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="login_box_img">
+                    <img class="img-fluid" src="img/living with yellow shade.jpeg" alt="">
+                    <div class="hover">
+                        <h4>New to our website?</h4>
+                        <p>Every day brings innovation, and just like science and technology, furniture evolves to blend comfort, style, and functionality seamlessly</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="login_form_inner">
+                    <p class="alert-danger"><%= message ||"" %></p>
+					<%= console.log(message) %> <!-- This will help confirm if the message is being passed -->
+					<div id="error" class="error-message">
+						<div class="alert alert-danger text-center">
+							This is a test error message
+						</div>
+					</div>
+					
+				
+                    <h3>Sign up to Register</h3>
+                    <form class="row login_form" action="/signup" method="post" id="signForm" onsubmit="return validatee(event)">
+						<div class="col-md-12 form-group" style="margin: 0; padding: 0;">
+							<input type="text" class="form-control" id="name" name="name" placeholder="Full Name">
+							<div id="error1" class="error-message" style="margin: 0; padding: 0;"></div>
+						</div>
+						
+						<!-- Email Field -->
+						<div class="col-md-12 form-group" style="margin: 0; padding: 0;">
+							<input type="email" class="form-control" id="email" name="email" placeholder="Email">
+							<div id="error2" class="error-message" style="margin: 0; padding: 0;"></div>
+						</div>
+						
+						<!-- Phone Field -->
+						<div class="col-md-12 form-group" style="margin: 0; padding: 0;">
+							<input type="number" class="form-control" id="phone" name="phone" placeholder="Phone Number">
+							<div id="error3" class="error-message" style="margin: 0; padding: 0;"></div>
+						</div>
+						
+						<!-- Password Field -->
+						<div class="col-md-12 form-group" style="margin: 0; padding: 0;">
+							<input type="password" class="form-control" id="password" name="password" placeholder="Password">
+							<div id="error4" class="error-message" style="margin: 0; padding: 0;"></div>
+						</div>
+						
+						<!-- Confirm Password Field -->
+						<div class="col-md-12 form-group">
+							<input type="password" class="form-control" id="cPassword" name="cPassword" placeholder="Confirm Password">
+							<div id="error5" class="error-message" style="margin: 0; padding: 0;"></div>
+						</div>
+						
+                        <div class="col-md-12 form-group">
+                            <button type="submit" value="submit" class="primary-btn">Register</button>
+                            <a href="#">Forgot Password?</a>
+                        </div>
+
+                        <div class="google-btn">
+                            <a href="/auth/google">
+                                <img src="/img/icons-8-google-10.svg" alt="Google Icon">
+                                Sign in with Google
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+  function validatee(event) {
+    let isValid = true;
+    
+    // Full Name Validation
+    const name = document.getElementById('name');
+    const error1 = document.getElementById('error1');
+    if (name.value.trim() === '') {
+        error1.style.display = 'block';
+        error1.textContent = 'Full Name is required.';
+        isValid = false;
+    } else {
+        error1.style.display = 'none';
+        error1.textContent = '';
+    }
+
+    // Email Validation
+    const email = document.getElementById('email');
+    const error2 = document.getElementById('error2');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value)) {
+        error2.style.display = 'block';
+        error2.textContent = 'Please enter a valid email.';
+        isValid = false;
+    } else {
+        error2.style.display = 'none';
+        error2.textContent = '';
+    }
+
+    // Phone Validation
+    const phone = document.getElementById('phone');
+    const error3 = document.getElementById('error3');
+    if (phone.value.trim() === '' || phone.value.length < 10) {
+        error3.style.display = 'block';
+        error3.textContent = 'Phone number must be at least 10 digits.';
+        isValid = false;
+    } else {
+        error3.style.display = 'none';
+        error3.textContent = '';
+    }
+
+    // Password Validation
+    const password = document.getElementById('password');
+    const error4 = document.getElementById('error4');
+    if (password.value.trim().length < 6) {
+        error4.style.display = 'block';
+        error4.textContent = 'Password must be at least 6 characters long.';
+        isValid = false;
+    } else {
+        error4.style.display = 'none';
+        error4.textContent = '';
+    }
+
+    // Confirm Password Validation
+    const cPassword = document.getElementById('cPassword');
+    const error5 = document.getElementById('error5');
+    if (cPassword.value !== password.value) {
+        error5.style.display = 'block';
+        error5.textContent = 'Passwords do not match.';
+        isValid = false;
+    } else {
+        error5.style.display = 'none';
+        error5.textContent = '';
+    }
+
+    // Prevent form submission if validation fails
+    if (!isValid) {
+        event.preventDefault();
+    }
+}
+
+</script>
+
+<%-include("../../views/partials/user/footer")%>
