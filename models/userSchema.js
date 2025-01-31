@@ -30,7 +30,7 @@ const userSchema = new Schema({
         type: String,
         required: false
     },
-    IsBlocked: {
+    isBlocked: {
         type: Boolean,
         default: false
     },

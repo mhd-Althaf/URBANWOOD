@@ -1,0 +1,90 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow p-4">
+                <h4 class="text-center mb-4">Edit Category</h4>
+
+                <form method="POST" action="/admin/editCategory/<%= category ? category._id : '' %>" onsubmit="return handleFormSubmit(event)">
+                    
+                    <!-- Category Name -->
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label">Category Name</label>
+                        <input 
+                            type="text" 
+                            id="category_name" 
+                            name="name" 
+                            class="form-control border" 
+                            value="<%= category ? category.name : '' %>" 
+                            required
+                        />
+                    </div>
+                    
+                    <!-- Category Description -->
+                    <div class="mb-3">
+                        <label for="category_description" class="form-label">Description</label>
+                        <textarea 
+                            id="category_description" 
+                            name="description" 
+                            class="form-control border" 
+                            required
+                        ><%= category ? category.description : '' %></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-end">
+                        <button class="btn btn-primary" type="submit">Update Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function handleFormSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new URLSearchParams(new FormData(form)).toString(); 
+
+    fetch(form.action, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status) {
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: data.message || "Category updated successfully",
+                showConfirmButton: false,
+                timer: 2000
+            }).then(() => {
+                window.location.href = "/admin/category"; 
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: data.error || "Failed to update category"
+            });
+        }
+    })
+    .catch(() => {
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Something went wrong!"
+        });
+    });
+}
+</script>

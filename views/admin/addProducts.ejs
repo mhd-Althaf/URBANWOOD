@@ -1,0 +1,297 @@
+<%-include("../../views/partials/admin/header")%>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      margin-top: 0.5rem;
+    }
+
+    .variant-preview {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 0.375rem;
+    }
+
+    .variant-item {
+      position: relative;
+    }
+
+    .delete-variant {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #ef4444;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .cropper-container {
+      max-width: 90vw;
+      max-height: 80vh;
+    }
+  </style>
+
+  <div class="card-body mx-auto px-4 py-8">
+    <h4 class="card-title mt-5">Basic form elements</h4>
+    <h4 class="text-2xl font-bold mb-6">Add New Product</h4>
+    <form class="space-y-6" id="productForm">
+      <!-- Basic Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700">Product Name</label>
+          <input type="text" class="form-control" placeholder="Enter product name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700">Category</label>
+          <select class="form-control">
+            <option value="">Select Category</option>
+            <option value="1">Category 1</option>
+            <option value="2">Category 2</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Price Information -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700">Regular Price</label>
+          <input type="number" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700">Sale Price</label>
+          <input type="number" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700">Quantity</label>
+          <input type="number" class="form-control" required>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea class="form-control" rows="4" required></textarea>
+      </div>
+
+      <!-- Image Variants -->
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-700 mb-4">Product Images</label>
+
+        <div class="space-y-4">
+          <button type="button" id="addVariant"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Add Image Variant
+          </button>
+
+          <div id="variantContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Variants will be added here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end space-x-4">
+        <button type="button" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+          Cancel
+        </button>
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Save Product
+        </button>
+      </div>
+    </form>
+  </div>
+
+
+  
+<!-- Cropper Modal -->
+<div id="cropperModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full">
+          <div class="p-4 border-b">
+              <h3 class="text-xl font-semibold">Crop Image</h3>
+          </div>
+          
+          <div class="p-4">
+              <div class="max-h-[60vh] overflow-hidden">
+                  <img id="cropperImage" class="max-w-full">
+              </div>
+          </div>
+          
+          <div class="p-4 border-t flex justify-end space-x-3">
+              <button id="cancelCrop" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                  Cancel
+              </button>
+              <button id="cropImage" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                  Crop & Save
+              </button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+let cropper;
+let currentPreviewId;
+let variantCount = 0;
+const MAX_VARIANTS = 4;
+
+// Add Variant Button Handler
+document.getElementById("addVariant").addEventListener("click", function() {
+    if (variantCount >= MAX_VARIANTS) {
+        alert('Maximum 4 images allowed');
+        return;
+    }
+
+    const variantContainer = document.getElementById("variantContainer");
+    const variantHTML = `
+        <div class="variant-item bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <button type="button" class="delete-variant" onclick="deleteVariant(this)">×</button>
+            <input type="file" id="fileInput_${variantCount}" class="hidden" accept="image/*">
+            <label for="fileInput_${variantCount}" class="cursor-pointer block w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                    <span class="block text-gray-500">Click to upload image</span>
+                </div>
+            </label>
+            <img id="preview_${variantCount}" class="variant-preview mt-4 hidden">
+        </div>
+    `;
+    
+    const div = document.createElement("div");
+    div.innerHTML = variantHTML;
+    variantContainer.appendChild(div);
+
+    // Add file input listener
+    const fileInput = document.getElementById(`fileInput_${variantCount}`);
+    fileInput.addEventListener("change", handleFileSelect);
+    
+    variantCount++;
+    
+    if (variantCount >= MAX_VARIANTS) {
+        document.getElementById("addVariant").style.display = 'none';
+    }
+});
+
+// File Select Handler
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentPreviewId = event.target.id.replace('fileInput', 'preview');
+        openCropperModal(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+// Delete Variant Handler
+function deleteVariant(button) {
+    button.closest('.variant-item').remove();
+    variantCount--;
+    document.getElementById("addVariant").style.display = 'block';
+}
+
+// Cropper Modal Handlers
+function openCropperModal(imageSrc) {
+    const modal = document.getElementById("cropperModal");
+    const cropperImage = document.getElementById("cropperImage");
+    
+    modal.classList.remove("hidden");
+    cropperImage.src = imageSrc;
+    
+    if (cropper) {
+        cropper.destroy();
+    }
+    
+    cropper = new Cropper(cropperImage, {
+        aspectRatio: 1,
+        viewMode: 2,
+        dragMode: 'move',
+        background: true,
+        modal: true,
+        zoomable: true,
+        guides: true,
+    });
+}
+
+document.getElementById("cropImage").addEventListener("click", function() {
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+        width: 600,
+        height: 600
+    });
+    
+    if (canvas) {
+        const preview = document.getElementById(currentPreviewId);
+        preview.src = canvas.toDataURL();
+        preview.classList.remove("hidden");
+        
+        // Hide the upload label
+        const label = preview.previousElementSibling;
+        label.style.display = 'none';
+    }
+    
+    closeCropperModal();
+});
+
+document.getElementById("cancelCrop").addEventListener("click", closeCropperModal);
+
+function closeCropperModal() {
+    const modal = document.getElementById("cropperModal");
+    modal.classList.add("hidden");
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+}
+
+// Form Submit Handler
+document.getElementById("productForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Add cropped images to form data
+    const previews = document.querySelectorAll('.variant-preview:not(.hidden)');
+    previews.forEach((preview, index) => {
+        fetch(preview.src)
+            .then(res => res.blob())
+            .then(blob => {
+              console.log(blob);
+              
+                formData.append(`productImage${index}`, blob, `image${index}.jpg`);
+            });
+    });
+    
+    // Submit the form
+    console.log('Form would be submitted here with images');
+});
+</script>

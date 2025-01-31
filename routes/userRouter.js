@@ -11,6 +11,7 @@ router.get("/signup", userController.loadSignUp);
 router.post("/signup", userController.signup);
 router.post("/verify-otp", userController.verifyOtp);
 router.post("/resend-otp", userController.resendOtp);
+router.get("/blocked",userController.blocked)
 
 
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));

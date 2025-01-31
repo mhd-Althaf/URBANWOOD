@@ -1,0 +1,106 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="card-body">
+    <h4 class="card-title">Basic Form Elements</h4>
+    <p class="card-description">Basic form elements</p>
+    <form class="forms-sample" id="categoryForm">
+      <div class="form-group">
+        <label for="categoryName">Name</label>
+        <input name="cname" type="text" class="form-control" id="categoryName" placeholder="Name">
+      </div>  
+      
+      <div class="form-group">
+        <label for="categoryDescription">Description</label>
+        <textarea name="description" class="form-control" id="categoryDescription" rows="4"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary mr-2">Submit</button>
+      <button type="button" class="btn btn-dark" onclick="resetForm()">Cancel</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById("categoryForm").addEventListener("submit", async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Validate form
+    if (!validateForm()) return;
+
+    // Prepare form data
+    const formData = {
+      cname: document.getElementById("categoryName").value.trim(),
+      description: document.getElementById("categoryDescription").value.trim()
+    };
+
+    console.log(formData);  // Debugging: log the form data to ensure it is correct
+
+    try {
+      const response = await fetch("/admin/addCategory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: result.message,
+          showConfirmButton: false,
+          timer: 2000
+        }).then(() => {
+          window.location.href = "/admin/category"; // Redirect after success
+        });
+      } else {
+        throw new Error(result.error || "An unknown error occurred.");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Something went wrong!"
+      });
+    }
+  });
+
+  function validateForm() {
+    clearErrorMessages();
+
+    const nameField = document.getElementById("categoryName");
+    const descriptionField = document.getElementById("categoryDescription");
+
+    let isValid = true;
+
+    if (nameField.value.trim() === "") {
+      showError(nameField, "Name is required.");
+      isValid = false;
+    }
+
+    if (descriptionField.value.trim() === "") {
+      showError(descriptionField, "Description is required.");
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  function showError(inputField, message) {
+    const errorElement = document.createElement("small");
+    errorElement.className = "text-danger";
+    errorElement.innerText = message;
+    inputField.parentNode.appendChild(errorElement);
+  }
+
+  function clearErrorMessages() {
+    document.querySelectorAll(".text-danger").forEach(el => el.remove());
+  }
+
+  function resetForm() {
+    document.getElementById("categoryForm").reset();
+    clearErrorMessages();
+  }
+</script>

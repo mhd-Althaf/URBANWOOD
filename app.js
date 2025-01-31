@@ -6,6 +6,7 @@ const db = require("./config/db");
 const session = require("express-session");
 const passport = require("./config/passport");
 const userRouter = require("./routes/userRouter");
+const adminRouter = require("./routes/adminRouter")
 
 db();
 
@@ -41,10 +42,14 @@ app.use((req, res, next) => {
 });
 
 app.set("view engine", "ejs");
-app.set("views", [path.join(__dirname, 'views/user'), path.join(__dirname, 'views/admin')]);
+app.set("views", path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", userRouter);
+app.use("/admin",adminRouter)
+
+
+
 
 app.listen(3000, () => {
     console.log("Server running on http://localhost:3000");

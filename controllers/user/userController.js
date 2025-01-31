@@ -10,14 +10,17 @@ const loadHomepage = async (req, res) => {
       const user = req.session.user;
 
 
+
       if (user) {
           const userData = await User.findOne({ _id: user });
           console.log(userData);
-          
+          if (userData.isBlocked) {
+            return res.redirect("/blocked");
+        }
      
-          res.render("home", { user: userData });
+          res.render("user/home", { user: userData });
       } else {
-          return res.render("home",{user:''});
+          return res.render("user/home",{user:''});
       }
   } catch (error) {
       console.log("Error loading homepage:", error.message); // Debugging error
@@ -28,7 +31,7 @@ const loadHomepage = async (req, res) => {
 
 const pageNotFound = async (req,res) => {
     try{
-        res.render("page-404")
+        res.render("user/page-404")
     }catch(error){
         res.redirect("/pageNotFound")
     }
@@ -38,7 +41,7 @@ const pageNotFound = async (req,res) => {
 const loadSignUp = async (req, res) => {
   try {
     
-    return res.render("signup", { message:null});
+    return res.render("user/signup", { message:null});
   } catch (error) {
     console.log("Home page not loading:", error);
     res.status(500).send("Server Error");
@@ -85,7 +88,7 @@ const signup = async (req, res) => {
     // console.log(req.body);
 
     if (password !== cPassword) {
-      return res.render("signup", { message: "Passwords do not match" });
+      return res.render("user/signup", { message: "Passwords do not match" });
     }
       // Check if this gets logged
     const findUser = await User.findOne({ email });
@@ -93,7 +96,7 @@ const signup = async (req, res) => {
     if (findUser) {
       console.log('alrddd');
       
-      return res.render("signup", { message: "User with this email already exists" });
+      return res.render("user/signup", { message: "User with this email already exists" });
     }
 
     const otp = generateOtp();
@@ -107,7 +110,7 @@ const signup = async (req, res) => {
     req.session.userOtp = otp;
     req.session.userData = { name, phone, email, password };
 
-    res.render("verify-otp");
+    res.render("user/verify-otp");
     console.log("OTP sent:", otp);
 
   } catch (error) {
@@ -257,7 +260,7 @@ const verifyOtp = async (req, res) => {
 const loadLogin = async(req,res)=>{
     try{
       if(!req.session.user){
-        return res.render('login')
+        return res.render('user/login')
       }else{
         res.redirect("/");
       }
@@ -274,27 +277,30 @@ const login = async (req, res) => {
     
 
     const findUser = await User.findOne({ isAdmin:false,email: email });
+    if (findUser.isBlocked) {
+      return res.redirect("/blocked");
+  }
   
 
     if (!findUser) {
-      return res.render("login", { message: "User not found" });
+      return res.render("user/login", { message: "User not found" });
     }
     if (findUser.IsBlocked) {
-      return res.render("login", { message: "User is blocked by Admin" });
+      return res.render("user/login", { message: "User is blocked by Admin" });
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     
 
     if (!passwordMatch) {
-      return res.render("login", { message: "Incorrect password" });
+      return res.render("user/login", { message: "Incorrect password" });
     }
 
     req.session.user = findUser._id;
     res.redirect("/");
   } catch (error) {
     console.error("Login error:", error);
-    res.render("login", { message: "Login failed. Please try again later" });
+    res.render("user/login", { message: "Login failed. Please try again later" });
   }
 };
 
@@ -314,6 +320,11 @@ const logout = async(req,res)=>{
   }
 }
 
+const blocked=async (req, res) => {
+  res.render("user/blocked"); // blocked.ejs
+};
+
+
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -325,4 +336,5 @@ module.exports = {
     signup,
     login,
     logout,
+    blocked
 }

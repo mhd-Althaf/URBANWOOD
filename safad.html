@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeChair - Premium Comfort Seating</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e67e22;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .product-gallery img {
+            cursor: crosshair;
+            transition: transform 0.3s ease;
+        }
+
+        .product-gallery img:hover {
+            transform: scale(1.02);
+        }
+
+        .product-info {
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .price-tag {
+            font-size: 2rem;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .btn-custom {
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background: #d35400;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary-custom {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-secondary-custom:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .thumbnail-container {
+            margin-top: 1rem;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .thumbnail.active {
+            border-color: var(--accent-color);
+        }
+
+        .product-description {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .review-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .magnify {
+            border-radius: 10%;
+            border: 2px solid var(--primary-color);
+            position: absolute;
+            z-index: 20;
+            background-repeat: no-repeat;
+            background-color: white;
+            display: none;
+            cursor: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Product Section -->
+<section class="container py-5">
+    <div class="row g-5">
+        <!-- Product Images -->
+        <div class="col-lg-7">
+            <div class="product-gallery position-relative">
+                <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80" 
+                     class="img-fluid main-image rounded-3" 
+                     alt="Luxe Comfort Chair"
+                     id="mainImage">
+                <div class="magnify"></div>
+            </div>
+            <div class="thumbnail-container d-flex gap-3">
+                <img src="https://images.unsplash.com/photo-1580480055273-228ff5388ef8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                     class="thumbnail rounded active" 
+                     alt="Thumbnail 1"
+                     data-main="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80">
+                <img src="https://images.unsplash.com/photo-1580480055273-228ff5388ef8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                     class="thumbnail rounded" 
+                     alt="Thumbnail 2"
+                     data-main="https://images.unsplash.com/photo-1580480055273-228ff5388ef8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80">
+                <img src="https://images.unsplash.com/photo-1580480055273-228ff5388ef8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                     class="thumbnail rounded" 
+                     alt="Thumbnail 3"
+                     data-main="https://images.unsplash.com/photo-1580480055273-228ff5388ef8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80">
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-5">
+            <div class="product-info">
+                <h1 class="mb-4">Luxe Comfort Executive Chair</h1>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="price-tag">$599.00</div>
+                    <div class="rating">
+                        ★★★★★ <span class="text-muted">(128 reviews)</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="mb-3">Select Color</h5>
+                    <div class="color-selector d-flex gap-3">
+                        <button class="btn btn-sm rounded-circle p-3" style="background: #2c3e50"></button>
+                        <button class="btn btn-sm rounded-circle p-3" style="background: #bdc3c7"></button>
+                        <button class="btn btn-sm rounded-circle p-3" style="background: #e67e22"></button>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <h5 class="mb-3">Quantity</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="number" class="form-control" value="1" style="width: 100px">
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-primary-custom btn-custom">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                            <button class="btn btn-secondary-custom btn-custom">
+                                Buy Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-highlights mb-4">
+                    <h5>Key Features</h5>
+                    <ul class="list-unstyled">
+                        <li>✔ Ergonomic lumbar support</li>
+                        <li>✔ Premium leather upholstery</li>
+                        <li>✔ 360-degree swivel base</li>
+                        <li>✔ Adjustable armrests</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Product Description -->
+<section class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h3 class="mb-4">Product Description</h3>
+            <div class="product-description">
+                <p>Experience unparalleled comfort with our Luxe Comfort Executive Chair. Designed for those who value both style and ergonomic support, this chair features:</p>
+                <ul>
+                    <li>Premium top-grain leather upholstery</li>
+                    <li>Adjustable seat height and tilt mechanism</li>
+                    <li>Breathable mesh backrest</li>
+                    <li>Heavy-duty nylon base with dual-wheel casters</li>
+                </ul>
+                <p>Available in three sophisticated colors to match any office decor. Backed by our 5-year limited warranty.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Customer Reviews -->
+<section class="container py-5">
+    <h3 class="mb-5">Customer Reviews</h3>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="review-card">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Michael Johnson</h5>
+                    <div class="text-muted">April 15, 2024</div>
+                </div>
+                <div class="rating mb-3">★★★★★</div>
+                <p>"This chair has transformed my home office experience. The lumbar support is fantastic and the adjustable arms are perfect for my setup."</p>
+            </div>
+
+            <div class="review-card">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Sarah Thompson</h5>
+                    <div class="text-muted">March 28, 2024</div>
+                </div>
+                <div class="rating mb-3">★★★★☆</div>
+                <p>"Great quality and comfortable for long hours. Took one star off because assembly instructions could be clearer."</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Image Zoom Functionality
+    const magnifier = {
+        size: 150,
+        magnification: 3,
+        init: function() {
+            $('body').prepend('<div class="magnify"></div>');
+        },
+        activate: function(img) {
+            const $img = $(img);
+            $img.hover(() => {
+                $('.magnify').show();
+                const width = $img.width();
+                const height = $img.height();
+                const src = $img.attr('src');
+                
+                $('.magnify').css({
+                    'background-size': ${width * this.magnification}px ${height * this.magnification}px,
+                    'background-image': url('${src}'),
+                    'width': this.size,
+                    'height': this.size
+                });
+
+                $img.mousemove(e => {
+                    const offset = $img.offset();
+                    const x = e.pageX - offset.left;
+                    const y = e.pageY - offset.top;
+                    const bgX = -((x * this.magnification) - this.size/2);
+                    const bgY = -((y * this.magnification) - this.size/2);
+                    
+                    $('.magnify').css({
+                        left: e.pageX - this.size/2,
+                        top: e.pageY - this.size/2,
+                        'background-position': ${bgX}px ${bgY}px
+                    });
+                });
+            }, () => {
+                $('.magnify').hide();
+            });
+        }
+    };
+
+    magnifier.init();
+    magnifier.activate('#mainImage');
+
+    // Thumbnail Click Handler
+    $('.thumbnail').click(function() {
+        $('.thumbnail').removeClass('active');
+        $(this).addClass('active');
+        const newSrc = $(this).data('main');
+        $('#mainImage').attr('src', newSrc);
+    });
+</script>
+
+</body>
+</html>
