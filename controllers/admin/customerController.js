@@ -49,10 +49,10 @@ const customerInfo = async (req,res)=>{
 const customerBlocked = async (req, res) => {
     try {
         let id = req.query.id;
-        await User.updateOne({ _id: id }, { $set: { isBlocked: true } }); // Fixed field name
+        await User.updateOne({ _id: id }, { $set: { isBlocked: true } }); 
         res.redirect("/admin/customers");
     } catch (error) {
-        console.error("Error blocking customer:", error); // Added error logging
+        console.error("Error blocking customer:", error);
         res.redirect("/pageerror");
     }
 };
@@ -60,10 +60,10 @@ const customerBlocked = async (req, res) => {
 const customerUnBlocked = async (req, res) => {
     try {
         let id = req.query.id;
-        await User.updateOne({ _id: id }, { $set: { isBlocked: false } }); // Fixed field name
+        await User.updateOne({ _id: id }, { $set: { isBlocked: false } }); 
         res.redirect("/admin/customers");
     } catch (error) {
-        console.error("Error unblocking customer:", error); // Added error logging
+        console.error("Error unblocking customer:", error); 
         res.redirect("/pageerror");
     }
 };

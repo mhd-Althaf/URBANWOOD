@@ -3,31 +3,63 @@ const User = require("../../models/userSchema");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt")
+const Product=require("../../models/productSchema")
+const Category=require("../../models/categorySchema")
+
 
 
 const loadHomepage = async (req, res) => {
   try {
-      const user = req.session.user;
+    const user = req.session.user;
+    
 
+    
+    const categories = await Category.find({ isListed: true });
 
+    if (!categories || categories.length === 0) {
+      console.error("No categories found");
+      return res.status(404).send("No categories available");
+    }
 
-      if (user) {
-          const userData = await User.findOne({ _id: user });
-          console.log(userData);
-          if (userData.isBlocked) {
-            return res.redirect("/blocked");
-        }
-     
-          res.render("user/home", { user: userData });
-      } else {
-          return res.render("user/home",{user:''});
+    
+    let productData = await Product.find({
+      isBlocked: false,
+      category: { $in: categories.map((category) => category._id) },
+      quantity: { $gt: 0 },
+    });
+
+    if (!productData || productData.length === 0) {
+      console.error("No products found");
+      return res.render("user/home", { user: user || '', products: [] });
+    }
+
+   
+    productData.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
+    productData = productData.slice(0, 4);
+
+    
+    if (user) {
+      const userData = await User.findOne({ _id: user });
+      if (!userData) {
+        console.error("User not found");
+        return res.status(404).send("User not found");
       }
+      res.render("user/home", { user: userData, products: productData });
+    } else {
+     
+      res.render("user/home", { user: '', products: productData });
+    }
+
   } catch (error) {
-      console.log("Error loading homepage:", error.message); // Debugging error
-      res.status(500).send("Server error");
+    console.error("Error loading homepage:", error.message);
+    res.status(500).send("Server error");
   }
 };
 
+  
+
+
+  
 
 const pageNotFound = async (req,res) => {
     try{
@@ -85,12 +117,12 @@ async function sendVerificationEmail(email,otp) {
 const signup = async (req, res) => {
   try {
     const { name, phone, email, password, cPassword } = req.body;
-    // console.log(req.body);
+   
 
     if (password !== cPassword) {
       return res.render("user/signup", { message: "Passwords do not match" });
     }
-      // Check if this gets logged
+     
     const findUser = await User.findOne({ email });
 
     if (findUser) {
@@ -138,64 +170,63 @@ const verifyOtp = async (req, res) => {
       const { otp } = req.body;
       console.log("Received OTP:", otp);
   
-      // Check if session data is valid
+      
       if (!req.session.userOtp || !req.session.userData) {
         return res.status(400).json({ success: false, message: "Session expired. Please try again." });
       }
   
-      // Check if OTP has expired
+     
       if (Date.now() > req.session.otpExpiration) {
         return res.send({ success: false, message: "OTP has expired. Please request a new one." });
       }
   
-      // Verify OTP
+     
       if (otp.trim() === req.session.userOtp) {
         const user = req.session.userData;
   
-        // Hash the password before saving
         const passwordHash = await securePassword(user.password);
   
-        // Create a new user
+        
         const newUser = new User({
           name: user.name,
           email: user.email,
           phone: user.phone,
           password: passwordHash,
-          referralCode: user.referralCode, // Store the referral code for the new user
+          referralCode: user.referralCode, 
         });
   
-        // Save the new user
+       
         await newUser.save();
   
         if (req.session.referrer) {
           const referrer = await User.findOne({ referralCode: req.session.referrer.referralCode });
         
           if (referrer) {
-            // Referrer gets 150 rupees
-            referrer.wallet += 150; // Add reward to the referrer's wallet
+           
+            referrer.wallet += 150; 
             await referrer.save();
   
             console.log("Saving wallet transaction for referrer...");
-            // Create wallet transaction for the referrer
+          
             await createWalletTransaction(referrer._id, 150, "Credit", "Referral Bonus");
   
             console.log("Referrer rewarded with 150 rupees.");
         
-            // New user gets 50 rupees
-            newUser.wallet += 50; // Add reward to the new user's wallet
+           
+            newUser.wallet += 50; 
             await newUser.save();
   
             console.log("Saving wallet transaction for new user...");
-            // Create wallet transaction for the new user
+            
             await createWalletTransaction(newUser._id, 50, "Credit", "Referral Bonus");
   
             console.log("New user rewarded with 50 rupees.");
   
-            // Update referrer's redeemedUsers array with the new user details
+           
             referrer.redeemedUsers.push({
               userName: newUser.name,
               signupDate: newUser.createdOn,
-              reward: 50, // New user’s reward
+              reward: 50,
             });
             await referrer.save();
   
@@ -203,14 +234,14 @@ const verifyOtp = async (req, res) => {
           }
         }
         
-        // Set session data for the new user
+      
         req.session.user = {
           _id: newUser._id,
           name: newUser.name,
           email: newUser.email,
         };
   
-        // Render the success response or redirect
+        
         console.log("User saved and logged in:", req.session.user);
         return res.json({ success: true, redirectUrl: "/" });
       } else {
@@ -321,8 +352,74 @@ const logout = async(req,res)=>{
 }
 
 const blocked=async (req, res) => {
-  res.render("user/blocked"); // blocked.ejs
+  res.render("user/blocked"); 
 };
+
+
+const loadShoppingPage = async (req, res) => {
+  try {
+   
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10; 
+    const skip = (page - 1) * limit;
+
+    
+    const user = req.session.user || null;
+    const userData = user ? await User.findOne({ _id: user }) : null;
+
+   
+    const categories = await Category.find({ isListed: true });
+
+   
+    if (categories.length === 0) {
+      return res.render("user/shop", {
+        user: userData,
+        products: [],
+        categories: [],
+        totalProducts: 0,
+        currentPage: page,
+        totalPages: 0,
+      });
+    }
+
+   
+    const categoryIds = categories.map((category) => category._id.toString());
+
+    
+    const products = await Product.find({
+      isBlocked: false,
+      category: { $in: categoryIds },
+      quantity: { $gt: 0 }, 
+    })
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit);
+
+   
+    const totalProducts = await Product.countDocuments({
+      isBlocked: false,
+      category: { $in: categoryIds },
+      quantity: { $gt: 0 },
+    });
+
+
+    const totalPages = Math.ceil(totalProducts / limit);
+
+   
+    res.render("user/shop", {
+      user: userData,
+      products,
+      categories,
+      totalProducts,
+      currentPage: page,
+      totalPages,
+    });
+  } catch (error) {
+    console.error("Error loading shopping page:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 
 
 module.exports = {
@@ -336,5 +433,7 @@ module.exports = {
     signup,
     login,
     logout,
-    blocked
+    blocked,
+    loadShoppingPage
+    
 }

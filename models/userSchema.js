@@ -11,7 +11,7 @@ const userSchema = new Schema({
         required: true,
         unique: true,
         sparse: true,
-        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ // Email validation
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ 
     },
     phone: {
         type: String,
@@ -19,7 +19,7 @@ const userSchema = new Schema({
         unique: false,
         sparse: true,
         default: null,
-        match: /^\d{10}$/ // 10-digit phone number validation
+        match: /^\d{10}$/ 
     },
     googleId: {
         type: String,
@@ -87,8 +87,8 @@ const userSchema = new Schema({
     }]
 });
 
-// Ensure indexing
-//  
+
+
 userSchema.index({ phone: 1, sparse: true });
 
 const User = mongoose.model("User", userSchema);

@@ -30,7 +30,7 @@ const login = async (req, res) => {
         }
     } catch (error) {
         console.log("Login error",error);
-        return res.redirect("/pageError")
+        return res.redirect("/pageerror")
     }
 }
 
@@ -41,9 +41,9 @@ const loadDashboard = async (req,res)=>{
 }
 
 
-const loadProductGet = async (req,res) =>{
-    res.render("admin/product")
-}
+// const loadProductGet = async (req,res) =>{
+//     res.render("admin/product")
+// }
 
 const loadcatogoryget = async (req,res)=>{
     
@@ -78,7 +78,7 @@ module.exports = {
     loadLogin,
     login,
     loadDashboard, 
-    loadProductGet,
+    // loadProductGet,
     loadAddProducts, 
     logoutUser,
 

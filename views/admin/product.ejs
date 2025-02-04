@@ -8,67 +8,48 @@
             
             <div class="table-responsive">
               <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>category</th>
-                    <th>OgPrice</th>
-                    <th>offerPrice</th>
-                    <th>review</th>
-                    <th>Update</th>
-                    <th>Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Red sofa</td>
-                    <td>sofa</td>
-                    <td>5900</td>
-                    <td>4999</td>
-                    <td>4.5</td>
-                    <td><label class="badge badge-success">Update</label></td>
-                    <td><label class="badge badge-danger">Delete</label></td>
-                  </tr>
-                  <tr>
-                    <td>Red sofa</td>
-                    <td>sofa</td>
-                    <td>5900</td>
-                    <td>4999</td>
-                    <td>4.5</td>
-                    <td><label class="badge badge-success">Update</label></td>
-                    <td><label class="badge badge-danger">Delete</label></td>
-                  </tr>
-                  <tr>
-                    <td>Red sofa</td>
-                    <td>sofa</td>
-                    <td>5900</td>
-                    <td>4999</td>
-                    <td>4.5</td>
-                    <td><label class="badge badge-success">Update</label></td>
-                    <td><label class="badge badge-danger">Delete</label></td>
-                  </tr>
-                  <tr>
-                    <td>Red sofa</td>
-                    <td>sofa</td>
-                    <td>5900</td>
-                    <td>4999</td>
-                    <td>4.5</td>
-                    <td><label class="badge badge-success">Update</label></td>
-                    <td><label class="badge badge-danger">Delete</label></td>
-                  </tr>
-                  <tr>
-                    <td>Red sofa</td>
-                    <td>sofa</td>
-                    <td>5900</td>
-                    <td>4999</td>
-                    <td>4.5</td>
-                    <td><label class="badge badge-success">Update</label></td>
-                    <td><label class="badge badge-danger">Delete</label></td>
-                  </tr>
-                </tbody>
+                  <thead>
+                      <tr>
+                          <th>Name</th>
+                          <th>Category</th>
+                          <th>RegPrice</th>
+                          <th>OfferPrice</th>
+                          <th>Quantity</th>
+                          <th>Update</th>
+                          <th>Delete</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <% data.forEach(product => { %>
+                          <tr>
+                              <td><%= product.productName %></td>
+                              <td><%= product.category.name %></td>
+                              <td><%= product.regularPrice %></td>
+                              <td><%= product.salePrice %></td>
+                              <td><%= product.quantity %></td>
+                              <td>
+                                <% if (product.isBlocked === false) { %>
+                                    <button class="btn btn-danger" onclick="toggleBlock('<%= product._id %>', 'block')" style="width: 80px;">
+                                        Block
+                                    </button>
+                                <% } else { %>
+                                    <button class="btn btn-success" onclick="toggleBlock('<%= product._id %>', 'unblock')" style="width: 80px;">
+                                        Unblock
+                                    </button>
+                                <% } %>
+                            </td>
+                            
+                              <td>
+                                  <button class="btn btn-info" style="width: 80px;">
+                                      <a href="/admin/editProduct/<%= product._id %>" class="text-white" style="text-decoration: none;">Edit</a>
+                                  </button>
+                              </td>
+                          </tr>
+                      <% }) %>
+                  </tbody>
               </table>
-              <a href="/admin/addProducts"> <button>add product</button></a>
-            </div>
+              <a href="/admin/addProducts"> <button>Add Product</button></a>
+          </div>
           </div>
           
           
@@ -80,7 +61,10 @@
     </div>
     <!-- container-scroller -->
     <!-- plugins:js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="/assets/js/dashboard.js"></script>
+
 <!-- endinject -->
 <!-- Plugin js for this page -->
 <script src="/assets/vendors/chart.js/Chart.min.js"></script>
@@ -98,6 +82,55 @@
 <!-- endinject -->
 <!-- Custom js for this page -->
 <script src="/assets/js/dashboard.js"></script>
+<script>
+function toggleBlock(productId, action) {
+    const url = action === 'block' ? '/admin/blockProduct' : '/admin/unblockProduct';
+    const method = 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId: productId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status) {
+           
+            Swal.fire({
+                icon: 'success',
+                title: data.message,
+                showConfirmButton: false,
+                timer: 1500  
+            }).then(() => {
+                
+                window.location.href = window.location.href;  
+               
+            });
+        } else {
+            
+            Swal.fire({
+                icon: 'error',
+                title: data.message,
+                showConfirmButton: true
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+       
+        Swal.fire({
+            icon: 'error',
+            title: 'Something went wrong!',
+            text: error.message,
+            showConfirmButton: true
+        });
+    });
+}
+
+</script>
+
 
     <!-- End custom js for this page -->
   </body>
