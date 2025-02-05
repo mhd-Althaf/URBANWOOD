@@ -1,0 +1,290 @@
+<section class="content-main">
+    <div class="container">
+        <h2 class="content-title">Edit Product</h2>
+
+        <form id="editProductForm" method="post" action="/admin/editProduct/<%= product._id %>"
+            enctype="multipart/form-data" onsubmit="return validateForm()">
+            <div class="form-grid">
+                <% const productFields={ productName: { label: 'Product Name' , type: 'text' ,
+                    errorId: 'productName-error' }, descriptionData: { label: 'Product Description' ,
+                    type: 'textarea' , errorId: 'description-error' }, regularPrice: { label: 'Regular Price' ,
+                    type: 'text' , errorId: 'regularPrice-error' }, salePrice: { label: 'Sale Price' ,
+                    type: 'text' , errorId: 'salePrice-error' }, quantity: { label: 'Product Quantity' ,
+                    type: 'text' , errorId: 'quantity-error' } }; %>
+
+                    <% Object.entries(productFields).forEach(([name, field])=> { %>
+                        <div class="form-group">
+                            <label for="<%= name %>">
+                                <%= field.label %>
+                            </label>
+                            <% if (field.type==='textarea' ) { %>
+                                <textarea name="<%= name %>" class="form-input" id="<%= name %>"
+                                    rows="4"><%- product[name] %></textarea>
+                                <% } else { %>
+                                    <input type="<%= field.type %>" name="<%= name %>"
+                                        value="<%- product[name] %>" class="form-input" id="<%= name %>">
+                                    <% } %>
+
+                                        
+
+                        </div>
+                        <% }); %>
+
+                            <!-- Product Category -->
+                            <div class="form-group">
+                                <label for="category">Product Category</label>
+                                <select class="form-input" name="category" id="category">
+                                    <% category.forEach((cat)=> { %>
+                                        <option value="<%= cat.name %>" <%=cat.name===product.category
+                                            ? 'selected' : '' %>><%= cat.name %>
+                                        </option>
+                                        <% }); %>
+                                </select>
+                               
+                            </div>
+            </div>
+
+
+            <!-- Image Upload Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Choose images</h4>
+                </div>
+
+                <% if (product.productImages && product.productImages.length> 0) { %>
+                    <div class="existing-images">
+                        <% product.productImages.forEach((imageName, index)=> { %>
+                            <div class="existing-image-container">
+                                <input type="hidden" value="<%= imageName %>" id="imageData<%= index %>">
+                                <img class="existing-image" src="/uploads/re-image/<%= imageName %>"
+                                    alt="Existing product image <%= index + 1 %>">
+                                <button onclick="deleteSingleImage('<%= imageName %>', '<%= product._id %>')"
+                                    class="delete-image-btn">&times;</button>
+                            </div>
+                            <% }); %>
+                    </div>
+                    <% } %>
+
+                        <div class="image-upload-section">
+                            <% [1, 2, 3, 4].forEach(index=> { %>
+                                <div class="image-upload-container">
+                                    <div class="image-preview-wrapper">
+                                        <img src="" alt="Preview" id="imgView<%= index %>">
+                                        <input class="form-control image-input" type="file" name="images"
+                                            id="input<%= index %>"
+                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            onchange="viewImage(event, <%= index %>)">
+                                        <div id="images-error-<%= index %>" class="error-message"></div>
+                                    </div>
+
+                                    <div class="image-cropper" id="imageCropper<%= index %>">
+                                        <img src="" id="croppedImg<%= index %>" alt="Cropped image">
+                                        <button type="button" id="saveButton<%= index %>"
+                                            class="btn btn-primary btn-sm">Save</button>
+                                    </div>
+                                </div>
+                                <% }); %>
+                        </div>
+
+                        <div id="image-section-error" class="error-message"></div>
+            </div>
+
+            <button class="btn btn-md rounded w-100 d-block font-sm hover-up" id="updatebtn" type="button"
+                onclick="validateAndSubmit()">Update</button>
+
+        </form>
+    </div>
+</section>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+
+
+<script>
+// Global Cropper instances to manage multiple croppers
+const cropperInstances = {};
+
+function viewImage(event, index) {
+const input = event.target;
+const file = input.files[0];
+
+if (!file) {
+    console.log(`No file selected for index ${index}`);
+    return;
+}
+
+// Validate image file type
+if (!file.type.startsWith('image/')) {
+    alert('Please upload a valid image file.');
+    console.log(`Invalid file type: ${file.type}`);
+    return;
+}
+
+// Validate image size (max 5MB)
+if (file.size > 5 * 1024 * 1024) {
+    alert('Image size should be less than 5MB.');
+    console.log(`File size too large: ${file.size} bytes`);
+    return;
+}
+
+const reader = new FileReader();
+
+reader.onload = function (e) {
+    if (cropperInstances[index]) {
+        cropperInstances[index].destroy();
+    }
+
+    const image = document.getElementById(`imgView${index}`);
+    const cropperContainer = document.getElementById(`imageCropper${index}`);
+    const croppedImg = document.getElementById(`croppedImg${index}`);
+    const saveButton = document.getElementById(`saveButton${index}`);
+
+    if (!image || !cropperContainer || !croppedImg || !saveButton) {
+        console.error(`One or more required elements are missing for index ${index}`);
+        return;
+    }
+
+    image.src = e.target.result;
+    cropperContainer.style.display = 'flex';
+
+    const cropper = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 1,
+        guides: true,
+        background: false,
+        autoCropArea: 0.8,
+        zoomable: true,
+        minCropBoxWidth: 100,
+        minCropBoxHeight: 100
+    });
+
+    cropperInstances[index] = cropper;
+
+    saveButton.onclick = function () {
+        try {
+            const croppedCanvas = cropper.getCroppedCanvas({ width: 250, height: 250 });
+            if (!croppedCanvas) throw new Error('Failed to get cropped canvas');
+
+            croppedImg.src = croppedCanvas.toDataURL('image/jpeg', 1.0);
+            croppedCanvas.toBlob(blob => {
+                if (!blob) throw new Error('Failed to create blob');
+                const croppedFile = new File([blob], `cropped-img-${Date.now()}-${index}.jpeg`, { type: 'image/jpeg' });
+
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                input.files = dataTransfer.files;
+
+                cropperContainer.style.display = 'none';
+                cropper.destroy();
+                delete cropperInstances[index];
+            }, 'image/jpeg', 1.0);
+        } catch (error) {
+            console.error('Error in cropping process:', error);
+        }
+    };
+};
+
+reader.readAsDataURL(file);
+}
+
+function validateForm() {
+let isValid = true;
+const errors = {}; // Object to store error messages
+
+// Define fields and their respective error elements
+const fields = {
+    productName: "productName-error",
+    descriptionData: "description-error",
+    regularPrice: "regularPrice-error",
+    salePrice: "salePrice-error",
+    quantity: "quantity-error",
+    category: "category-error"
+};
+
+// Clear previous error messages
+Object.values(fields).forEach(errorId => {
+    const errorElement = document.getElementById(errorId);
+    if (errorElement) {
+        errorElement.innerText = "";
+    } else {
+        console.warn(`Error element with ID '${errorId}' not found.`);
+    }
+});
+
+// Validate each field
+Object.entries(fields).forEach(([fieldName, errorId]) => {
+    const field = document.getElementById(fieldName);
+
+    if (!field) {
+        console.error(`Element with ID '${fieldName}' not found.`);
+        return;
+    }
+
+    const value = field.value.trim();
+
+    if (value === "") {
+        errors[fieldName] = "This field is required.";
+        isValid = false;
+    } else if (["regularPrice", "salePrice", "quantity"].includes(fieldName)) {
+        if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+            errors[fieldName] = "Enter a valid numeric value.";
+            isValid = false;
+        }
+    }
+});
+
+// Display errors
+Object.entries(errors).forEach(([fieldName, message]) => {
+    const errorElement = document.getElementById(`${fieldName}-error`);
+    if (errorElement) {
+        errorElement.innerText = message;
+        console.log(`Error displayed for ${fieldName}: ${message}`);
+    } else {
+        console.warn(`Error element for '${fieldName}' not found.`);
+    }
+});
+
+console.log(errors, "errors");
+
+return isValid;
+}
+
+
+function validateAndSubmit() {
+if (validateForm()) {
+    document.getElementById("editProductForm").submit(); // Use the correct form ID
+}
+}
+
+function deleteSingleImage(imageId, productId) {
+console.log(`Deleting image: ${imageId} for product: ${productId}`);
+$.ajax({
+    url: "/admin/deleteImage",
+    method: "POST",
+    data: { imageNameToServer: imageId, productIdToServer: productId },
+    success: function (response) {
+        if (response.status) window.location.reload();
+    },
+    error: function (xhr, status, error) {
+        console.error("Error deleting image:", error);
+    }
+});
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+// Select all input fields inside the form
+const inputs = document.querySelectorAll(".form-input");
+
+inputs.forEach(input => {
+    input.addEventListener("input", function () {
+        // Get the error message element related to this input
+        const errorElement = document.getElementById(`${this.id}-error`);
+        if (errorElement) {
+            errorElement.style.display = "none"; // Hide the error message
+        }
+    });
+});
+});
+</script>

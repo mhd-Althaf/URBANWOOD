@@ -49,10 +49,8 @@ app.use("/", userRouter);
 app.use("/admin",adminRouter)
 
 
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-});
 
 module.exports = app;

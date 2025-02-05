@@ -240,9 +240,9 @@ const editProduct = async (req, res) => {
             _id: { $ne: id },
         });
         if (existingProduct) {
+            
             return res.status(400).json({ error: "Product with this name already exists. Please try with another name." });
         }
-
         const images = [];
         if (req.files && req.files.length > 0) {
             for (let i = 0; i < req.files.length; i++) {
@@ -270,6 +270,9 @@ const editProduct = async (req, res) => {
         res.redirect("/admin/pageerror");
     }
 };
+
+
+
 
 const deleteSingleImage = async (req, res) => {
     try {
