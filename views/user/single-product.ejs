@@ -1,117 +1,203 @@
 <%- include("../../views/partials/user/header") %>
-
-<!-- Shop Detail Start -->
-<div class="container-fluid pb-5">
-    <div class="container">
-        <!-- Product Images Section -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div id="product-carousel" class="carousel slide" data-ride="carousel">
-                    <div class="carousel-inner border shadow-sm">
-                        <% product.productImages.forEach((image, index) => { %>
-                            <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                                <img class="w-100 zoom" 
-                                     style="height: 500px; object-fit: contain;"
-                                     src="/uploads/product-images/<%= image %>" 
-                                     alt="Product Image <%= index + 1 %>" 
-                                     data-zoom-image="/uploads/re-image/<%= image %>">
-                            </div>
-                        <% }); %>
-                    </div>
-                    <!-- Carousel Controls -->
-                    <a class="carousel-control-prev" href="#product-carousel" data-slide="prev">
-                        <i class="fa fa-2x fa-angle-left text-dark"></i>
-                    </a>
-                    <a class="carousel-control-next" href="#product-carousel" data-slide="next">
-                        <i class="fa fa-2x fa-angle-right text-dark"></i>
-                    </a>
+    <section class="banner-area organic-breadcrumb">
+        <div class="container">
+            <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+                <div class="col-first">
+                    <h1>Product Details Page</h1>
+                    <nav class="d-flex align-items-center">
+                        <a href="/">Home<span class="lnr lnr-arrow-right"></span></a>
+                        <a href="/shop">Shop<span class="lnr lnr-arrow-right"></span></a>
+                        <a href="">product-details</a>
+                    </nav>
                 </div>
             </div>
         </div>
-
-        <!-- Product Details Section -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <!-- Product Title -->
-                        <div class="text-center mb-4">
-                            <h2 class="font-weight-bold"><%= product.productName %></h2>
+    </section>
+    <!-- Shop Detail Start -->
+    <div class="container-fluid pb-5">
+        <div class="container">
+            <!-- Product Images Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div id="product-carousel" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner border shadow-sm">
+                            <% product.productImages.forEach((image, index)=> { %>
+                                <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                                    <img class="w-100 zoom" style="height: 500px; object-fit: contain;"
+                                        src="/uploads/product-images/<%= image %>" alt="Product Image <%= index + 1 %>"
+                                        data-zoom-image="/uploads/re-image/<%= image %>">
+                                </div>
+                                <% }); %>
                         </div>
-                        
-                        <!-- Ratings -->
-                        <div class="d-flex justify-content-center align-items-center mb-4">
-                            <div class="text-primary mr-2">
-                                <small class="fas fa-star"></small>
-                                <small class="fas fa-star"></small>
-                                <small class="fas fa-star"></small>
-                                <small class="fas fa-star-half-alt"></small>
-                                <small class="far fa-star"></small>
+                        <!-- Carousel Controls -->
+                        <a class="carousel-control-prev" href="#product-carousel" data-slide="prev">
+                            <i class="fa fa-2x fa-angle-left text-dark"></i>
+                        </a>
+                        <a class="carousel-control-next" href="#product-carousel" data-slide="next">
+                            <i class="fa fa-2x fa-angle-right text-dark"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Details Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <!-- Product Title -->
+                            <div class="text-center mb-4">
+                                <h2 class="font-weight-bold">
+                                    <%= product.productName %>
+                                </h2>
                             </div>
-                            <small class="text-muted">(50 Reviews)</small>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="text-center mb-4">
-                            <h3 class="font-weight-bold">
-                                <% if (product.salePrice) { %>
-                                    <span class="text-danger">
-                                        <del>₹<%= product.regularPrice %></del>
-                                    </span>
-                                    <span class="text-primary ml-2">₹<%= product.salePrice %></span>
-                                <% } else { %>
-                                    <span class="text-primary">₹<%= product.regularPrice %></span>
-                                <% } %>
-                            </h3>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Product Info -->
-                        <div class="row justify-content-center mb-4">
-                            <div class="col-md-8">
-                                <!-- Stock Status -->
-                                <div class="text-center mb-4">
-                                    <% if (product.quantity > 0) { %>
-                                        <span class="badge badge-success p-2">In Stock: <%= product.quantity %> available</span>
-                                    <% } else { %>
-                                        <span class="badge badge-danger p-2">Out of Stock</span>
-                                    <% } %>
+                            <div class="description">
+                                <h5>Product details</h5>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eos doloremque temporibus
+                                    aperiam praesentium tempore dolorem, mollitia, fuga amet corporis iusto quis aliquam
+                                    beatae sequi explicabo repellendus vero obcaecati eveniet consectetur</p>
+                            </div>
+                            <!-- Ratings -->
+                            <div class="d-flex justify-content-center align-items-center mb-4">
+                                <div class="text-primary mr-2">
+                                    <small class="fas fa-star"></small>
+                                    <small class="fas fa-star"></small>
+                                    <small class="fas fa-star"></small>
+                                    <small class="fas fa-star-half-alt"></small>
+                                    <small class="far fa-star"></small>
                                 </div>
+                                <small class="text-muted">(50 Reviews)</small>
+                            </div>
 
-                                <!-- Category -->
-                                <div class="text-center mb-4">
-                                    <p class="text-muted mb-0">Category: 
-                                        <a href="#" class="text-primary"><%= category.name %></a>
-                                    </p>
-                                </div>
+                            <!-- Price -->
+                            <div class="text-center mb-4">
+                                <h3 class="font-weight-bold">
+                                    <% if (product.salePrice) { %>
+                                        <span class="text-danger">
+                                            <del>₹<%= product.regularPrice %></del>
+                                        </span>
+                                        <span class="text-primary ml-2">₹<%= product.salePrice %></span>
+                                        <% } else { %>
+                                            <span class="text-primary">₹<%= product.regularPrice %></span>
+                                            <% } %>
+                                </h3>
+                            </div>
 
-                                <!-- Quantity Selection -->
-                                <div class="d-flex justify-content-center align-items-center mb-4">
-                                    <label class="text-dark font-weight-medium mr-3 mb-0">Quantity:</label>
-                                    <div class="input-group quantity-input" style="width: 150px;">
-                                        <div class="input-group-prepend">
-                                            <button class="btn btn-outline-primary btn-minus" type="button" onclick="decreaseQuantity()">-</button>
-                                        </div>
-                                        <input type="number" 
-                                               id="quantity" 
-                                               class="form-control text-center" 
-                                               value="1" 
-                                               min="1" 
-                                               max="<%= product.quantity %>" 
-                                               onchange="validateQuantity()" />
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-primary btn-plus" type="button" onclick="increaseQuantity()">+</button>
+                            <hr class="my-4">
+
+                            <!-- Product Info -->
+                            <div class="row justify-content-center mb-4">
+                                <div class="col-md-8">
+                                    <!-- Stock Status -->
+                                    <div class="text-center mb-4">
+                                        <% if (product.quantity> 0) { %>
+                                            <span class="badge badge-success p-2">In Stock: <%= product.quantity %>
+                                                    available</span>
+                                            <% } else { %>
+                                                <span class="badge badge-danger p-2">Out of Stock</span>
+                                                <% } %>
+                                    </div>
+
+                                    <!-- Category -->
+                                    <div class="text-center mb-4">
+                                        <p class="text-muted mb-0">Category:
+                                            <a href="#" class="text-primary">
+                                                <%= category.name %>
+                                            </a>
+                                        </p>
+                                    </div>
+
+                                    <!-- Quantity Selection -->
+                                    <div class="d-flex justify-content-center align-items-center mb-4">
+                                        <label class="text-dark font-weight-medium mr-3 mb-0">Quantity:</label>
+                                        <div class="input-group quantity-input" style="width: 150px;">
+                                            <div class="input-group-prepend">
+                                                <button class="btn btn-outline-primary btn-minus"
+                                                    type="button">-</button>
+                                            </div>
+                                            <input type="number" id="quantity" class="form-control text-center"
+                                                value="1" min="1" max="<%= product.quantity %>">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-primary btn-plus"
+                                                    type="button">+</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Add to Cart Button -->
-                                <div class="text-center">
-                                    <button onclick="addToCart('<%= product._id %>', document.getElementById('quantity').value)" 
-                                            class="btn btn-primary px-5 py-2">
-                                        <i class="fas fa-shopping-cart mr-2"></i>Add To Cart
-                                    </button>
+                                    <!-- Add to Cart Form -->
+                                    <form id="addToCartForm" action="/addToCart" method="POST">
+                                        <input type="hidden" name="productId" value="<%= product._id %>">
+                                        <input type="hidden" name="quantity" id="formQuantity" value="1">
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary px-5 py-2">
+                                                <i class="fas fa-shopping-cart mr-2"></i>Add To Cart
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Review Form -->
+                                    <div class="review-form mb-5">
+                                        <h5>Write a Review</h5>
+                                        <form id="reviewForm" class="g-3">
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-6">
+                                                    <input type="text" class="form-control" placeholder="Your Name"
+                                                        required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="email" class="form-control" placeholder="Your Email"
+                                                        required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="rating-input">
+                                                    <span class="me-2">Your Rating:</span>
+                                                    <% for(let i=1; i<=5; i++) { %>
+                                                        <i class="far fa-star rating-star" data-value="<%= i %>"></i>
+                                                        <% } %>
+                                                            <input type="hidden" name="rating" id="selectedRating"
+                                                                required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <textarea class="form-control" rows="4" placeholder="Your Review"
+                                                    required></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Reviews List -->
+                                    <div class="reviews-list">
+                                        <% if (product.reviews && product.reviews.length> 0) { %>
+                                            <% product.reviews.forEach(review=> { %>
+                                                <div class="review-item mb-4 p-3 bg-light rounded">
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <div>
+                                                            <h5 class="mb-1">
+                                                                <%= review.userName %>
+                                                            </h5>
+                                                            <div class="rating-stars small text-warning">
+                                                                <% for(let i=1; i<=5; i++) { %>
+                                                                    <i
+                                                                        class="fas fa-star <%= i <= review.rating ? 'text-warning' : 'text-secondary' %>"></i>
+                                                                    <% } %>
+                                                            </div>
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <%= new Date(review.date).toLocaleDateString() %>
+                                                        </small>
+                                                    </div>
+                                                    <p class="mb-0">
+                                                        <%= review.comment %>
+                                                    </p>
+                                                </div>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <p class="text-muted">No reviews yet. Be the first to review
+                                                            this product!</p>
+                                                        <% } %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -125,84 +211,233 @@
             <h3 class="text-center font-weight-bold mb-4">
                 <span class="border-bottom border-primary pb-2">Top Sellers</span>
             </h3>
-            
+
             <div class="row mt-4">
-                <% if (topSellers && topSellers.length > 0) { %>
-                    <% topSellers.forEach(product => { %>
+                <% if (topSellers && topSellers.length> 0) { %>
+                    <% topSellers.forEach(product=> { %>
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="card product-card h-100 border-0 shadow-sm">
                                 <div class="card-header bg-transparent border-0 p-0">
                                     <a href="/productDetails?id=<%= product._id %>">
-                                        <img class="card-img-top" 
-                                             style="height: 200px; object-fit: contain;"
-                                             src="<%= product.productImages?.length ? `/uploads/re-image/${product.productImages[0]}` : '/uploads/product-images/default.jpg' %>" 
-                                             alt="<%= product.productName %>">
+                                        <img class="card-img-top" style="height: 200px; object-fit: contain;"
+                                            src="<%= product.productImages?.length ? `/uploads/re-image/${product.productImages[0]}` : '/uploads/product-images/default.jpg' %>"
+                                            alt="<%= product.productName %>">
                                     </a>
                                 </div>
                                 <div class="card-body text-center">
-                                    <h6 class="card-title text-truncate mb-3"><%= product.productName %></h6>
+                                    <h6 class="card-title text-truncate mb-3">
+                                        <%= product.productName %>
+                                    </h6>
                                     <div class="d-flex justify-content-center align-items-center">
-                                        <h6 class="text-primary mb-0">₹<%= product.salePrice %></h6>
+                                        <h6 class="text-primary mb-0">₹<%= product.salePrice %>
+                                        </h6>
                                         <% if (product.regularPrice) { %>
-                                            <small class="text-muted ml-2"><del>₹<%= product.regularPrice %></del></small>
-                                        <% } %>
+                                            <small class="text-muted ml-2"><del>₹<%= product.regularPrice %>
+                                                </del></small>
+                                            <% } %>
                                     </div>
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between">
-                                    <a href="/productDetails?id=<%= product._id %>" class="btn btn-sm btn-outline-primary">
+                                    <a href="/productDetails?id=<%= product._id %>"
+                                        class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye mr-1"></i>View Detail
                                     </a>
-                                    <button onclick="addToCart('<%= product._id %>')" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-cart-plus mr-1"></i>Add to Cart
-                                    </button>
+                                    <form id="addToCartForm" class="text-center">
+                                        <input type="hidden" name="productId" value="<%= product._id %>">
+                                        
+                                        <div class="d-flex justify-content-center align-items-center mb-4">
+                                            <label class="text-dark font-weight-medium mr-3 mb-0">Quantity:</label>
+                                            <div class="input-group quantity-input" style="width: 150px;">
+                                                <div class="input-group-prepend">
+                                                    <button type="button" class="btn btn-outline-primary btn-minus">-</button>
+                                                </div>
+                                                <input type="number" 
+                                                       id="quantity" 
+                                                       class="form-control text-center"
+                                                       value="1" 
+                                                       min="1" 
+                                                       max="<%= product.quantity %>">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-primary btn-plus">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    
+                                        <button type="submit" class="btn btn-primary px-5 py-2">
+                                            <i class="fas fa-shopping-cart mr-2"></i>Add To Cart
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
-                    <% }); %>
-                <% } else { %>
-                    <div class="col-12">
-                        <p class="text-center text-muted">No top sellers available at the moment.</p>
-                    </div>
-                <% } %>
+                        <% }); %>
+                            <% } else { %>
+                                <div class="col-12">
+                                    <p class="text-center text-muted">No top sellers available at the moment.</p>
+                                </div>
+                                <% } %>
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<script>
-$(document).ready(function () {
-    // ElevateZoom configuration
-    $(".zoom").elevateZoom({
-        zoomType: "lens",
-        lensShape: "round",
-        lensSize: 150,
-        scrollZoom: true,
-        cursor: "crosshair"
-    });
-});
-
-// Quantity controls
-function validateQuantity() {
-    const input = document.getElementById('quantity');
-    const max = parseInt(input.max);
-    const value = parseInt(input.value);
+    <script src="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/Drift.min.js"></script>
     
-    if (value > max) input.value = max;
-    if (value < 1) input.value = 1;
-}
+    <script>
+        document.getElementById('addToCartForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                productId: '<%= product._id %>',
+                quantity: parseInt(document.getElementById('quantity').value)
+            };
+        
+            try {
+                const response = await fetch('/addToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+        
+                const data = await response.json();
+        
+                if (!response.ok) throw new Error(data.message || 'Failed to add to cart');
+        
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = '/cart'; // Redirect to cart after success
+                });
+        
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: error.message,
+                    showConfirmButton: true
+                });
+            }
+        });
+        
+        // Quantity controls
+        document.querySelector('.btn-minus').addEventListener('click', () => {
+            const quantityInput = document.getElementById('quantity');
+            if(quantityInput.value > 1) quantityInput.value--;
+        });
+        
+        document.querySelector('.btn-plus').addEventListener('click', () => {
+            const quantityInput = document.getElementById('quantity');
+            if(quantityInput.value < <%= product.quantity %>) quantityInput.value++;
+        });
+        
+        </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Image Zoom Functionality
+            document.querySelectorAll('.zoom-img').forEach(img => {
+                // Hover Zoom with Drift
+                new Drift(img, {
+                    paneContainer: document.body,
+                    inlinePane: false,
+                    zoomFactor: 2,
+                    containInline: true
+                });
 
-function decreaseQuantity() {
-    const input = document.getElementById('quantity');
-    const value = parseInt(input.value);
-    if (value > 1) input.value = value - 1;
-}
+                // Click Zoom Modal
+                img.addEventListener('click', () => {
+                    document.getElementById('zoomedImage').src = img.dataset.zoom;
+                    new bootstrap.Modal(document.getElementById('zoomModal')).show();
+                });
+            });
 
-function increaseQuantity() {
-    const input = document.getElementById('quantity');
-    const value = parseInt(input.value);
-    const max = parseInt(input.max);
-    if (value < max) input.value = value + 1;
-}
-</script>
+            // Rating Stars Interaction
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.addEventListener('click', function () {
+                    const value = parseInt(this.dataset.value);
+                    const stars = document.querySelectorAll('.rating-star');
 
-<%- include("../../views/partials/user/footer") %>
+                    stars.forEach((s, index) => {
+                        s.classList.toggle('fas', index < value);
+                        s.classList.toggle('far', index >= value);
+                    });
+
+                    document.getElementById('selectedRating').value = value;
+                });
+            });
+
+            // Review Form Submission
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire('Thank you!', 'Your review has been submitted.', 'success');
+                    this.reset();
+                    document.querySelectorAll('.rating-star').forEach(star => {
+                        star.classList.remove('fas');
+                        star.classList.add('far');
+                    });
+                });
+            }
+
+            // Initialize Bootstrap Carousel
+            const carousel = new bootstrap.Carousel('#product-carousel', {
+                interval: false,
+                wrap: true
+            });
+
+            // Quantity Controls
+            function validateQuantity() {
+                const input = document.getElementById('quantity');
+                const max = parseInt(input.max);
+                const value = parseInt(input.value);
+
+                if (value > max) input.value = max;
+                if (value < 1) input.value = 1;
+            }
+
+            function adjustQuantity(change) {
+                const input = document.getElementById('quantity');
+                let value = parseInt(input.value) + change;
+                value = Math.max(Math.min(value, parseInt(input.max)), 1);
+                input.value = value;
+            }
+
+            // Quantity Button Handlers
+            document.querySelectorAll('.btn-minus').forEach(btn => {
+                btn.addEventListener('click', () => adjustQuantity(-1));
+            });
+
+            document.querySelectorAll('.btn-plus').forEach(btn => {
+                btn.addEventListener('click', () => adjustQuantity(1));
+            });
+
+            // Input Validation
+            const quantityInput = document.getElementById('quantity');
+            if (quantityInput) {
+                quantityInput.addEventListener('change', validateQuantity);
+                quantityInput.addEventListener('input', validateQuantity);
+            }
+        });
+
+        // Global Styles
+        const style = document.createElement('style');
+        style.textContent = `
+    .rating-stars { color: #ffc107; font-size: 1.25rem; }
+    .rating-input .rating-star { cursor: pointer; transition: color 0.2s; }
+    .rating-input .rating-star:hover, 
+    .rating-input .rating-star.active { color: #ffc107; }
+    .drift-zoom-pane { background: rgba(255,255,255,0.9)!important; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,0.15); }
+    .review-item { padding:1.5rem; background:rgba(248,249,250,0.5); border-radius:8px; }
+    .zoom-img { transition:transform 0.3s ease; }
+    .zoom-img:hover { transform:scale(1.02); }
+`;
+        document.head.appendChild(style);
+    </script>
+    <%- include("../../views/partials/user/footer") %>

@@ -20,60 +20,83 @@ const getProductAddPage = async (req, res) => {
 
 const addProducts = async (req, res) => {
     try {
-        console.log(req.files);
+        console.log("Request body:", req.body);
+        console.log("Files:", req.files);
+
         const products = req.body;
-        console.log("reqbody",req.body)
         const productExists = await Product.findOne({ productName: products.productName });
-  
-        // Ensure description is a string
-        const description = Array.isArray(products.description) ? products.description.join('\n') : products.description;
-       
-        if (!productExists) {
-            const images = [];
-            if (req.files && req.files.length > 0) {
-                for (let i = 0; i < req.files.length; i++) {
-                    const originalImagePath = req.files[i].path;
-                    const resizedImagePath = path.join("public", "uploads", "product-images", req.files[i].filename);
 
-                    await sharp(originalImagePath)
-                        .resize({ width: 440, height: 440 })
-                        .toFile(resizedImagePath);
-
-                    images.push(req.files[i].filename);
-                }
-            }
-
-            if (images.length === 0) {
-                return res.status(400).json({ message: "At least one image is required." });
-            }
-
-            const categoryId = await Category.findOne({ name: products.category });
-            if (!categoryId) {
-                return res.status(400).json({ message: "Invalid category name." });
-            }
-            console.log(products.stockCode);
-            const newProduct = new Product({
-                productName: products.productName,
-                description: products.description,
-                category: categoryId._id,
-                regularPrice: products.regularPrice,
-                salePrice: products.salePrice,
-                quantity: products.quantity,
-                
-                metalType: products.metalType,
-                productImages: images,
-                status: "Available",
-                createdOn: new Date(),
+        if (productExists) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Product already exists, please try with another name." 
             });
-
-            await newProduct.save();
-            res.redirect("/admin/addProducts");
-        } else {
-            res.status(400).json({ message: "Product already exists, please try with another name." });
         }
+
+        // Check for required fields
+        if (!products.productName || !products.description || !products.regularPrice || !products.quantity) {
+            return res.status(400).json({ 
+                success: false,
+                message: "All required fields must be filled." 
+            });
+        }
+
+        // Handle images
+        const images = [];
+        if (req.files && req.files.length > 0) {
+            for (let file of req.files) {
+                const originalImagePath = file.path;
+                const resizedImagePath = path.join("public", "uploads", "product-images", file.filename);
+
+                await sharp(originalImagePath)
+                    .resize({ width: 440, height: 440 })
+                    .toFile(resizedImagePath);
+
+                images.push(file.filename);
+            }
+        }
+
+        if (images.length === 0) {
+            return res.status(400).json({ 
+                success: false,
+                message: "At least one image is required." 
+            });
+        }
+
+        // Get category
+        const categoryId = await Category.findOne({ name: products.category });
+        if (!categoryId) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Invalid category name." 
+            });
+        }
+
+        const newProduct = new Product({
+            productName: products.productName,
+            description: products.description,
+            category: categoryId._id,
+            regularPrice: products.regularPrice,
+            salePrice: products.salePrice || products.regularPrice,
+            quantity: products.quantity,
+            productImages: images,
+            status: "Available",
+            createdOn: new Date(),
+        });
+
+        await newProduct.save();
+        
+        return res.status(200).json({
+            success: true,
+            message: "Product added successfully"
+        });
+
     } catch (error) {
         console.error("Error adding product:", error);
-        res.redirect("/admin/pageerror");
+        return res.status(500).json({ 
+            success: false,
+            message: "Error adding product: " + error.message 
+        });
     }
 };
 
@@ -83,7 +106,8 @@ const getAllProducts = async (req, res) => {
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
-        const limit = 4;
+        const limit = 5
+       
 
         const productQuery = {
             $or: [
@@ -99,8 +123,8 @@ const getAllProducts = async (req, res) => {
         }
 
         const productData = await Product.find(productQuery)
-            .limit(limit)
             .skip((page - 1) * limit)
+            .limit(limit)
             .populate("category")
             .exec();
 
@@ -112,6 +136,7 @@ const getAllProducts = async (req, res) => {
             currentPage: page,
             totalPages: Math.ceil(count / limit),
             cat: categories,
+            search
         });
     } catch (error) {
         console.error("Error fetching products:", error);
@@ -169,7 +194,7 @@ const removeProductOffer = async (req, res) => {
 
 const blockProduct = async (req, res) => {
     try {
-        const { id } = req.query;
+        const { productId } = req.body;
 
         // Validate the ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -192,7 +217,9 @@ const blockProduct = async (req, res) => {
 
 const unblockProduct = async (req, res) => {
     try {
-        const { id } = req.query;
+        const { productId } = req.body;
+        console.log("jii",productId);
+        
 
         // Validate the ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -264,7 +291,7 @@ const editProduct = async (req, res) => {
         }
 
         await Product.findByIdAndUpdate(id, updateFields, { new: true });
-        res.redirect("/admin/product");
+        res.redirect("/admin/productGet");
     } catch (error) {
         console.error(error);
         res.redirect("/admin/pageerror");
@@ -301,7 +328,75 @@ const deleteSingleImage = async (req, res) => {
     }
 };
 
+const getProducts = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10; // Show 10 products per page
+        const skip = (page - 1) * limit;
+
+        // Get total count of products
+        const totalProducts = await Product.countDocuments({});
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        // Fetch products with pagination
+        const products = await Product.find({})
+            .populate({
+                path: 'category',
+                select: 'name'
+            })
+            .sort({ createdOn: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const formattedProducts = products.map(product => ({
+            _id: product._id,
+            productName: product.productName || 'No Name',
+            description: product.description || 'No Description',
+            category: product.category ? product.category.name : 'Uncategorized',
+            regularPrice: product.regularPrice || 0,
+            salePrice: product.salePrice || product.regularPrice || 0,
+            quantity: product.quantity || 0,
+            status: product.status || 'Unavailable',
+            productImages: product.productImages || [],
+
+            createdOn: product.createdOn ? new Date(product.createdOn).toLocaleDateString() : 'No Date'
+        }));
+
+        res.render('admin/products', {
+            products: formattedProducts,
+            currentPage: page,
+            totalPages: totalPages,
+            totalProducts: totalProducts,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+            nextPage: page + 1,
+            prevPage: page - 1,
+            lastPage: totalPages,
+            moment: require('moment')
+        });
+
+    } catch (error) {
+        console.error("Error in getProducts:", error);
+        res.status(500).render('admin/products', {
+            products: [],
+            error: "Error loading products: " + error.message
+        });
+    }
+};
+
+// Add this helper function to check if image exists
+const checkImageExists = (imagePath) => {
+    try {
+        return fs.existsSync(path.join(__dirname, '../../public/uploads/product-images/', imagePath));
+    } catch (error) {
+        console.error("Error checking image:", error);
+        return false;
+    }
+};
+
 module.exports = {
+    
     getProductAddPage,
     addProducts,
     getAllProducts,
@@ -312,4 +407,6 @@ module.exports = {
     getEditProduct,
     editProduct,
     deleteSingleImage,
+    getProducts,
+    checkImageExists,
 };

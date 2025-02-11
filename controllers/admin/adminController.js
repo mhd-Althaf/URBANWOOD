@@ -5,40 +5,40 @@ const bcrypt = require("bcrypt");
 
 
 const loadLogin = (req, res) => {
-    // if (req.session.admin) {
-    //     return res.redirect("/admin/dashboard");
-    // }
+    if (req.session.admin) {
+        return res.redirect("/admin/dashboard");
+    }
     res.render("admin/login", { message: null });
 };
 
 const login = async (req, res) => {
-
     try {
-        const {email,password} = req.body;
-        const admin = await User.findOne({email,isAdmin:true});
-        if(admin){
+        const { email, password } = req.body;
+        const admin = await User.findOne({ email, isAdmin: true }); 
 
-            const passwordMatch = bcrypt.compare(password,admin.password)
-            if(passwordMatch){
+        if (admin) {
+            const passwordMatch = await bcrypt.compare(password, admin.password); 
+            if (passwordMatch) {
                 req.session.admin = true;
-                return res.redirect("/admin")
-            }else{
-                return res.redirect("/login")
+                return res.render("admin/dashboard");
             }
-        }else{
-            return res.redirect("/login")
         }
+
+        return res.redirect("admin/login");
     } catch (error) {
-        console.log("Login error",error);
-        return res.redirect("/pageerror")
+        console.log("Login error", error);
+        return res.redirect("/pageerror");
     }
-}
+};
 
+const loadDashboard = async (req, res) => {
+    if (req.session.admin) {
+        return res.render("admin/dashboard");
+    } else {
+        return res.redirect("/login"); // Fixed missing res.
+    }
+};
 
-const loadDashboard = async (req,res)=>{
-  
-    res.render("admin/dashboard");
-}
 
 
 // const loadProductGet = async (req,res) =>{

@@ -7,9 +7,9 @@
 				<div class="col-first">
 					<h1>Shop Category page</h1>
 					<nav class="d-flex align-items-center">
-						<a href="index.html">Home<span class="lnr lnr-arrow-right"></span></a>
-						<a href="#">Shop<span class="lnr lnr-arrow-right"></span></a>
-						<a href="category.html">Fashon Category</a>
+						<a href="/">Home<span class="lnr lnr-arrow-right"></span></a>
+						<a href="">Shop<span class="lnr lnr-arrow-right"></span></a>
+						<a href="/shop">furniture Category</a>
 					</nav>
 				</div>
 			</div>
@@ -202,36 +202,38 @@
 				<!-- Start Best Seller -->
 				 <section class="lattest-product-area pb-40 category-list">
 					<div class="row"> 
-						 <!-- single product --> -->
+						 <!-- single product --> 
                          <% for(let i = 0; i < products.length; i++) { %>
-                            <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
-                                <div class="card product-item border-0 mb-4 position-relative">
-                                    <!-- Wishlist Button -->
-                                    <button 
-                                        class="btn btn-love position-absolute wishlist-btn" 
-                                        onclick="addToWishlist('<%= products[i]._id %>', this)"
-                                    >
-                                        <i class="far fa-heart"></i>
-                                    </button>
-                                    
-                                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                                       
-                                        <img class="img-fluid w-100 hover-zoom" src="/uploads/re-image/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>">
-                                   
-                                    </div>
-                                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                                        <h6 class="text-truncate mb-3"><%= products[i].productName %></h6>
-                                        <div class="d-flex justify-content-center">
-                                            <h6>₹<%= products[i].salePrice %></h6>
-                                            <h6 class="text-muted ml-2"><del>₹<%= products[i].regularPrice %></del></h6>
+                            <div class="col-lg-4 col-md-6">
+                                <div class="single-product">
+                                    <div class="product-img position-relative">
+                                        <img class="img-fluid w-100" src="/uploads/re-image/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>">
+                                        <div class="product-details">
+                                            <button 
+                                                class="btn btn-love position-absolute wishlist-btn" 
+                                                onclick="addToWishlist('<%= products[i]._id %>', this)"
+                                            >
+                                                <i class="far fa-heart"></i>
+                                            </button>
+                                            <div class="price">
+                                                <h6>₹<%= products[i].salePrice %></h6>
+                                                <h6 class="l-through">₹<%= products[i].regularPrice %></h6>
+                                            </div>
+                                            <div class="prd-bottom">
+                                                <a href="#" class="social-info" onclick="addToCart('<%=products[i]._id%>')">
+                                                    <span class="ti-bag"></span>
+                                                    <p class="hover-text">add to bag</p>
+                                                </a>
+                                                <a href="/productDetails?id=<%= products[i]._id %>" class="social-info">
+                                                    <span class="lnr lnr-move"></span>
+                                                    <p class="hover-text">view more</p>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="card-footer d-flex justify-content-between bg-light border">
-                                        <a href="/productDetails?id=<%= products[i]._id %>" class="btn btn-sm text-dark p-0">
-                                            <i class="fas fa-eye text-primary mr-1"></i>View Detail
-                                        </a>
-                                        <a href="#" class="btn btn-sm text-dark p-0" onclick="addToCart('<%=products[i]._id%>')">
-                                            <i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart
+                                    <div class="product-btm">
+                                        <a href="#" class="d-block">
+                                            <h4><%= products[i].productName %></h4>
                                         </a>
                                     </div>
                                 </div>

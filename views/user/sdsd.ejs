@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>FloraGems</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free HTML Templates" name="keywords">
+    <meta content="Free HTML Templates" name="description">
+
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Rouge+Script" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2A9D8F;
+            --secondary-color: #264653;
+            --accent-color: #E9C46A;
+            --light-bg: #F8F9FA;
+        }
+
+        .cart-item-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .cart-item-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            background: none;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .price-highlight {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .stock-status {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .remove-btn {
+            background: #FF4D4D;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .remove-btn:hover {
+            opacity: 0.9;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .product-image {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .cart-item-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+ <!-- Topbar Start -->
+ <div class="container-fluid">
+    <div class="row bg-secondary py-2 px-xl-5">
+        <div class="col-lg-6 d-none d-lg-block">
+            <div class="d-inline-flex align-items-center">
+                <a class="text-dark" href="#">FAQs</a>
+                <span class="text-muted px-2">|</span>
+                <a class="text-dark" href="#">Help</a>
+                <span class="text-muted px-2">|</span>
+                <a class="text-dark" href="#">Support</a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center text-lg-right">
+            <div class="d-inline-flex align-items-center">
+                <a class="text-dark px-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                <a class="text-dark px-2" href="#"><i class="fab fa-twitter"></i></a>
+                <a class="text-dark px-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a class="text-dark px-2" href="#"><i class="fab fa-instagram"></i></a>
+                <a class="text-dark pl-2" href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="row align-items-center py-3 px-xl-5">
+        <div class="col-lg-3 d-none d-lg-block">
+            <a href="#" class="text-decoration-none">
+                <h1 class="m-0 display-5 font-weight-semi-bold">Flora<span>Gems</span></h1>
+            </a>
+        </div>
+        <div class="col-lg-6 col-6 text-left">
+            <form action="#">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search for products">
+                    <div class="input-group-append">
+                        <span class="input-group-text bg-transparent text-primary">
+                            <i class="fa fa-search"></i>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-3 col-6 text-right">
+            <a href="/wishlist" class="btn border">
+                <i class="fas fa-heart text-primary"></i>
+
+            </a>
+            <a href="/cart" class="btn border">
+                <i class="fas fa-shopping-cart text-primary"></i>
+                <span class="badge" id="cart-count">0</span> <!-- Cart count displayed here -->
+                <!-- Cart count displayed here -->
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Topbar End -->
+
+<!-- Page Header Start -->
+<div class="container-fluid bg-secondary mb-5">
+    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 300px">
+        <h1 class="font-weight-semi-bold text-uppercase mb-3"
+            style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;">Shopping Cart
+        </h1>
+        <div class="d-inline-flex">
+            <p class="m-0"><a href="/">Home</a></p>
+            <p class="m-0 px-2">-</p>
+            <p class="m-0">Shopping Cart</p>
+        </div>
+    </div>
+</div>
+
+    <!-- Cart Items Section -->
+    <div class="container py-5">
+        <h2 class="mb-4">Your Cart Items</h2>
+        
+        <% if (cartItems.length > 0) { %>
+            <div class="row">
+                <% cartItems.forEach((item, index) => { %>
+                    <div class="col-12 mb-4">
+                        <div class="cart-item-card p-4">
+                            <div class="row align-items-center">
+                                <!-- Product Image -->
+                                <div class="col-md-2 mb-3 mb-md-0">
+                                    <% if (item.productImages.length > 0) { %>
+                                        <img src="/uploads/product-images/<%= item.productImages[0] %>" 
+                                             class="product-image" alt="<%= item.productName %>">
+                                    <% } %>
+                                </div>
+
+                                <!-- Product Details -->
+                                <div class="col-md-5 mb-3 mb-md-0">
+                                    <h4 class="mb-2"><%= item.productName %></h4>
+                                    <p class="text-muted mb-1"><%= item.description %></p>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span class="price-highlight">
+                                            ₹<%= item.salePrice.toLocaleString() %>
+                                        </span>
+                                        <% if (item.salePrice < item.regularPrice) { %>
+                                            <del class="text-muted">₹<%= item.regularPrice.toLocaleString() %></del>
+                                        <% } %>
+                                    </div>
+                                    <p class="stock-status mt-2">
+                                        Stock: <%= item.quantity %> available
+                                    </p>
+                                </div>
+
+                                <!-- Quantity Controls -->
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <div class="quantity-control">
+                                        <button class="quantity-btn" 
+                                                onclick="changeQuantity('<%= item.productId %>', -1, '<%= index %>')">
+                                            -
+                                        </button>
+                                        <input type="number" 
+                                               id="cartProductQuantity<%= index %>"
+                                               class="quantity-input"
+                                               value="<%= item.quantity %>"
+                                               min="1"
+                                               max="<%= item.quantity %>"
+                                               onchange="handleQuantityChange('<%= item.productId %>', this.value, '<%= index %>')">
+                                        <button class="quantity-btn" 
+                                                onclick="changeQuantity('<%= item.productId %>', 1, '<%= index %>')">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Total and Remove -->
+                                <div class="col-md-2 text-md-right">
+                                    <div class="mb-2">
+                                        <span class="price-highlight">
+                                            ₹<%= (item.salePrice * item.quantity).toLocaleString() %>
+                                        </span>
+                                    </div>
+                                    <button class="remove-btn" 
+                                            onclick="removeProduct('<%= item.productId %>')">
+                                        <i class="fas fa-trash mr-2"></i>Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <h3 class="mb-4">Your cart is empty</h3>
+                <a href="/products" class="btn btn-primary btn-lg">
+                    Continue Shopping
+                </a>
+            </div>
+        <% } %>
+
+        <!-- Cart Summary -->
+        <% if (cartItems.length > 0) { %>
+            <div class="row justify-content-end mt-5">
+                <div class="col-lg-6">
+                    <div class="summary-card">
+                        <h4 class="mb-4">Order Summary</h4>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal:</span>
+                            <span class="price-highlight">₹<%= subtotal.toLocaleString() %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Shipping:</span>
+                            <span class="price-highlight">₹<%= shippingCost.toLocaleString() %></span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total:</strong>
+                            <strong class="price-highlight">₹<%= grandTotal.toLocaleString() %></strong>
+                        </div>
+                        <a href="/checkout?userId=<%= user._id %>" 
+                           class="btn btn-primary btn-block btn-lg py-3">
+                            Proceed to Checkout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        async function changeQuantity(productId, count, index, maxStock) {
+            const quantityInput = document.getElementById(`cartProductQuantity${index}`);
+            let newQuantity = parseInt(quantityInput.value) + count;
+
+            // Client-side validation
+            if (isNaN(newQuantity) || newQuantity < 1 || newQuantity > 3 || newQuantity > maxStock) {
+                let errorMessage;
+                if (newQuantity > 3) errorMessage = 'You can only add up to 3 items.';
+                else if (newQuantity > maxStock) errorMessage = `Only ${maxStock} items in stock.`;
+                else errorMessage = 'Quantity must be at least 1.';
+
+                Swal.fire('Error!', errorMessage, 'error');
+                quantityInput.value = Math.min(Math.max(newQuantity, 1), Math.min(3, maxStock));
+                return;
+            }
+
+            // Update UI immediately for better UX
+            quantityInput.value = newQuantity;
+
+            try {
+                // Use fetch instead of $.ajax for consistency
+                const response = await fetch('/changeQuantity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: newQuantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to update quantity');
+                }
+
+                // Update totals dynamically
+                document.getElementById(`subTotal${index}`).textContent = `₹${data.newSubtotal.toFixed(2)}`;
+                document.getElementById('subTotalDisplay').textContent = `₹${data.subtotal.toFixed(2)}`;
+                document.getElementById('shipping').textContent = `₹${data.shippingCost.toFixed(2)}`;
+                document.getElementById('total').textContent = `₹${data.grandTotal.toFixed(2)}`;
+
+                Swal.fire('Success!', 'Quantity updated!', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error!', error.message, 'error');
+                // Reset to previous value on error
+                quantityInput.value = parseInt(quantityInput.value) - count;
+            }
+        }
+
+
+        function updateShipping() {
+            // Example: if total price is more than ₹5000, shipping is free, else it's ₹100
+            let total = parseFloat(document.getElementById('subTotalDisplay').textContent.replace('₹', ''));
+            let shippingCost = total > 1000 ? 0 : 100;
+
+            // Update the shipping cost
+            document.getElementById('shipping').textContent = `₹${shippingCost.toFixed(2)}`;
+
+            // Update the total (subtotal + shipping)
+            let grandTotal = total + shippingCost;
+            document.getElementById('total').textContent = `₹${grandTotal.toFixed(2)}`;
+        }
+
+        // Function to fetch the cart count when the page loads
+        function updateCartCount() {
+            $.ajax({
+                url: '/getCartCount',  // The backend route you created
+                method: 'GET',
+                success: function (response) {
+                    const cartCountElement = document.getElementById('cart-count');
+                    cartCountElement.innerHTML = response.cartLength; // Update the cart count badge with the fetched value
+                },
+                error: function () {
+                    console.error('Failed to fetch cart count');
+                }
+            });
+        }
+
+        // Call the updateCartCount function when the page loads
+        $(document).ready(function () {
+            updateCartCount(); // This will automatically update the cart count
+        });
+
+
+
+        function removeProduct(productId) {
+            if (!productId) {
+                console.error('Invalid productId:', productId);
+                alert('Invalid product ID.');
+                return;
+            }
+
+            console.log(`Attempting to remove product with ID: ${productId}`);
+
+            fetch(`/deleteItem?id=${productId}`, {
+                method: 'GET',
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    if (data.success) {
+                        alert('Product removed successfully!');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to remove product.');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error removing product:', error);
+                });
+        }
+
+
+    </script>
+</body>
+</html>

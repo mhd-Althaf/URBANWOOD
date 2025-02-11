@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloraGems - Checkout</title>
+    
+    <!-- Include your CSS and other head elements -->
+    
+    <style>
+        /* Add your custom styles here */
+        .checkout-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .product-list, .address-section, .order-summary {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .product-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .order-summary {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+        }
+
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .payment-option:hover {
+            background: #f8f9fa;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .grand-total {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #eee;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .place-order-btn:hover {
+            background: #27ae60;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .order-summary {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <h1>Checkout</h1>
+        
+        <div class="checkout-grid">
+            <!-- Left Column -->
+            <div class="main-content">
+                <!-- Products List -->
+                <div class="product-list">
+                    <h2>Your Items</h2>
+                    <% cartItems.forEach(item => { %>
+                        <div class="product-item">
+                            <img src="/uploads/product-images/<%= item.product.productImages[0] %>" 
+                                 alt="<%= item.product.productName %>"
+                                 class="product-image">
+                            <div class="product-details">
+                                <div class="product-name"><%= item.product.productName %></div>
+                                <div class="product-quantity">Quantity: <%= item.quantity %></div>
+                                <div class="product-price">₹<%= item.total.toLocaleString() %></div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- Address Section -->
+                <div class="address-section">
+                    <h2>Shipping Address</h2>
+                    <div class="form-group">
+                        <input type="text" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" placeholder="Mobile Number" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" placeholder="Address Line 1" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" placeholder="Address Line 2">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <input type="text" placeholder="City" required>
+                        </div>
+                        <div class="form-group half">
+                            <input type="text" placeholder="PIN Code" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div class="summary-totals">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>₹<%= subtotal.toLocaleString() %></span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span>₹<%= shippingCost.toLocaleString() %></span>
+                    </div>
+                    <div class="summary-row grand-total">
+                        <span>Total</span>
+                        <span>₹<%= grandTotal.toLocaleString() %></span>
+                    </div>
+                </div>
+
+                <div class="payment-methods">
+                    <h3>Payment Method</h3>
+                    <div class="payment-option">
+                        <input type="radio" id="card" name="payment" value="card">
+                        <label for="card">
+                            <i class="fas fa-credit-card"></i>
+                            Credit/Debit Card
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" id="upi" name="payment" value="upi">
+                        <label for="upi">
+                            <i class="fas fa-mobile-alt"></i>
+                            UPI Payment
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" id="cod" name="payment" value="cod">
+                        <label for="cod">
+                            <i class="fas fa-money-bill-wave"></i>
+                            Cash on Delivery
+                        </label>
+                    </div>
+                </div>
+
+                <button id="placeOrderBtn" class="place-order-btn">
+                    Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+            // Add order placement logic here
+            try {
+                const response = await fetch('/place-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        // Add order details
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Handle successful order placement
+                    window.location.href = '/order-success';
+                }
+            } catch (error) {
+                console.error('Error placing order:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

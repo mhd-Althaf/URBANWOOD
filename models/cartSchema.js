@@ -14,28 +14,26 @@ const cartSchema = new Schema({
             ref:'Product',
             required:true
         },
-        quantity:{
-            type:Number,
-            default:1
-        },
-        price:{
-            type:Number,
-            require:true
-        },
-        totalPrice:{
-            type:Number,
-            required:true
-        },
-        status:{
-            type:String,
-            default:'placed'
-        },
-        cancellationReason:{
-            type:String,
-            default:"none"
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
         }
-    }]
+    }],createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
 })
+
+
+cartSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
 
 const Cart = mongoose.model("Cart",cartSchema);
 module.exports = Cart;

@@ -30,7 +30,7 @@ const loadHomepage = async (req, res) => {
 
     if (!productData || productData.length === 0) {
       console.error("No products found");
-      return res.render("user/home", { user: user || '', products: [] });
+      return res.render("home", { user: user || '', products: [] });
     }
 
    

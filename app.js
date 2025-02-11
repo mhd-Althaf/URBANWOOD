@@ -18,15 +18,14 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Use true only if HTTPS
+        secure: false, 
         httpOnly: true,
-        maxAge: 72 * 60 * 60 * 1000 // 72 hours
+        maxAge: 72 * 60 * 60 * 1000 
     }
 }));
 
 // Debugging session middleware
 app.use((req, res, next) => {
-    // console.log("Session Data:", req.session); // Check if session data exists
     next();
 });
 
@@ -48,8 +47,18 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", userRouter);
 app.use("/admin",adminRouter)
 
+// Add this after all routes
+app.use((err, req, res, next) => {
+    console.error('Global Error Handler:', err);
+    res.status(500).json({
+        status: false,
+        message: 'Internal server error'
+    });
+});
 
-const PORT = process.env.PORT || 3001
+
+const PORT =  3004
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 

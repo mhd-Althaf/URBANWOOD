@@ -2,6 +2,19 @@
 
 
 	<!--================Login Box Area =================-->
+	<style>
+		.forgot-password-link{
+            font-size:0.875rem;
+            color:#007bff;
+            text-decoration: none;
+          
+        }
+        .forgot-password-link:hover{
+            color: #0558b1;
+            text-decoration: underline;
+            
+        }
+	</style>
 	<section class="login_box_area section_gap">
 		<div class="container">
 			<div class="row">
@@ -10,60 +23,52 @@
 						<img class="img-fluid" src="img/living with yellow shade.jpeg" alt="">
 						<div class="hover">
 							<h4>New to our website?</h4>
-							<p>Every day brings innovation, and just like science and technology, furniture evolves to blend comfort, style, and functionality seamlessly</p>
+							<p>Every day brings innovation, and just like science and technology, furniture evolves to
+								blend comfort, style, and functionality seamlessly</p>
 							<a class="primary-btn" href="/signup">Create an Account</a>
 						</div>
 					</div>
 				</div>
 				<div class="col-lg-6">
 					<div class="login_form_inner">
-						
+
 						<h3>Log in to enter</h3>
-						<form
-  class="row login_form"
-  action="/login"
-  method="post"
-  id="contactForm"
-  novalidate="novalidate"
->
-  <!-- Email Field -->
-  <div class="col-md-12 form-group">
-    <input
-      type="email"
-      class="form-control"
-      id="email"
-      name="email"
-      placeholder=" Enter your email"
-    />
-  </div>
-  <div id="error1" class="error-message"></div>
+						<form class="row login_form" action="/login" method="post" id="contactForm"
+							novalidate="novalidate">
+							<!-- Email Field -->
+							<div class="col-md-12 form-group">
+								<input type="email" class="form-control" id="email" name="email"
+									placeholder=" Enter your email" />
+							</div>
+							<div id="error1" class="error-message"></div>
 
-  <!-- Password Field -->
-  <div class="col-md-12 form-group">
-    <input
-      type="password"
-      class="form-control"
-      id="password"
-      name="password"
-      placeholder=" Enter your Password"
-      
-    />
-  </div>
-  <div id="error2" class="error-message">
-	<% if (locals.message && message.length > 0) { %>
-		<div class="alert alert-danger text-center">
-			<%= message %>
-		</div>
-	<% } %>
-  </div>
+							<!-- Password Field -->
+							<div class="col-md-12 form-group">
+								<input type="password" class="form-control"  id="password" name="password"
+									placeholder=" Enter your Password" />
+							</div>
+							<div id="error2" class="error-message">
+								<% if (locals.message && message.length> 0) { %>
+									<div class="alert alert-danger text-center">
+										<%= message %>
+									</div>
+									<% } %>
+							</div>
 
-  <!-- Submit Button -->
-  <div class="col-md-12 form-group">
-    <button type="submit" value="submit" class="primary-btn">Log In</button>
-    <a href="#">Forgot Password?</a>
-  </div>
-</form>
-
+							<!-- Submit Button -->
+							<div class="col-md-12 form-group">
+								<button type="submit" value="submit" class="primary-btn">Log In</button>
+								<div class="form-group d-flex justify-content-center ">
+									<a href="/forgot-password" class="forgot-password-link ms-auto">Forgot Password</a>
+								</div>
+							</div>
+						</form>
+						<div class="google-btn">
+							<a href="/auth/google">
+								<img src="/img/icons-8-google-10.svg" alt="Google Icon">
+								Sign in with Google
+							</a>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -71,15 +76,15 @@
 	</section>
 	<!--================End Login Box Area =================-->
 	<script>
-	document.getElementById("contactForm").addEventListener("submit", function (e) {
-		const email = document.getElementById("email").value.trim();
-		const password = document.getElementById("password").value.trim();
-	  
-		if (!email || !password) {
-		  e.preventDefault(); // Prevent form submission
-		  alert("Please fill in all required fields.");
-		}
-	  });
+		document.getElementById("contactForm").addEventListener("submit", function (e) {
+			const email = document.getElementById("email").value.trim();
+			const password = document.getElementById("password").value.trim();
+
+			if (!email || !password) {
+				e.preventDefault(); // Prevent form submission
+				alert("Please fill in all required fields.");
+			}
+		});
 	</script>
-	  
-	<%-include("../../views/partials/user/footer")%>
+
+<%-include("../../views/partials/user/footer")%>
