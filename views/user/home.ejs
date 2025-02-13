@@ -78,7 +78,7 @@
 					<div class="col-lg-3 col-md-4 col-6">
 						<div class="product-card h-100 border-0 rounded-3 overflow-hidden shadow-sm">
 							<div class="product-image position-relative">
-								<a href="/productDetails?id=<%= product._id %>">
+								<a href="/product-details/<%= product._id %>">
 									<img src="<%= product.productImages && product.productImages.length > 0 ? 
 									'/uploads/re-image/' + product.productImages[0] : 
 									'/uploads/product-images/default.jpg' %>" class="img-fluid product-img" alt="<%= product.productName %>">
@@ -93,7 +93,7 @@
 							</div>
 							<div class="product-details p-3">
 								<h6 class="product-title mb-1">
-									<a href="/productDetails?id=<%= product._id %>"
+									<a href="/product-details/<%= product._id %>"
 										class="text-dark text-decoration-none">
 										<%= product.productName %>
 									</a>

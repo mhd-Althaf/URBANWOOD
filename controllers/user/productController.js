@@ -6,7 +6,7 @@ const productDetails = async (req, res) => {
   try {
     const userId = req.session.User;
     const userData = await User.findById(userId);
-    const productId = req.query.id;
+    const productId = req.params.id;
 
     if (!productId) {
       return res.status(400).send("Product ID is required.");

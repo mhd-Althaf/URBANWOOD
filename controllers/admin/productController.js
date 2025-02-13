@@ -55,6 +55,7 @@ const addProducts = async (req, res) => {
                 images.push(file.filename);
             }
         }
+console.log("kkkkkkkkkkkkk",req.files);
 
         if (images.length === 0) {
             return res.status(400).json({ 
@@ -197,17 +198,18 @@ const blockProduct = async (req, res) => {
         const { productId } = req.body;
 
         // Validate the ID format
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ status: false, message: "Invalid product ID" });
         }
 
-        const product = await Product.findById(id);
+        const product = await Product.findById(productId);
         if (!product) {
             return res.status(400).json({ status: false, message: "Product not found" });
         }
 
         product.isBlocked = true;
         await product.save();
+        
         res.json({ status: true, message: "Product blocked successfully" });
     } catch (error) {
         console.error("Error blocking product:", error);
@@ -218,28 +220,26 @@ const blockProduct = async (req, res) => {
 const unblockProduct = async (req, res) => {
     try {
         const { productId } = req.body;
-        console.log("jii",productId);
-        
 
         // Validate the ID format
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ status: false, message: "Invalid product ID" });
         }
 
-        const product = await Product.findById(id);
+        const product = await Product.findById(productId);
         if (!product) {
             return res.status(400).json({ status: false, message: "Product not found" });
         }
 
         product.isBlocked = false;
         await product.save();
+        
         res.json({ status: true, message: "Product unblocked successfully" });
     } catch (error) {
         console.error("Error unblocking product:", error);
         res.status(500).json({ status: false, message: "Internal server error", error: error.message });
     }
 };
-
 
 const getEditProduct = async (req, res) => {
     try {

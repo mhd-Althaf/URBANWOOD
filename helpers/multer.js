@@ -6,8 +6,10 @@ const storage = multer.diskStorage({
         cb(null,path.join(__dirname,"../public/uploads/re-image"));
      },
      filename:(req,res,cb)=>{
-        cb(null,Date.now()+"_"+File.originalname);
+        cb(null,Date.now()+"_"+ File.originalname);
      }
 })
 
 module.exports = storage;
+
+

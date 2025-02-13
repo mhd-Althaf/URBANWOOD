@@ -1,0 +1,37 @@
+<%-include("../../views/partials/user/header")%>
+
+<div class="error-container">
+    <h1>Oops! Something went wrong</h1>
+    <p><%= message || 'An unexpected error occurred' %></p>
+    <a href="/" class="back-home">Back to Home</a>
+</div>
+
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .error-container h1 {
+        color: #e53e3e;
+        margin-bottom: 1rem;
+    }
+
+    .back-home {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #15803d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+
+    .back-home:hover {
+        background: #166534;
+    }
+</style>
+
+<%- include("../../views/partials/user/footer") %> 

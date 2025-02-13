@@ -57,9 +57,11 @@ app.use((err, req, res, next) => {
 });
 
 
-const PORT =  3004
+const port = process.env.PORT || 3001;  
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
 
 
 module.exports = app;

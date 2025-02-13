@@ -3,19 +3,19 @@ const { ObjectId } = mongoose.Types;
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Cart = require("../../models/cartSchema");
-
+const Address = require("../../models/addressSchema");
 const validateObjectId = (id) => ObjectId.isValid(id) && new ObjectId(id).toString() === id;
 
 const getCartPage = async (req, res) => {
     try {
-        const userId = req.session.user; // Assuming user is authenticated
+        const userId = req.session.user; 
         const cart = await Cart.findOne({ userid: userId }).lean();
 
         if (!cart) {
             return res.render('user/cart', { cartItems: [], subtotal: 0, shippingCost: 0, grandTotal: 0 });
         }
 
-        // Populate product details for each cart item
+        
         const cartItems = await Promise.all(cart.items.map(async (item) => {
             const product = await Product.findById(item.productId).lean();
             return {
@@ -26,7 +26,7 @@ const getCartPage = async (req, res) => {
                 regularPrice: product.regularPrice,
                 salePrice: product.salePrice,
                 productImages: product.productImages,
-                quantity: item.quantity // Cart item quantity instead of product stock
+                quantity: item.quantity 
             };
         }));
 
@@ -49,13 +49,96 @@ const getCartPage = async (req, res) => {
     }
 };
 
+///add to cart
+
+const addToCart = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Please login to add items to cart'
+            });
+        }
+
+        const { productId, quantity } = req.body;
+
+        // Validate product exists and has stock
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (product.quantity < quantity) {
+            return res.status(400).json({
+                success: false,
+                message: 'Not enough stock available'
+            });
+        }
+
+        // Find or create cart
+        let cart = await Cart.findOne({ userid: userId });
+        if (!cart) {
+            cart = new Cart({
+                userid: userId,
+                items: []
+            });
+        }
+
+        // Check if product already exists in cart
+        const existingItem = cart.items.find(item => 
+            item.productId.toString() === productId
+        );
+
+        if (existingItem) {
+            // Update quantity if total doesn't exceed stock
+            const newQuantity = existingItem.quantity + quantity;
+            if (newQuantity > product.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot add more items than available in stock'
+                });
+            }
+            existingItem.quantity = newQuantity;
+        } else {
+            // Add new item
+            cart.items.push({
+                productId: productId,
+                quantity: quantity
+            });
+        }
+
+        await cart.save();
+
+        // Calculate new cart count
+        const cartCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
+        res.status(200).json({
+            success: true,
+            message: 'Product added to cart successfully',
+            cartCount: cartCount,
+            redirect: '/cart'
+        });
+
+    } catch (error) {
+        console.error('Error in addToCart:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add product to cart'
+        });
+    }
+};
+
 //delete product from cart
 
 const deleteProduct = async (req, res) => {
     try {
         const productId = req.query.id;
         const userId = req.session?.user?._id;
-        console.log("from backen:", productId)
+        // console.log("from backen:", productId)
 
         if (!ObjectId.isValid(userId) || !ObjectId.isValid(productId)) {
             return res.status(400).json({ success: false, message: "Invalid request parameters" });
@@ -109,28 +192,7 @@ const getCheckStock = async (req, res) => {
 
 
 
-///add to cart
 
-const addToCart = async (req, res) => {
-    const { productId, quantity } = req.body;
-        const userId = req.session.user; 
-        let cart = await Cart.findOne({ userid: userId });
-        if (!cart) {
-            cart = new Cart({
-                userid: userId,
-                items: [{ productId, quantity }]
-            });
-        } else {
-            const existingItem = cart.items.find(item => item.productId.toString() === productId);
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                cart.items.push({ productId, quantity });
-            }
-        }
-
-        await cart.save();
-};
 
 // Helper functions
 async function checkStockStatus(productId, cartQuantity) {
@@ -268,10 +330,10 @@ const updateCartQuantity = async (req, res) => {
         const userId = req.session.user._id;
 
         // Validate quantity
-        if (quantity < 1 || quantity > 3) {
+        if (quantity < 1 || quantity > 10) {
             return res.status(400).json({
                 success: false,
-                message: 'Quantity must be between 1 and 3'
+                message: 'Quantity must be between 1 and 10'
             });
         }
 
@@ -397,6 +459,8 @@ const getCheckoutPage = async (req, res) => {
         // Get user's saved addresses if any
         const user = await User.findById(userId);
         const savedAddresses = user?.addresses || [];
+        const userAddress = await Address.find({})          
+        // console.log("userAddress",userAddress)         
 
         res.render('user/checkout', {
             cartItems,
@@ -404,7 +468,8 @@ const getCheckoutPage = async (req, res) => {
             shippingCost,
             grandTotal,
             savedAddresses,
-            user: req.session.user
+            user: req.session.user,
+            userAddress
         });
 
     } catch (error) {

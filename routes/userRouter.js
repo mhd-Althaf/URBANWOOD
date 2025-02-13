@@ -6,6 +6,10 @@ const {userAuth, adminAuth}=require("../middlewares/auth")
 const productController=require("../controllers/user/productController")
 const profileController=require("../controllers/user/profileController");
 const cartController = require("../controllers/user/cartController")
+const checkoutController = require('../controllers/user/checkoutController');
+const Product = require('../models/productSchema');
+const Category = require('../models/categorySchema');
+const orderController = require('../controllers/user/orderController');
 
 
 //Error management
@@ -101,7 +105,40 @@ router.get("/checkStock",userAuth,cartController.getCheckStock)
 router.get('/getCartCount',userAuth,cartController.getCartCount)
 router.post("/clearCart",userAuth,cartController.clearCart)
 
-router.get('/shop',productController.getshop)
+router.get('/shop',productController.getshop);
+router.get("/product-details/:id",productController.productDetails);
+
+    
+    
+//     (req, res) => {
+//     try {
+//         const products = await Product.find({ isListed: true });
+//         const categories = await Category.find({ isListed: true });
+        
+//         res.render('shop', {
+//             products,
+//             categories,
+//             user: req.session?.user || null
+//         });
+        
+//     } catch (error) {
+//         console.error('Error loading shop page:', error);
+//         // Change to render shop page with error message instead of error page
+//         res.render('shop', {
+//             products: [],
+//             categories: [],
+//             error: 'Unable to load products at this time',
+//             user: req.session?.user || null
+//         });
+//     }
+// });
+// Checkout routes
+router.get('/checkout', userAuth, checkoutController.getCheckoutPage);
+router.post('/place-order', userAuth, checkoutController.placeOrder);
+
+// Order routes
+router.post('/place-order', userAuth, orderController.placeOrder);
+router.get('/order-success/:orderId', userAuth, orderController.orderSuccess);
 
 
 

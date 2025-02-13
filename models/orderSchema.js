@@ -3,7 +3,7 @@ const {Schema} = mongoose;
 
 const {v4:uuidv4} =require('uuid');
 
-const orderShema = new Schema({
+const orderSchema = new Schema({
     orderId:{
         type:String,
         default:()=>uuidv4(),
@@ -36,11 +36,29 @@ const orderShema = new Schema({
         type:Number,
         required:true
     },
-    address:{
-        type:Schema.Types.ObjectId,
-        ref:"User",
-        required:true
-    },
+    address: {
+        addressType: { 
+          type: String 
+        },
+        name: { 
+          type: String 
+        },
+        landMark: { 
+          type: String 
+        }, 
+        city: { 
+          type: String 
+        }, 
+        state: { 
+          type: String 
+        }, 
+        pincode: { 
+          type: String 
+        },
+        phone: { 
+          type: String 
+        }, 
+      },
     invoiceDate:{
         type:Date
     },
