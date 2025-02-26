@@ -1,53 +1,53 @@
 <!DOCTYPE html>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-async function addToCart(productId) {
-    try {
-        const response = await fetch('/addToCart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                productId: productId,
-                quantity: 1
-            })
-        });
+	async function addToCart(productId) {
+		try {
+			const response = await fetch('/addToCart', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					productId: productId,
+					quantity: 1
+				})
+			});
 
-        const data = await response.json();
+			const data = await response.json();
 
-        if (data.success) {
-            if (!response.ok) {
-                throw new Error('You must be logged in to add items to cart');
-            }
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!', 
-                text: 'Product added to cart successfully',
-                confirmButtonColor: '#2A9D8F'
-            }).then(() => {
-                // Refresh cart count after successful add
-                fetch('/getCartCount')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.count) {
-                            document.querySelector('.cart-count').textContent = data.count;
-                        }
-                    });
-            });
-        } else {
-            throw new Error(data.message || 'Failed to add product to cart');
-        }
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Something went wrong. Please try again.',
-            confirmButtonColor: '#2A9D8F'
-        });
-    }
-}
+			if (data.success) {
+				if (!response.ok) {
+					throw new Error('You must be logged in to add items to cart');
+				}
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Success!',
+					text: 'Product added to cart successfully',
+					confirmButtonColor: '#2A9D8F'
+				}).then(() => {
+					// Refresh cart count after successful add
+					fetch('/getCartCount')
+						.then(res => res.json())
+						.then(data => {
+							if (data.count) {
+								document.querySelector('.cart-count').textContent = data.count;
+							}
+						});
+				});
+			} else {
+				throw new Error(data.message || 'Failed to add product to cart');
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: error.message || 'Something went wrong. Please try again.',
+				confirmButtonColor: '#2A9D8F'
+			});
+		}
+	}
 </script>
 <html lang="zxx" class="no-js">
 
@@ -106,7 +106,7 @@ async function addToCart(productId) {
 			margin: 0 auto;
 		}
 
-		/* Updated Product Card Styles */
+
 		.product-grid {
 			display: grid;
 			grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -628,6 +628,7 @@ async function addToCart(productId) {
 
 		/* Responsive adjustments */
 		@media (max-width: 1700px) {
+
 			.container-centered,
 			.col-xl-9.col-lg-8.col-md-7.mx-auto,
 			.product-grid {
@@ -645,7 +646,7 @@ async function addToCart(productId) {
 
 
 
-		<!-- Centered Container -->
+
 		<div style="margin-top: 150px;" class="container-centered">
 			<div class="container">
 				<div class="row">
@@ -653,125 +654,43 @@ async function addToCart(productId) {
 
 					<!-- Main Content -->
 					<div class="col-xl-9 col-lg-8 col-md-7 mx-auto">
-						<!-- Advanced Filter Bar with Search and Filters -->
 
 						<div class="top-bar">
-							<div class="search-container">
-								<input type="text" class="search-input" id="searchInput"
-									placeholder="Search products..." value="<%= filters?.search || '' %>">
-								<svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-									stroke="currentColor" stroke-width="2">
-									<circle cx="11" cy="11" r="8"></circle>
-									<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-								</svg>
-							</div>
-
-							<select class="sort-select" id="sortSelect">
-								<option value="">Sort By</option>
-								<option value="nameAsc" <%=filters?.sort==='nameAsc' ? 'selected' : '' %>>Name (A-Z)
-								</option>
-								<option value="nameDesc" <%=filters?.sort==='nameDesc' ? 'selected' : '' %>>Name (Z-A)
-								</option>
-								<option value="priceAsc" <%=filters?.sort==='priceAsc' ? 'selected' : '' %>>Price: Low
-									to High</option>
-								<option value="priceDesc" <%=filters?.sort==='priceDesc' ? 'selected' : '' %>>Price:
-									High to Low</option>
-							</select>
-
-							<select class="sort-select" id="categorySelect">
-								<option value="">All Categories</option>
-								<% categories.forEach(category=> { %>
-									<option value="<%= category.name %>" <%=filters?.category===category.name
-										? 'selected' : '' %>>
-										<%= category.name %>
-									</option>
+							<form id="filterForm" method="GET" action="/shop">
+								<div class="input-group">
+									<input type="text" name="query" class="form-control" placeholder="Search products"
+									value="<%= filters?.query || '' %>" id="searchInput"  />
+									<div class="input-group-append">
+										<button type="submit" class="btn btn-primary">Search</button>
+										<span class="input-group-text bg-transparent text-primary">
+											<i class="fa fa-search"></i>
+										</span>
+									</div>
+								</div>
+						
+								<select id="sort" name="sort" class="form-select" onchange="this.form.submit()">
+									<option value="" <%= !filters?.sort ? 'selected' : '' %>>Sort By</option>
+									<option value="priceAsc" <%= filters?.sort === 'priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
+									<option value="priceDesc" <%= filters?.sort === 'priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
+									<option value="nameAsc" <%= filters?.sort === 'nameAsc' ? 'selected' : '' %>>Name: A-Z</option>
+									<option value="nameDesc" <%= filters?.sort === 'nameDesc' ? 'selected' : '' %>>Name: Z-A</option>
+								  </select>								  
+														
+								<select class="sort-select" id="categorySelect" name="category">
+									<option value="">All Categories</option>
+									<% categories.forEach(category => { %>
+										<option value="<%= category.name %>" <%= filters?.category===category.name ? 'selected' : '' %>>
+											<%= category.name %>
+										</option>
 									<% }) %>
-							</select>
-
-							<button class="filter-trigger"
-								onclick="document.getElementById('filterModal').classList.add('active')">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-									stroke-width="2">
-									<path d="M4 21v-7m0-4V3M12 21v-9m0-4V3M20 21v-5m0-4V3M1 14h6M9 8h6M17 16h6" />
-								</svg>
-								Filters
-							</button>
+								</select>
+						
+								<input type="hidden" name="page" value="<%= currentPage || 1 %>">
+						
+								<button type="submit" class="btn btn-primary">Apply Filters</button>
+							</form>
 						</div>
-
-						<!-- Filter Modal -->
-						<div class="modal-overlay" id="filterModal">
-							<div class="modal">
-								<div class="modal-header">
-									<h3 class="modal-title">Filter Products</h3>
-									<button class="close-button"
-										onclick="document.getElementById('filterModal').classList.remove('active')">
-										<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-											stroke="currentColor" stroke-width="2">
-											<path d="M18 6L6 18M6 6l12 12" />
-										</svg>
-									</button>
-								</div>
-
-								<div class="modal-body">
-									<!-- Price Range -->
-									<div class="filter-section">
-										<h4 class="section-title">Price Range</h4>
-										<div class="price-inputs">
-											<div class="price-input">
-												<span class="currency">₹</span>
-												<input type="number" id="minPrice" placeholder="Min"
-													value="<%= filters?.minPrice || '' %>">
-											</div>
-											<div class="price-input">
-												<span class="currency">₹</span>
-												<input type="number" id="maxPrice" placeholder="Max"
-													value="<%= filters?.maxPrice || '' %>">
-											</div>
-										</div>
-									</div>
-
-									<!-- Categories -->
-									<div class="filter-section">
-										<h4 class="section-title">Categories</h4>
-										<div class="checkbox-group">
-											<label class="checkbox-label">
-												<input type="checkbox"> Furniture
-											</label>
-											<label class="checkbox-label">
-												<input type="checkbox"> Decor
-											</label>
-											<label class="checkbox-label">
-												<input type="checkbox"> Lighting
-											</label>
-											<label class="checkbox-label">
-												<input type="checkbox"> Kitchen
-											</label>
-										</div>
-									</div>
-
-									<!-- Ratings -->
-									<div class="filter-section">
-										<h4 class="section-title">Rating</h4>
-										<div class="checkbox-group">
-											<label class="checkbox-label">
-												<input type="checkbox"> 4★ & above
-											</label>
-											<label class="checkbox-label">
-												<input type="checkbox"> 3★ & above
-											</label>
-											<label class="checkbox-label">
-												<input type="checkbox"> 2★ & above
-											</label>
-										</div>
-									</div>
-								</div>
-
-								<div class="modal-footer">
-									<button class="reset-btn">Reset</button>
-									<button class="apply-btn">Apply Filters</button>
-								</div>
-							</div>
-						</div>
+						
 
 						<!-- Product Grid -->
 						<div class="container">
@@ -792,11 +711,11 @@ async function addToCart(productId) {
 										</div>
 
 										<div class="product-image-wrap">
-											<% if (product.productImages && product.productImages.length > 0) { %>
+											<% if (product.productImages && product.productImages.length> 0) { %>
 												<div class="product-image-slider">
 													<% product.productImages.forEach(image=> { %>
-														<img src="/uploads/product-images/<%= image %>" alt="<%= product.productName %>"
-															class="product-image">
+														<img src="/uploads/product-images/<%= image %>"
+															alt="<%= product.productName %>" class="product-image">
 														<% }) %>
 												</div>
 												<% } else { %>
@@ -805,7 +724,8 @@ async function addToCart(productId) {
 													<% } %>
 
 														<div class="product-hover-overlay">
-															<a href="/product-details/<%= product._id %>" class="quick-view-btn">
+															<a href="/product-details/<%= product._id %>"
+																class="quick-view-btn">
 																View Product</a>
 														</div>
 										</div>
@@ -831,12 +751,14 @@ async function addToCart(productId) {
 											<div class="product-price">
 												<% if (product.salePrice < product.regularPrice) { %>
 													<% if (product.productOffer) { %>
-														<span class="price-sale">₹<%= ((product.salePrice) - 
-															(product.salePrice * product.productOffer / 100)).toFixed(2) %></span>
-													<% } else { %>
-														<span class="price-sale">₹<%= product.salePrice.toFixed(2) %></span>
-													<% } %>
-												<% } %>
+														<span class="price-sale">₹<%= ((product.salePrice) -
+																(product.salePrice * product.productOffer /
+																100)).toFixed(2) %></span>
+														<% } else { %>
+															<span class="price-sale">₹<%= product.salePrice.toFixed(2)
+																	%></span>
+															<% } %>
+																<% } %>
 											</div>
 
 											<button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
@@ -845,7 +767,8 @@ async function addToCart(productId) {
 										</div>
 
 										<div class="product-actions">
-											<button class="action-btn wishlist" onclick="addToWhishList('<%= product._id %>')">
+											<button class="action-btn wishlist"
+												onclick="addToWhishList('<%= product._id %>')">
 												<i class="fa fa-heart-o"></i>
 											</button>
 											<button class="action-btn compare" title="Compare">
@@ -854,6 +777,26 @@ async function addToCart(productId) {
 										</div>
 									</div>
 									<% }); %>
+							</div>
+							<!-- pagianation links -->
+							<div class="pagination" style="margin-top: 57px; margin-left: 44%;">
+								<% if (currentPage> 1) { %>
+									<a href="?page=<%= currentPage - 1 %>"
+										style="text-decoration: none; padding: 5px 10px;width: 85px; border: 1px solid #ccc; margin-right: 5px;">Previous</a>
+									<% } %>
+
+										<% for (let i=1; i <=totalPages; i++) { %>
+											<a href="?page=<%= i %>"
+												style="text-decoration: none; padding: 5px 10px; border: 1px solid #ccc; background-color: '<%= currentPage === i ? '#ddd' : '#fff' %>';">
+												<%= i %>
+											</a>
+											<% } %>
+
+												<% if (currentPage < totalPages) { %>
+													<a href="?page=<%= currentPage + 1 %>"
+														style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
+													<% } %>
+														 
 							</div>
 						</div>
 					</div>
@@ -960,33 +903,33 @@ async function addToCart(productId) {
 							quantity: 1
 						})
 					})
-					.then(response => response.json())
-					.then(data => {
-						if (data.success) {
-							Swal.fire({
-								icon: 'success',
-								title: 'Success',
-								text: 'Product added to cart successfully',
-								confirmButtonColor: '#2A9D8F'
-							});
-						} else {
+						.then(response => response.json())
+						.then(data => {
+							if (data.success) {
+								Swal.fire({
+									icon: 'success',
+									title: 'Success',
+									text: 'Product added to cart successfully',
+									confirmButtonColor: '#2A9D8F'
+								});
+							} else {
+								Swal.fire({
+									icon: 'error',
+									title: 'Error',
+									text: data.message || 'Failed to add product to cart',
+									confirmButtonColor: '#2A9D8F'
+								});
+							}
+						})
+						.catch(error => {
+							console.error('Error:', error);
 							Swal.fire({
 								icon: 'error',
 								title: 'Error',
-								text: data.message || 'Failed to add product to cart',
+								text: 'Something went wrong. Please try again later.',
 								confirmButtonColor: '#2A9D8F'
 							});
-						}
-					})
-					.catch(error => {
-						console.error('Error:', error);
-						Swal.fire({
-							icon: 'error',
-							title: 'Error',
-							text: 'Something went wrong. Please try again later.',
-							confirmButtonColor: '#2A9D8F'
 						});
-					});
 				}
 
 				function showToast(message, type) {
@@ -1058,7 +1001,7 @@ async function addToCart(productId) {
 					if (minPrice) params.set('minPrice', minPrice);
 					if (maxPrice) params.set('maxPrice', maxPrice);
 
-					window.location.href = /user/shop?${params.toString()};
+					window.location.href = /user/shop ? ${ params.toString() };
 				}
 
 				// Add event listeners
@@ -1081,133 +1024,135 @@ async function addToCart(productId) {
 				});
 			</script>
 
-			<script>
-				// Debounce function to limit API calls
-				function debounce(func, wait) {
-					let timeout;
-					return function executedFunction(...args) {
-						const later = () => {
-							clearTimeout(timeout);
-							func(...args);
-						};
-						clearTimeout(timeout);
-						timeout = setTimeout(later, wait);
-					};
-				}
+	// 		<script>
+	// 			// Debounce function to limit API calls
+	// 			function debounce(func, wait) {
+	// 				let timeout;
+	// 				return function executedFunction(...args) {
+	// 					const later = () => {
+	// 						clearTimeout(timeout);
+	// 						func(...args);
+	// 					};
+	// 					clearTimeout(timeout);
+	// 					timeout = setTimeout(later, wait);
+	// 				};
+	// 			}
 
-				// Function to handle search and filters
-				const handleFilters = debounce(async () => {
-					try {
-						const searchValue = document.getElementById('searchInput').value;
-						const sortValue = document.getElementById('sortSelect').value;
-						const categoryValue = document.getElementById('categorySelect').value;
-						const minPrice = document.getElementById('minPrice')?.value;
-						const maxPrice = document.getElementById('maxPrice')?.value;
+	// 			// Function to handle search and filters
+	// 			const handleFilters = debounce(async () => {
+	// 				try {
+	// 					const searchValue = document.getElementById('searchInput').value;
+	// 					const sortValue = document.getElementById('sortSelect').value;
+	// 					const categoryValue = document.getElementById('categorySelect').value;
+	// 					const minPrice = document.getElementById('minPrice')?.value;
+	// 					const maxPrice = document.getElementById('maxPrice')?.value;
 
-						// Build query parameters
-						const params = new URLSearchParams();
-						if (searchValue) params.set('search', searchValue);
-						if (sortValue) params.set('sort', sortValue);
-						if (categoryValue) params.set('category', categoryValue);
-						if (minPrice) params.set('minPrice', minPrice);
-						if (maxPrice) params.set('maxPrice', maxPrice);
+	// 					// Build query parameters
+	// 					const params = new URLSearchParams();
+	// 					if (searchValue) params.set('search', searchValue);
+	// 					if (sortValue) params.set('sort', sortValue);
+	// 					if (categoryValue) params.set('category', categoryValue);
+	// 					if (minPrice) params.set('minPrice', minPrice);
+	// 					if (maxPrice) params.set('maxPrice', maxPrice);
 
-						// Show loading state
-						document.querySelector('.product-grid').innerHTML = '<div class="text-center w-100"><i class="fas fa-spinner fa-spin fa-3x"></i></div>';
+	// 					// Show loading state
+	// 					document.querySelector('.product-grid').innerHTML = '<div class="text-center w-100"><i class="fas fa-spinner fa-spin fa-3x"></i></div>';
 
-						// Fetch filtered products
-						const response = await fetch(/user/shop/filter?${params.toString()});
-						const data = await response.json();
+	// 					// Fetch filtered products
+	// 					const response = await fetch(/user/shop / filter ? ${ params.toString() });
+	// 					const data = await response.json();
 
-						if (!data.success) {
-							throw new Error(data.message);
-						}
+	// 					if (!data.success) {
+	// 						throw new Error(data.message);
+	// 					}
 
-						// Update product grid
-						displayProducts(data.products);
+	// 					// Update product grid
+	// 					displayProducts(data.products);
 
-						// Update URL without page reload
-						const newUrl = ${window.location.pathname}?${params.toString()};
-						window.history.pushState({ path: newUrl }, '', newUrl);
+	// 					// Update URL without page reload
+	// 					const newUrl = ${ window.location.pathname }?${ params.toString()
+	// 				};
+	// 				window.history.pushState({ path: newUrl }, '', newUrl);
 
-					} catch (error) {
-						console.error('Error:', error);
-						showToast('Error filtering products', 'error');
-					}
-				}, 300); // 300ms delay
+	// 			} catch (error) {
+	// 				console.error('Error:', error);
+	// 				showToast('Error filtering products', 'error');
+	// 			}
+	// 			}, 300); // 300ms delay
 
-				// Function to display products
-				function displayProducts(products) {
-					const productGrid = document.querySelector('.product-grid');
+	// 			// Function to display products
+	// 			function displayProducts(products) {
+	// 				const productGrid = document.querySelector('.product-grid');
 
-					if (!products.length) {
-						productGrid.innerHTML = `
-							<div class="text-center w-100">
-								<h3>No products found</h3>
-							</div>
-						`;
-						return;
-					}
+	// 				if (!products.length) {
+	// 					productGrid.innerHTML = `
+	// 						<div class="text-center w-100">
+	// 							<h3>No products found</h3>
+	// 						</div>
+	// 					`;
+	// 					return;
+	// 				}
 
-					productGrid.innerHTML = products.map(product => `
-        <div class="product-card">
-            <div class="product-badge">
-                ${product.productOffer > 0 ? <span class="badge badge-danger">SAVE ${product.productOffer}%</span> : ''}
-                ${product.isNew ? '<span class="badge badge-primary">NEW ARRIVAL</span>' : ''}
-                ${product.isBestSeller ? '<span class="badge badge-success">BESTSELLER</span>' : ''}
-            </div>
+	// 				productGrid.innerHTML = products.map(product => `
+    //     <div class="product-card">
+    //         <div class="product-badge">
+    //             ${product.productOffer > 0 ? <span class="badge badge-danger">SAVE ${product.productOffer}%</span> : ''}
+    //             ${product.isNew ? '<span class="badge badge-primary">NEW ARRIVAL</span>' : ''}
+    //             ${product.isBestSeller ? '<span class="badge badge-success">BESTSELLER</span>' : ''}
+    //         </div>
 
-            <div class="product-image-wrap">
-                ${product.images && product.images.length > 0 ? `
-                    <div class="product-image-slider">
-                        ${product.images.slice(0, 3).map(image => `
-                            <img src="${image}" alt="${product.name}" class="product-image">
-                        `).join('')}
-                    </div>
-                ` : `
-                    <img src="/default-product.jpg" alt="${product.name}" class="product-image">
-                `}
+    //         <div class="product-image-wrap">
+    //             ${product.images && product.images.length > 0 ? `
+    //                 <div class="product-image-slider">
+    //                     ${product.images.slice(0, 3).map(image => `
+    //                         <img src="${image}" alt="${product.name}" class="product-image">
+    //                     `).join('')}
+    //                 </div>
+    //             ` : `
+    //                 <img src="/default-product.jpg" alt="${product.name}" class="product-image">
+    //             `}
                 
-                <div class="product-hover-overlay">
-                    <button class="quick-view-btn" onclick="quickView('${product._id}')">QUICK VIEW</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
+    //             <div class="product-hover-overlay">
+    //                 <button class="quick-view-btn" onclick="quickView('${product._id}')">QUICK VIEW</button>
+    //             </div>
+    //         </div>
+    //     </div>
+    // `).join('');
+	// 			}
 
-	// Add event listeners
-	document.getElementById('searchInput').addEventListener('keyup', function (e) {
-		if (e.key === 'Enter') updateFilters();
-	});
+	// 			// Add event listeners
+	// 			document.getElementById('searchInput').addEventListener('keyup', function (e) {
+	// 				if (e.key === 'Enter') updateFilters();
+	// 			});
 
-	document.getElementById('sortSelect').addEventListener('change', updateFilters);
-	document.getElementById('categorySelect').addEventListener('change', updateFilters);
+	// 			document.getElementById('sortSelect').addEventListener('change', updateFilters);
+	// 			document.getElementById('categorySelect').addEventListener('change', updateFilters);
 
-				// Close modal when clicking outside
-				document.getElementById('filterModal').addEventListener('click', function (e) {
-					if (e.target === this) {
-						closeFilterModal();
-					}
-				});
+	// 			// Close modal when clicking outside
+	// 			document.getElementById('filterModal').addEventListener('click', function (e) {
+	// 				if (e.target === this) {
+	// 					closeFilterModal();
+	// 				}
+	// 			});
 
 
-				// add to whishList
+	// 			// add to whishList
 
-				function addToWhishList(productId){
-					
-					console.log("shoo",productId);
-					
-					fetch(/user/whishList,{
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify({ productId })
-					})
-				
-				}
-			</script>
+	// 			function addToWhishList(productId) {
+
+	// 				console.log("shoo", productId);
+
+	// 				fetch(/user/whishList, {
+	// 					method: "POST",
+	// 					headers: {
+	// 						"Content-Type": "application/json"
+	// 					},
+	// 					body: JSON.stringify({ productId })
+	// 				})
+
+	// 			}
+	// 		</script>
 </body>
 
 </html>
+implement paginationrs

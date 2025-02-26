@@ -163,12 +163,12 @@ const postNewPassword = async (req, res) => {
                 });
             }
 
-            req.session.touch();  // Extend session expiry time
+            req.session.touch();  
 
-            // Clear session after successful password update
-            req.session.destroy();  // Clear session data
+            
+            req.session.destroy();  
 
-            // Redirect to login page with a success message
+            
             res.render("user/login", {
                 message: "Your password has been successfully updated. Please log in with your new password."
             });
@@ -189,18 +189,18 @@ const userProfile = async (req, res) => {
     try {
         const userId = req.session.user;
         console.log("Session User:", req.session.user);
-        // if (!userId) {
-        //     return res.redirect("/login"); // Redirect to login if session user is missing
-        // }
+        if (!userId) {
+            return res.redirect("/login");
+        }
         const addressData = await Address.findOne({ userId: userId });
         const userData = await User.findById(userId);
         console.log("User Data:", userData);
         console.log("Address Data:", addressData);
         if (!userData) {
-            return res.redirect("/pageNotFound"); // Handle case where user data is not found
+            return res.redirect("/pageNotFound");
         }
 
-        res.render("user/profile", { user: userData, userAddress: addressData }); // Pass user data to template
+        res.render("user/profile", { user: userData, userAddress: addressData }); 
     } catch (error) {
         console.error("Error retrieving profile data:", error);
         res.redirect("/pageNotFound");

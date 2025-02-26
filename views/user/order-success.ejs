@@ -4,18 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation</title>
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-    <div class="container">
-        <div class="success-message">
-            <h1>Thank you for your order!</h1>
-            <p>Order ID: <%= order.orderId %></p>
-            <p>Total Amount: ₹<%= order.finalAmount.toLocaleString() %></p>
-            <div class="order-status">
-                <p>Order Status: <%= order.status %></p>
+    <section class="order_details section_gap">
+        <div class="container">
+            <h3 class="title_confirmation">Thank you. Your order has been received.</h3>
+            
+            <div class="row order_d_inner">
+                <div class="col-lg-4">
+                    <div class="details_item">
+                        <h4>Order Info</h4>
+                        <ul class="list">
+                            <li><a href="#"><span>Order number</span> : <%= order.orderId %></a></li>
+                            <li><a href="#"><span>Date</span> : <%= order.createdOn.toLocaleDateString() %></a></li>
+                            <li><a href="#"><span>Total</span> : ₹<%= order.finalAmount.toLocaleString() %></a></li>
+                            <li><a href="#"><span>Payment method</span> : <%= order.paymentMethod %></a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="details_item">
+                        <h4>Shipping Address</h4>
+                        <ul class="list">
+                            <li><a href="#"><span>Address</span> : <%= order.address.landMark %></a></li>
+                            <li><a href="#"><span>City</span> : <%= order.address.city %></a></li>
+                            <li><a href="#"><span>State</span> : <%= order.address.state %></a></li>
+                            <li><a href="#"><span>Postcode</span> : <%= order.address.pincode %></a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <a href="/" class="continue-shopping">Continue Shopping</a>
+            
+            <div class="order_details_table">
+                <h2>Order Details</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% order.orderItems.forEach(item => { %>
+                                <tr>
+                                    <td>
+                                        <p><%= item.product.productName %></p>
+                                    </td>
+                                    <td>
+                                        <h5>x <%= item.quantity %></h5>
+                                    </td>
+                                    <td>
+                                        <p>₹<%= (item.price * item.quantity).toLocaleString() %></p>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                            <tr>
+                                <td>
+                                    <h4>Subtotal</h4>
+                                </td>
+                                <td>
+                                    <h5></h5>
+                                </td>
+                                <td>
+                                    <p>₹<%= order.totalPrice.toLocaleString() %></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>Shipping</h4>
+                                </td>
+                                <td>
+                                    <h5></h5>
+                                </td>
+                                <td>
+                                    <p>₹<%= (order.finalAmount - order.totalPrice).toLocaleString() %></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h4>Total</h4>
+                                </td>
+                                <td>
+                                    <h5></h5>
+                                </td>
+                                <td>
+                                    <h4>₹<%= order.finalAmount.toLocaleString() %></h4>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 </body>
 </html> 

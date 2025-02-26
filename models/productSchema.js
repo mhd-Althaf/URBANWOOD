@@ -1,8 +1,12 @@
- const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const productSchema = new Schema(
   {
+    productId: {
+      type: String,
+      unique: true,
+    },
     productName: {
       type: String,
       required: true,
@@ -33,7 +37,7 @@ const productSchema = new Schema(
       required: true,
     },
     productImages: {
-      type: [String], 
+      type: [String],
       required: true,
     },
     isBlocked: {
@@ -49,6 +53,10 @@ const productSchema = new Schema(
   },
   { timestamps: true }
 );
+
+productSchema.index({ productName: 'text', description: 'text' });
+productSchema.index({ category: 1 });
+productSchema.index({ salePrice: 1 });
 
 const Product = mongoose.model("Product", productSchema);
 

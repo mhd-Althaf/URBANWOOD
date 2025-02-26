@@ -104,7 +104,7 @@
 <script src="/assets/js/todolist.js"></script>
 <script>
     function toggleBlock(productId, action) {
-        const url = action === 'block' ? '/blockProduct' : '/unblockProduct';
+        const url = action === 'block' ? '/admin/blockProduct' : '/admin/unblockProduct';
         const method = 'POST';
    console.log("blaa",url)
         fetch(url, {
@@ -117,11 +117,11 @@
             if (data.status) {
                 Swal.fire({
                     icon: 'success',
-                    title: data.message,
+                    title: data.message || 'Product updated successfully',
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
-                    window.location.reload();  // Refresh page
+                    window.location.reload(); 
                 });
             } else {
                 Swal.fire({

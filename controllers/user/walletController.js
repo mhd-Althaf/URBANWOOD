@@ -1,0 +1,78 @@
+const User = require("../../models/userSchema")
+const Product = require("../../models/productSchema")
+const razorpay = require("razorpay");
+
+
+let instance = new razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+})
+
+const getWalletPage = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user).select("-password");
+        res.render("user/wallet", { user });
+    } catch (error) {
+        res.redirect("/pageNotFound");
+    }
+}
+const addMoneyToWallet = async (req, res) => {
+    try {
+      var options = {
+        amount: req.body.total * 100,
+        currency: "INR",
+        receipt: "" + Date.now(),
+      };
+      instance.orders.create(options, async function (err, order) {
+        if (err) {
+          console.log("Error while creating order : ", err);
+        } else {
+          var amount = order.amount / 100;
+          console.log(amount);
+          await User.updateOne(
+            {
+              _id: req.session.user
+            },
+            {
+              $push: {
+                history: {
+                  amount: amount,
+                  status: "credit",
+                  date: Date.now()
+                }
+              }
+            }
+          );
+        }
+        res.json({ order: order, razorpay: true });
+      });
+    } catch (error) {
+      res.redirect("/pageNotFound");
+    }
+  };
+  
+
+
+const verify_payment = async (req, res)=>{
+    try {
+        let details = req.body
+        let amount = parseInt(details.order.order.amount) / 100
+        await User.updateOne(
+            {_id : req.session.user},
+            {$inc : {wallet : amount}}
+        )
+        res.json({success : true})
+    } catch (error) {
+        res.redirect("/pageNotFound");
+    }
+}
+
+
+
+module.exports = {
+    getWalletPage,
+    addMoneyToWallet,
+    verify_payment,
+
+}
+

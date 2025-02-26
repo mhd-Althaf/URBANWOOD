@@ -1,4 +1,4 @@
-<%-include("../../views/partials/user/header")%>
+<%-include("../../views/partials/user/header.ejs")%>
 	<section class="banner-area organic-breadcrumb">
 		<div class="container">
 			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
@@ -110,9 +110,9 @@
 												<span class="text-primary fw-bold">₹<%= product.price %></span>
 												<% } %>
 									</div>
-									<button class="btn btn-sm btn-outline-primary add-to-cart">
-										<i class="fas fa-cart-plus"></i>
-									</button>
+									<!-- <button class="btn btn-sm btn-outline-primary add-to-cart">
+										<a href="/"><i class="fas fa-cart-plus"></i></a>
+									</button> -->
 								</div>
 							</div>
 						</div>

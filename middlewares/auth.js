@@ -38,10 +38,10 @@ console.log(user);
 const adminAuth = (req, res, next) => {
     try {
         if (!req.session.admin) {
-            return res.redirect("/admin/login"); // Redirect if not logged in
+            return res.redirect("/admin/login"); 
         }
 
-        next(); // Proceed if admin session exists
+        next();
     } catch (error) {
         console.error("Error in adminAuth middleware:", error);
         res.status(500).send("Internal Server Error");

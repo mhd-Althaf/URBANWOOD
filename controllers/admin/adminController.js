@@ -24,8 +24,8 @@ const login = async (req, res) => {
             }
         }
 
-        return res.redirect("admin/login");
-    } catch (error) {
+        return res.redirect("/admin/login");
+    } catch (error) {   
         console.log("Login error", error);
         return res.redirect("/pageerror");
     }
@@ -35,7 +35,7 @@ const loadDashboard = async (req, res) => {
     if (req.session.admin) {
         return res.render("admin/dashboard");
     } else {
-        return res.redirect("/login"); // Fixed missing res.
+        return res.redirect("/login");
     }
 };
 

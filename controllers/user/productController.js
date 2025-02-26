@@ -1,4 +1,4 @@
-const User=require("../../models/userSchema")
+const User = require("../../models/userSchema")
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 
@@ -17,23 +17,23 @@ const productDetails = async (req, res) => {
       return res.status(404).send("Product not found.");
     }
     const topSellers = await Product.find()
-    .sort({ salesCount: -1 })  
-    .limit(4);  
+      .sort({ salesCount: -1 })
+      .limit(4);
 
     const findCategory = product?.category;
     const categoryOffer = findCategory?.categoryOffer || 0;
     const productOffer = product.productOffer || 0;
     const totalOffer = categoryOffer + productOffer;
-    
+
     res.render("user/single-product", {
       user: userData,
       product: product,
       quantity: product.quantity,
       category: findCategory,
       totalOffer: totalOffer,
-      topSellers: topSellers, 
+      topSellers: topSellers,
       validUntil: product.validUntil || null,
-      offerType: product.offerType || "percentage" 
+      offerType: product.offerType || "percentage"
     });
   } catch (error) {
     console.error("Error fetching product details:", error);
@@ -43,106 +43,102 @@ const productDetails = async (req, res) => {
 
 const getshop = async (req, res) => {
   try {
-    // Pagination parameters
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
-
-    // Get user data if logged in
     const userId = req.session.user;
     const userData = userId ? await User.findById(userId) : null;
+    const { page = 1, query = "", category, sort, minPrice, maxPrice } = req.query;
+    const limit = 12;
+    const skip = (page - 1) * limit;
 
-    // Get all active categories
-    const categories = await Category.find({ isListed: true });
-    
-    // Base query for products
-    let query = {
-      isBlocked: false,
-      quantity: { $gt: 0 }
-    };
+    let filter = { isBlocked: false, quantity: { $gt: 0 } };
 
-    // Apply filters if present
-    if (req.query.category) {
-      const category = await Category.findOne({ name: req.query.category });
-      if (category) {
-        query.category = category._id;
+    // Search query
+    if (query.trim()) {
+      filter.$or = [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }
+      ];
+    }
+
+    // Category filter
+    if (category) {
+      const categoryObj = await Category.findOne({ name: category });
+      if (categoryObj) {
+        filter.category = categoryObj._id;
       }
     }
 
-    if (req.query.priceRange) {
-      const [min, max] = req.query.priceRange.split('-');
-      query.salePrice = {
-        $gte: parseInt(min),
-        $lte: parseInt(max)
-      };
+    // Price range filter
+    if (minPrice && maxPrice) {
+      filter.salePrice = { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) };
+    } else if (minPrice) {
+      filter.salePrice = { $gte: parseInt(minPrice) };
+    } else if (maxPrice) {
+      filter.salePrice = { $lte: parseInt(maxPrice) };
     }
 
-    // Get sorting parameter
-    const sort = {};
-    if (req.query.sort) {
-      switch (req.query.sort) {
-        case 'price-low':
-          sort.salePrice = 1;
-          break;
-        case 'price-high':
-          sort.salePrice = -1;
-          break;
-        case 'newest':
-          sort.createdOn = -1;
-          break;
-        default:
-          sort.createdOn = -1;
+    // Sorting
+    let sortOption = {};
+    let useCollation = false;
+
+    if (sort) {
+      if (sort === "priceAsc") {
+        sortOption = { salePrice: 1 };
+      } else if (sort === "priceDesc") {
+        sortOption = { salePrice: -1 };
+      } else if (sort === "nameAsc") {
+        sortOption = { productName: 1 };
+        useCollation = true;
+      } else if (sort === "nameDesc") {
+        sortOption = { productName: -1 };
+        useCollation = true;
+      } else {
+        sortOption = { createdOn: -1 };
       }
     }
 
-    // Get total count for pagination
-    const totalProducts = await Product.countDocuments(query);
+    const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Fetch products
-    const products = await Product.find(query)
-      .populate('category')
-      .sort(sort)
+    // Create query
+    let productQuery = Product.find(filter)
+      .populate("category")
+      .sort(sortOption)
       .skip(skip)
       .limit(limit);
 
-    // Get brand and color lists for filters
-    const brands = await Product.distinct('brand');
-    const colors = await Product.distinct('color');
+    // Apply collation for proper alphabetic sorting
+    if (useCollation) {
+      productQuery = productQuery.collation({ locale: "en", strength: 2 });
+    }
 
-    // Price range for filter
-    const priceRange = {
-      min: await Product.find().sort({ salePrice: 1 }).limit(1).then(products => products[0]?.salePrice || 0),
-      max: await Product.find().sort({ salePrice: -1 }).limit(1).then(products => products[0]?.salePrice || 10000)
-    };
+    // Execute query
+    const products = await productQuery.exec();
 
-    res.render('user/shop', {
+    res.render("user/shop", {
       user: userData,
       products,
-      categories,
-      brands,
-      colors,
-      priceRange,
-      filters: {
-        category: req.query.category,
-        priceRange: req.query.priceRange,
-        sort: req.query.sort
-      },
-      pagination: {
-        currentPage: page,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
+      currentPage: parseInt(page),
+      totalPages,
+      categories: await Category.find({ isListed: true }),
+      filters: { query, category, sort, minPrice, maxPrice }
     });
-
   } catch (error) {
-    console.error('Error in shop page:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error fetching shop data:", error);
+    res.status(500).send("An error occurred while fetching shop data.");
   }
 };
+
+
+
+const getFilteredProducts = async (req, res) => {
+
+};
+
+
+
 
 module.exports = {
   getshop,
   productDetails,
+  getFilteredProducts
 };

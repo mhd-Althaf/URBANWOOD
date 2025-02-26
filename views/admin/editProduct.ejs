@@ -164,7 +164,7 @@
             width: 100%;
             padding: 1rem;
             background-color: #15803d;
-            color: rgba(255, 255, 255, 0.414);
+            color: white;
             border: none;
             border-radius: 4px;
             font-size: 1rem;
@@ -274,21 +274,25 @@
                             <div id="images-error" class="error-message"></div>
                         </div>
 
-                        <!-- Cropper Modal -->
-                        <div id="cropperModal" class="cropper-modal">
-                            <div class="cropper-modal-content">
-                                <div class="cropper-wrapper">
-                                    <img id="cropperImage" src="">
-                                </div>
-                                <div class="cropper-buttons">
-                                    <button id="cancelCrop" class="btn btn-secondary">Cancel</button>
-                                    <button id="saveCrop" class="btn btn-primary">Save</button>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
                     <button type="button" id="updateBtn" onclick="validateAndSubmit()">Update Product</button>
                 </form>
+
+                
+            </div>
+
+            <!-- Cropper Modal -->
+            <div id="cropperModal" class="cropper-modal">
+                <div class="cropper-modal-content">
+                    <div class="cropper-wrapper">
+                        <img id="cropperImage" src="">
+                    </div>
+                    <div class="cropper-buttons">
+                        <button id="cancelCrop" class="btn btn-secondary">Cancel</button>
+                        <button id="saveCrop" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -300,18 +304,22 @@
             let currentIndex = null;
 
             // Handle file selection
-            // Handle file selection for multiple inputs
             function handleFileSelect(event, inputNumber) {
                 const input = event.target;
                 const file = input.files[0];
 
                 if (file) {
-                    const reader = new FileReader();
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                        displayErrorMessage('images-error', 'Please select a valid image file.');
+                        input.value = '';
+                        return;
+                    }
 
-                    reader.onload = function (e) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
                         openCropperModal(e.target.result, input, inputNumber);
                     };
-
                     reader.readAsDataURL(file);
                 }
             }
@@ -324,29 +332,34 @@
                 activeFileInput = input;
                 currentIndex = inputNumber;
 
+                // Destroy existing cropper if any
                 if (cropper) {
                     cropper.destroy();
                     cropper = null;
                 }
 
+                // Reset the image source
+                cropperImage.src = '';
                 cropperImage.src = imageUrl;
                 modal.style.display = 'flex';
 
-                cropper = new Cropper(cropperImage, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    guides: true,
-                    background: false,
-                    autoCropArea: 1,
-                    zoomable: true,
-                });
+                // Initialize cropper after image is loaded
+                cropperImage.onload = function() {
+                    cropper = new Cropper(cropperImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        guides: true,
+                        background: false,
+                        autoCropArea: 1,
+                        zoomable: true,
+                    });
+                };
             }
 
-            // Global variables ന് താഴെ ഇത് ചേർക്കുക
+            
             const saveCropButton = document.getElementById('saveCrop');
             const cancelCropButton = document.getElementById('cancelCrop');
 
-            // saveCrop ബട്ടൺ ഇവന്റ് ലിസ്നർ
             saveCropButton.addEventListener('click', function() {
                 if (cropper && activeFileInput) {
                     const croppedCanvas = cropper.getCroppedCanvas();
@@ -372,7 +385,6 @@
                 }
             });
 
-            // cancelCrop ബട്ടൺ ഇവന്റ് ലിസ്നർ
             cancelCropButton.addEventListener('click', function() {
                 document.getElementById('cropperModal').style.display = 'none';
                 if (cropper) {
@@ -381,7 +393,6 @@
                 }
             });
 
-            // Validate and submit form
             function validateAndSubmit() {
                 if (validateForm()) {
                     document.getElementById('productForm').submit();
@@ -393,38 +404,48 @@
                 let isValid = true;
                 clearErrorMessages();
 
+                const productName = document.getElementById('product_name').value;
                 const description = document.getElementsByName('descriptionData')[0].value;
                 const regularPrice = document.getElementsByName('regularPrice')[0].value;
                 const salePrice = document.getElementsByName('salePrice')[0].value;
                 const quantity = document.getElementsByName('quantity')[0].value;
                 const existingImages = document.querySelectorAll('.image-container').length;
-                const newImages = document.querySelectorAll('input[type="file"]:not(:disabled)').length;
+                const newImages = Array.from(document.querySelectorAll('input[type="file"]'))
+                    .filter(input => input.files.length > 0).length;
 
+                // Product name validation
+                if (!productName.trim()) {
+                    displayErrorMessage('productName-error', 'Please enter a product name.');
+                    isValid = false;
+                }
+
+                // Description validation
                 if (!description.trim()) {
                     displayErrorMessage('description-error', 'Please enter a product description.');
                     isValid = false;
                 }
 
-                if (parseInt(quantity) < 0) {
+                // Quantity validation
+                if (!quantity.trim() || isNaN(quantity) || parseInt(quantity) < 0) {
                     displayErrorMessage('quantity-error', 'Please enter a valid non-negative quantity.');
                     isValid = false;
                 }
 
-                if (!/^\d+(\.\d{1,2})?$/.test(regularPrice) || parseFloat(regularPrice) < 0) {
+                // Regular price validation
+                if (!regularPrice.trim() || isNaN(regularPrice) || parseFloat(regularPrice) < 0) {
                     displayErrorMessage('regularPrice-error', 'Please enter a valid non-negative price.');
                     isValid = false;
                 }
 
-                if (!/^\d+(\.\d{1,2})?$/.test(salePrice) || parseFloat(salePrice) < 0) {
+                // Sale price validation
+                if (salePrice.trim() && (isNaN(salePrice) || parseFloat(salePrice) < 0)) {
                     displayErrorMessage('salePrice-error', 'Please enter a valid non-negative price.');
                     isValid = false;
                 }
 
+                // Image validation
                 if (existingImages + newImages === 0) {
                     displayErrorMessage('images-error', 'Please select at least one image.');
-                    isValid = false;
-                } else if (existingImages + newImages > 4) {
-                    displayErrorMessage('images-error', 'You can only upload up to 4 images.');
                     isValid = false;
                 }
 
@@ -468,37 +489,15 @@
                     .catch(error => console.error('Error:', error));
             }
 
-            // JavaScript section ലേക്ക് ഈ ഫങ്ഷൻ ചേർക്കുക
+            
             document.addEventListener('DOMContentLoaded', function() {
-                // നിലവിലുള്ള ഇമേജുകളുടെ എണ്ണം കണക്കാക്കുക
+                
                 const existingImages = document.querySelectorAll('.image-container').length;
                 
-                // ബാക്കിയുള്ള ഇൻപുട്ടുകൾ enable ചെയ്യുക
+               
                 for(let i = 1; i <= 4-existingImages; i++) {
                     document.getElementById(`input${i}`).disabled = false;
                 }
             });
-
-            // handleFileSelect ഫങ്ഷൻ അപ്ഡേറ്റ് ചെയ്യുക
-            function handleFileSelect(event, inputNumber) {
-                const input = event.target;
-                const file = input.files[0];
-
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        openCropperModal(e.target.result, input, inputNumber);
-                    };
-                    reader.readAsDataURL(file);
-                    
-                    // അടുത്ത ഇൻപുട്ട് enable ചെയ്യുക
-                    if (inputNumber < 4) {
-                        const nextInput = document.getElementById(`input${inputNumber + 1}`);
-                        if (nextInput) {
-                            nextInput.disabled = false;
-                        }
-                    }
-                }
-            }
         </script>
     </body>
