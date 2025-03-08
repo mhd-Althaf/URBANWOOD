@@ -56,8 +56,9 @@
               <%= orders[i].status %>
             </td>
             <td>
-              <%= orders[i].paymentMethod.toUpperCase() %>
+              <%= orders[i] && orders[i].paymentMethod ? orders[i].paymentMethod.toUpperCase() : "N/A" %>
             </td>
+            
             <td>
                 <% if (orders[i].status === "Pending") { %>
                   <button class="btn btn-success" onclick="changeOrderStatus('<%= orders[i].orderId %>', 'Processing')" style="width: 120px;">
@@ -77,7 +78,7 @@
               </td>
               
             <td>
-              <button class="btn btn-info" style="width: 80px;">
+              <button class="btn btn-info" style="width: 105px;;">
                 <a href="/admin/orderDetailsAdmin?orderId=<%= orders[i].orderId %>" class="btn btn-info text-white" style="width: 80px; text-decoration: none;">
                   View
                 </a>

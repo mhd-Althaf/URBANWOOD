@@ -10,8 +10,8 @@
     <style>
         /* General Styles */
         :root {
-            --primary-color: #b46e59;
-            --secondary-color: #ff7f50;
+            --primary-color: #06734d;
+            --secondary-color: #06734d;
             --light-bg: #f8f9fa;
             --text-dark: #333;
             --text-muted: #555;
@@ -36,16 +36,20 @@
             background-color: var(--primary-color);
             color: white;
             padding: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            text-align: center;
         }
 
         .navbar {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 20px;
         }
 
         .navbar-brand h1 {
-            font-size: 1.8rem;
-            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #06734d;
             margin: 0;
         }
 
@@ -57,32 +61,37 @@
         }
 
         .card {
-            border: none;
+            border: 1px solid #ddd;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
-            border-radius: 0.5rem;
+            border-radius: 10px;
         }
 
         .card-header {
-            background-color: var(--primary-color);
+            background-color: #06734d;
             color: white;
-            border-radius: 0.5rem 0.5rem 0 0 !important;
-            padding: 1rem;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px;
+            text-align: center;
         }
 
         .card-body {
-            padding: 1.5rem;
+            padding: 20px;
         }
 
         /* Buttons */
         .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+            background-color: #25537d;
+            border-color: #25537d;
+            color: #fff;
+            font-size: 1rem;
+            padding: 10px 15px;
+            border-radius: 5px;
         }
 
         .btn-primary:hover {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
+            background-color: #074b62;
+            border-color: #074b62;
         }
 
         /* Sidebar and Responsive Layout */
@@ -100,8 +109,30 @@
         }
 
         .dashboard-menu .nav-link.active {
-            color: #b46e59;
+            color: #06734d;
             font-weight: bold;
+        }
+
+        /* Navbar Links */
+        .navbar-nav .nav-item .nav-link {
+            color: #555;
+            font-size: 1.1rem;
+            padding: 10px 20px;
+        }
+
+        .navbar-nav .nav-item .nav-link.active {
+            color: #06734d;
+        }
+
+        .navbar-nav .btn {
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            color: #555;
+        }
+
+        .navbar-nav .btn:hover {
+            background-color: #f1f1f1;
+            color: #88aca0;
         }
 
         /* Adjustments for Mobile View */
@@ -144,7 +175,6 @@
                 padding: 1rem 0;
             }
 
-            /* Make the table scrollable */
             .transaction-table {
                 overflow-x: auto;
                 display: block;
@@ -178,15 +208,17 @@
         /* Modal Improvements */
         .modal-content {
             border-radius: 0.5rem;
+            padding: 20px;
         }
 
         .modal-header {
-            background-color: var(--primary-color);
+            background-color: #06734d;
             color: white;
             border-radius: 0.5rem 0.5rem 0 0;
         }
 
         .modal-header .btn-close {
+            background-color: #006532;
             filter: brightness(0) invert(1);
         }
 
@@ -198,15 +230,16 @@
         }
 
         .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(180, 110, 89, 0.25);
+            border-color: #06734d;
+            box-shadow: 0 0 0 0.2rem rgba(6, 115, 77, 0.25);
         }
 
         /* Footer */
         footer {
-            background-color: var(--light-bg);
-            padding: 1rem 0;
-            margin-top: 3rem;
+            background-color: #f1f1f1;
+            padding: 20px;
+            text-align: center;
+            margin-top: 50px;
         }
 
         footer p {

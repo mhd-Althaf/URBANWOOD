@@ -8,7 +8,6 @@ const getCheckoutPage = async (req, res) => {
 }
 
 
-
 const placeOrder = async (req, res) => {
     try {
         const { addressId, paymentMethod } = req.body;
@@ -77,10 +76,6 @@ const placeOrder = async (req, res) => {
             await product.save();
         }
 
-
-
-
-
         const order = new Order({
             orderId: generateOrderId(),
             userId: userId,
@@ -101,7 +96,6 @@ const placeOrder = async (req, res) => {
             invoiceDate: new Date()
         });
 
-
         await order.save();
 
 
@@ -121,10 +115,10 @@ const placeOrder = async (req, res) => {
 
 
 
-
 const userOrderDetails = async (req, res) => {
     try {
         const orders = await Order.find().populate("orderItems.productId");
+        
         res.render("user/orderDetails", { orders });
     } catch (error) {
         console.error("Error fetching orders:", error);
@@ -133,72 +127,8 @@ const userOrderDetails = async (req, res) => {
 }
 
 
-
-const cancelOrder = async (req, res) => {
-    try {
-        const { orderId, reason, paymentMethod } = req.body;
-
-        console.log(req.body);
-
-        const order = await Order.findOne({ orderId: orderId });
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-
-        if (order.status === 'Cancelled') {
-            return res.status(400).json({ message: 'Order is already cancelled' });
-        }
-
-
-        order.status = 'Cancelled';
-        order.cancellationReason = reason;
-        order.cancelledAt = new Date();
-
-
-        for (let item of order.orderItems) {
-            const product = await Product.findById(item.productId);
-            console.log(product)
-            if (product) {
-                product.quantity += item.quantity;
-                await product.save();
-            }
-        }
-
-
-        await order.save();
-
-        return res.json({ message: 'Order cancelled successfully, stock quantity updated' });
-    } catch (error) {
-        console.error('Error cancelling order:', error);
-        return res.status(500).json({ message: 'Server error, try again later' });
-    }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports = {
     placeOrder,
     getCheckoutPage,
     userOrderDetails,
-    cancelOrder,
 };

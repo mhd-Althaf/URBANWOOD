@@ -235,18 +235,14 @@ const getCheckStock = async (req, res) => {
 
 const getCartCount = async (req, res, next) => {
     try {
-        if (req.session.user) {  // Check if user is logged in
-            const cart = await Cart.findOne({ userId: req.session.user._id });
-            const totalProductsInCart = cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
+        let totalProductsInCart = 0; 
 
-            // If it's an AJAX request, send JSON response
-            // if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            //     return res.json({ cartLength: totalProductsInCart });
-            // }
-            res.locals.cartCount = totalProductsInCart;
-        } else {
-            res.locals.cartCount = totalProductsInCart;
+        if (req.session.user) { 
+            const cart = await Cart.findOne({ userId: req.session.user._id });
+            totalProductsInCart = cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
         }
+
+        res.locals.cartCount = totalProductsInCart;
         next();
     } catch (error) {
         console.error('Error fetching cart count:', error);
@@ -254,6 +250,7 @@ const getCartCount = async (req, res, next) => {
         next();
     }
 };
+
 
 const clearCart = async (req, res) => {
     try {

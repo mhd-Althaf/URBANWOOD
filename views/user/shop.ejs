@@ -87,7 +87,106 @@
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<style>
+		.premium-filter-form {
+			background: #fff;
+			padding: 2rem;
+			border-radius: 15px;
+			box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+		}
 
+		.search-container {
+			margin-bottom: 1.5rem;
+		}
+
+		.search-input {
+			height: 55px;
+			border: 2px solid #eee;
+			border-radius: 10px;
+			padding-left: 1.5rem;
+			font-size: 1rem;
+			transition: all 0.3s ease;
+		}
+
+		.search-input:focus {
+			border-color: #6366f1;
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+		}
+
+		.search-btn {
+			background: #6366f1;
+			color: white;
+			border: none;
+			padding: 0 2rem;
+			border-radius: 10px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			transition: all 0.3s ease;
+		}
+
+		.search-btn:hover {
+			background: #4f46e5;
+			transform: translateY(-1px);
+		}
+
+		.filter-controls {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.select-wrapper {
+			position: relative;
+			flex: 1;
+		}
+
+		.select-wrapper i {
+			position: absolute;
+			left: 1rem;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #6b7280;
+			pointer-events: none;
+		}
+
+		.premium-select {
+			width: 100%;
+			height: 45px;
+			padding: 0 1rem 0 2.5rem;
+			border: 2px solid #eee;
+			border-radius: 10px;
+			appearance: none;
+			background: white;
+			cursor: pointer;
+			font-size: 0.95rem;
+			transition: all 0.3s ease;
+		}
+
+		.premium-select:hover {
+			border-color: #6366f1;
+		}
+
+		.apply-filters-btn {
+			background: #6366f1;
+			color: white;
+			border: none;
+			padding: 0 2rem;
+			height: 45px;
+			border-radius: 10px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			transition: all 0.3s ease;
+		}
+
+		.apply-filters-btn:hover {
+			background: #4f46e5;
+			transform: translateY(-1px);
+		}
+	</style>
 	<style>
 		* {
 			margin: 0;
@@ -655,40 +754,66 @@
 					<!-- Main Content -->
 					<div class="col-xl-9 col-lg-8 col-md-7 mx-auto">
 
-						<div class="top-bar">
-							<form id="filterForm" method="GET" action="/shop">
-								<div class="input-group">
-									<input type="text" name="query" class="form-control" placeholder="Search products"
-									value="<%= filters?.query || '' %>" id="searchInput"  />
-									<div class="input-group-append">
-										<button type="submit" class="btn btn-primary">Search</button>
-										<span class="input-group-text bg-transparent text-primary">
-											<i class="fa fa-search"></i>
-										</span>
+						<div class="top-bar w-100">
+							<form id="filterForm" method="GET" action="/shop" class="premium-filter-form w-100">
+								<div class="search-container">
+									<div class="input-group">
+										<input type="text" 
+											   name="query" 
+											   class="form-control search-input" 
+											   placeholder="Search for amazing products..."
+											   value="<%= filters?.query || '' %>" 
+											   id="searchInput" />
+										<div class="input-group-append">
+											<button type="submit" class="search-btn">
+												<i class="fa fa-search"></i>
+												<span>Search</span>
+											</button>
+										</div>
 									</div>
 								</div>
-						
-								<select id="sort" name="sort" class="form-select" onchange="this.form.submit()">
-									<option value="" <%= !filters?.sort ? 'selected' : '' %>>Sort By</option>
-									<option value="priceAsc" <%= filters?.sort === 'priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
-									<option value="priceDesc" <%= filters?.sort === 'priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
-									<option value="nameAsc" <%= filters?.sort === 'nameAsc' ? 'selected' : '' %>>Name: A-Z</option>
-									<option value="nameDesc" <%= filters?.sort === 'nameDesc' ? 'selected' : '' %>>Name: Z-A</option>
-								  </select>								  
-														
-								<select class="sort-select" id="categorySelect" name="category">
-									<option value="">All Categories</option>
-									<% categories.forEach(category => { %>
-										<option value="<%= category.name %>" <%= filters?.category===category.name ? 'selected' : '' %>>
-											<%= category.name %>
-										</option>
-									<% }) %>
-								</select>
-						
-								<input type="hidden" name="page" value="<%= currentPage || 1 %>">
-						
-								<button type="submit" class="btn btn-primary">Apply Filters</button>
+
+								<div class="filter-controls">
+									<div class="select-wrapper">
+										<select id="sort" name="sort" class="premium-select" onchange="this.form.submit()">
+											<option value="" <%= !filters?.sort ? 'selected' : '' %>>Sort Products</option>
+											<option value="priceAsc" <%= filters?.sort === 'priceAsc' ? 'selected' : '' %>>
+												<i class="fa fa-arrow-up"></i> Price: Low to High
+											</option>
+											<option value="priceDesc" <%= filters?.sort === 'priceDesc' ? 'selected' : '' %>>
+												<i class="fa fa-arrow-down"></i> Price: High to Low
+											</option>
+											<option value="nameAsc" <%= filters?.sort === 'nameAsc' ? 'selected' : '' %>>
+												Name: A to Z
+											</option>
+											<option value="nameDesc" <%= filters?.sort === 'nameDesc' ? 'selected' : '' %>>
+												Name: Z to A
+											</option>
+										</select>
+									</div>
+
+									<div class="select-wrapper">									
+										<select class="premium-select" id="categorySelect" name="category">
+											<option value="">All Categories</option>
+											<% categories.forEach(category => { %>
+												<option value="<%= category.name %>" 
+														<%= filters?.category===category.name ? 'selected' : '' %>>
+													<%= category.name %>
+												</option>
+											<% }) %>
+										</select>
+									</div>
+
+									<input type="hidden" name="page" value="<%= currentPage || 1 %>">
+
+									<button type="submit" class="apply-filters-btn">
+										<i class="fa fa-filter"></i>
+										Apply Filters
+									</button>
+								</div>
 							</form>
+
+							
 						</div>
 						
 
@@ -834,15 +959,7 @@
 			</section>
 			<!-- End related-product Area -->
 
-			<!-- Start footer Area -->
-			<footer class="footer-area section_gap">
-				<div class="container">
-					<div class="row">
-						<!-- Footer content -->
-					</div>
-				</div>
-			</footer>
-			<!-- End footer Area -->
+			<%-include("../../views/partials/user/footer")%>
 
 			<!-- Modal Quick Product View -->
 			<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-hidden="true">

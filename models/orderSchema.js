@@ -5,13 +5,20 @@ const { v4: uuidv4 } = require('uuid');
 const orderSchema = new Schema({
     orderId: {
         type: String,
-       required:true,
+        required: true,
     },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
+    address: {
+        name: String,
+        phone: String,
+        city: String,
+        state: String,
+        pincode: String
+    },    
     orderItems: [
         {
             productId: {  
@@ -30,6 +37,19 @@ const orderSchema = new Schema({
             price: {
                 type: Number,
                 required: true
+            },
+            status: {
+                type: String,
+                enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+                default: "Pending"
+            },
+            cancellationReason: {
+                type: String,
+                required: false
+            },
+            cancelledAt: {
+                type: Date,
+                required: false
             }
         }
     ],
@@ -45,57 +65,16 @@ const orderSchema = new Schema({
         type: Number,
         required: true
     },
-    address: {
-        addressType: { type: String, required: true },
-        name: { type: String, required: true },
-        city: { type: String, required: true },
-        landMark: { type: String, required: true },
-        state: { type: String, required: true },
-        pincode: { type: Number, required: true },
-        phone: { type: String, required: true },
-        altPhone: { type: String, required: true }
-    },
-     // other existing fields...
-     paymentMethod: {
-        type: String,
-        enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
-        required: true
-    },
-    razorpayOrderId: {
-        type: String,
-        required: false
-    },
     status: {
         type: String,
-        enum: [ "Pending", "Processing", "Shipped", "Delivered", "Cancelled","Return Request", "Returned"],
+        enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
         default: "Pending"
-    },
-    paymentStatus: {
-        type: String,
-        enum: ['Pending', 'paid', 'failed'],
-        default: 'pending'
     },
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    invoiceDate: {
-        type: Date
-    },
-    couponApplied: {
-        type: Boolean,
-        default: false
-    },cancellationReason:{
-        type:String,
-        required:false
-    },
-    cancelledAt:{
-        type:Date,
-        required:false,
     }
 });
 
-// Create Order model
 const Order = mongoose.model("Order", orderSchema);
-
 module.exports = Order;

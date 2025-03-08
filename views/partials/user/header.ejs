@@ -139,8 +139,6 @@
 							<li class="nav-item submenu dropdown">
 								<a href="/shop" class="nav-link">Shop</a>
 							</li>
-
-
 							<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
 							<li class="nav-item submenu dropdown">
 								<!-- <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
@@ -155,7 +153,10 @@
 						<ul class="nav navbar-nav navbar-right">
 							<li class="nav-item"><a href="/cart" class="btn border mx-2">
 								<i class="fas fa-cart-shopping text-primary"></i>
-								<span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span>
+								<!-- <span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span> -->
+							</a></li>
+							<li class="nav-item"><a href="/wishlist" class="btn border mx-2">
+								<i class="fas fa-heart text-primary"></i>
 							</a></li>
 							<li class="nav-item">
 								<button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>

@@ -40,7 +40,7 @@
                     <p><strong>Total Price:</strong> ₹<%= orders.totalPrice.toFixed(2) %></p>
                     <p><strong>Discount:</strong> ₹<%= orders.discount.toFixed(2) %></p>
                     <p><strong>Final Amount:</strong> ₹<%= orders.finalAmount.toFixed(2) %></p>
-                    <p><strong>Payment Method:</strong> <%= orders.paymentMethod.toUpperCase() %></p>
+                    <p><strong>Payment Method:</strong> <%= orders.paymentMethod ? orders.paymentMethod.toUpperCase() : "Not Available" %></p>
                     <p>
                         <strong>Payment Status:</strong>
                         <span class="status-badge status-<%= orders.paymentStatus.toLowerCase().replace(' ', '-') %>">
