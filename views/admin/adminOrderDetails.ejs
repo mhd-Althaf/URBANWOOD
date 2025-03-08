@@ -1,0 +1,259 @@
+<%-include("../../views/partials/admin/header")%>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <style>
+        .card-custom {
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status-pending { background-color: #ffc107; color: #000; }
+        .status-processing { background-color: #17a2b8; color: #fff; }
+        .status-shipped { background-color: #28a745; color: #fff; }
+        .status-delivered { background-color: #28a745; color: #fff; }
+        .status-return-requested { background-color: #dc3545; color: #fff; }
+        .status-returned { background-color: #6c757d; color: #ffffff; }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Order Summary Card -->
+        <div class="col-md-4">
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order ID:</strong> <%= orders.orderId %></p>
+                    <p>
+                        <strong>Order Status:</strong>
+                        <span class="status-badge status-<%= orders.status.toLowerCase().replace(' ', '-') %>">
+                            <%= orders.status %>
+                        </span>
+                    </p>
+                    <p><strong>Total Price:</strong> ₹<%= orders.totalPrice.toFixed(2) %></p>
+                    <p><strong>Discount:</strong> ₹<%= orders.discount.toFixed(2) %></p>
+                    <p><strong>Final Amount:</strong> ₹<%= orders.finalAmount.toFixed(2) %></p>
+                    <p><strong>Payment Method:</strong> <%= orders.paymentMethod.toUpperCase() %></p>
+                    <p>
+                        <strong>Payment Status:</strong>
+                        <span class="status-badge status-<%= orders.paymentStatus.toLowerCase().replace(' ', '-') %>">
+                            <%= orders.paymentStatus %>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer and Shipping Details Card -->
+        <div class="col-md-4">
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title">Customer & Shipping Details</h5>
+                </div>
+                <div class="card-body">
+                    <% if (orders.userId) { %>
+                        <p><strong>Customer Name:</strong> <%= orders.userId.name %></p>
+                        <p><strong>Email:</strong> <%= orders.userId.email %></p>
+                        <p><strong>Phone:</strong> <%= orders.userId.phone %></p>
+                    <% } %>
+
+                    <% if (orders.address) { %>
+                        <h6>Shipping Address:</h6>
+                        <p>
+                            <%= orders.address.addressType %><br>
+                            <%= orders.address.landMark %>, <%= orders.address.city %><br>
+                            <%= orders.address.state %> - <%= orders.address.pincode %><br>
+                            Phone: <%= orders.address.phone %>
+                            <% if (orders.address.altPhone) { %>
+                                , Alt: <%= orders.address.altPhone %>
+                            <% } %>
+                        </p>
+                    <% } else { %>
+                        <p>No address available.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coupon and Invoice Details Card -->
+        <div class="col-md-4">
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title">Additional Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Coupon Applied:</strong> <%= orders.couponApplied ? "Yes" : "No" %></p>
+                    <p><strong>Invoice Date:</strong> <%= orders.invoiceDate ? new Date(orders.invoiceDate).toDateString() : "Not available" %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details Table -->
+        <div class="container my-5">
+            <h2 class="mb-4">Order Details</h2>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Payment Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (orders.orderItems && orders.orderItems.length > 0) { %>
+                        <% orders.orderItems.forEach(item => { %>
+                            <tr>
+                                <td><%= item.name %></td>
+                                <td><%= item.quantity %></td>
+                                <td>₹<%= item.price %></td>
+                                <td>₹<%= item.price*item.quantity %></td>
+                                <td><%= orders.status %></td>
+                                <td><%= orders.paymentStatus %></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No products found for this order.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- Include previous scripts here -->
+<script>
+//  function updateItemStatus(itemId, newStatus, orderId) {
+//   Swal.fire({
+//     title: `Change Item Return Status to ${newStatus}?`,
+//     text: `Are you sure you want to change the return status of this item to ${newStatus}?`,
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#3885d6",
+//     cancelButtonColor: "#d33",
+//     confirmButtonText: "Yes, change it!"
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       $.ajax({
+//         url: `/admin/updateItemStatus`,
+//         method: "GET",
+//         data: {
+//           itemId: itemId,
+//           status: newStatus,
+//           orderId: orderId // Pass orderId here
+//         },
+//         success: (response) => {
+//           if (response.status) {
+//             Swal.fire("Status Updated", `Item return status has been changed to ${newStatus}.`, "success");
+//             location.reload();
+//           } else {
+//             Swal.fire("Error", "Failed to update item return status", "error");
+//           }
+//         },
+//         error: (error) => {
+//           Swal.fire("Error", "An error occurred", "error");
+//         }
+//       });
+//     }
+//   });
+// }
+
+
+// function changeOrderStatus(orderId, newStatus) {
+//   Swal.fire({
+//     title: `Change Status to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}?`,
+//     text: `Are you sure you want to change the status of this order to ${newStatus}?`,
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#3885d6",
+//     cancelButtonColor: "#d33",
+//     confirmButtonText: "Yes, change it!"
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       $.ajax({
+//         url: `/admin/changeOrderStatus`,
+//         method: "GET",
+//         data: {
+//           orderId: orderId,
+//           status: newStatus,
+//         },
+//         success: (response) => {
+//           if (response.status) {
+//             Swal.fire("Status Updated", `Order status has been changed to ${newStatus}.`, "success");
+//             location.reload(); // Reload the page to see the updated status
+//           } else {
+//             Swal.fire("Error", response.message || "Failed to update order status", "error");
+//           }
+//         },
+//         error: (error) => {
+//           Swal.fire("Error", "An error occurred while updating the order status.", "error");
+//           console.error("AJAX error:", error.responseText);
+//         },
+//       });
+//     }
+//   });
+// }
+// // Function to open the reject return modal and pass necessary data
+// function openRejectReturnModal(itemId, orderId) {
+//     // Store the item ID and order ID in hidden fields or as data attributes
+//     $('#rejectReturnBtn').data('itemId', itemId);
+//     $('#rejectReturnBtn').data('orderId', orderId);
+//     $('#rejectReturnModal').modal('show');
+// }
+
+// // Function to handle the rejection when the button is clicked
+// $('#rejectReturnBtn').click(function() {
+//     var returnReason = $('#returnReason').val();
+//     var itemId = $(this).data('itemId');
+//     var orderId = $(this).data('orderId');
+    
+//     if (returnReason.trim() === '') {
+//         Swal.fire('Error', 'Please provide a rejection reason.', 'error');
+//         return;
+//     }
+
+//     // Send the reason to the server
+//     $.ajax({
+//         url: '/admin/rejectReturn',  // Adjust the URL to your API endpoint
+//         method: 'POST',
+//         data: {
+//             itemId: itemId,
+//             orderId: orderId,
+//             reason: returnReason
+//         },
+//         success: function(response) {
+//             if (response.status) {
+//                 Swal.fire('Success', 'Return request rejected and reason sent.', 'success');
+//                 $('#rejectReturnModal').modal('hide');
+//                 location.reload(); // Reload the page to update the order details
+//             } else {
+//                 Swal.fire('Error', response.message || 'Failed to reject return request.', 'error');
+//             }
+//         },
+//         error: function(error) {
+//             Swal.fire('Error', 'An error occurred while rejecting the return request.', 'error');
+//         }
+//     });
+// });
+
+
+</script>
+

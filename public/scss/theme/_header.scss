@@ -14,15 +14,14 @@
 	}
 }
 .sticky-wrapper {
-	position: absolute;
+	position: relative;
 	top: 40px;
 	width: 100%;
 	@media (max-width: 991px) {
 		top: 0;
 	}
 }
-.header_area {
-	position: absolute;
+.header_area {	
 	width: 100%;
 	top: 0;
 	left: 0;
@@ -95,7 +94,7 @@
 						margin: 0px;
 						background: #fff;
 						@media (min-width: 992px) {
-							position: absolute;
+							position: relative;
 							top: 140%;
 							left: 0px;
 							min-width: 200px;
@@ -112,7 +111,7 @@
 							border-style: solid;
 							border-width: 10px 10px 0 10px;
 							border-color: #eeeeee transparent transparent transparent;
-							position: absolute;
+							position: relative;
 							right: 24px;
 							top: 45px;
 							z-index: 3;
