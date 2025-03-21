@@ -60,8 +60,8 @@ const logoutUser = async (req,res)=>{
     res.redirect("/admin/login")
 }
 
-const loadCategoryform = async (req,res)=>{
-    res.render("admin/categoryForm")
+const loadAddCategory = async (req,res)=>{
+    res.render("admin/addCategory")
 }
 
 const loadproductform = async (req,res)=>{
@@ -74,7 +74,7 @@ module.exports = {
  
     loadcatogoryget,
     loadproductform,
-    loadCategoryform,
+    loadAddCategory,
     loadLogin,
     login,
     loadDashboard, 

@@ -28,7 +28,7 @@ router.get("/unBlockCustomer",adminAuth,customerController.customerUnBlocked)
 
 //category management 
 router.get('/category',adminAuth,categoryController.categoryInfo);
-router.get('/addCategory',adminAuth,adminController.loadCategoryform)
+router.get('/addCategory',adminAuth,adminController.loadAddCategory)
 router.post('/addCategory',adminAuth,categoryController.addCategory)
 router.get("/editCategory/:id",adminAuth,categoryController.getUpdateCategory)
 router.post("/editCategory/:id",adminAuth,categoryController.editCategory);
@@ -52,15 +52,14 @@ router.post("/deleteImage", adminAuth, productController.deleteSingleImage);
 router.get("/coupon", adminAuth, couponController.loadCoupon);
 router.post("/createCoupon", adminAuth, couponController.createCoupon);
 router.get("/editCoupon", adminAuth, couponController.editCoupon);
-router.post("/updateCoupon", adminAuth, couponController.updateCoupon);
+router.post("/updatecoupon/:id", adminAuth, couponController.updateCoupon);
 router.get("/deleteCoupon", adminAuth, couponController.deleteCoupon);
+router.post("/apply-coupon", adminAuth, couponController.applyCoupon);
+
 
 //order
 router.get('/order',adminAuth,orderController.getOrderListPageAdmin);
-router.patch("/changeStatus/:orderId",adminAuth,orderController.changeOrderStatus)
 router.get("/orderDetailsAdmin",adminAuth,orderController.getOrderDetailsPageAdmin);
-
-
-
+router.patch('/changeStatus/:orderId', adminAuth, orderController.changeOrderStatus);
     
 module.exports = router;

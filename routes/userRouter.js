@@ -7,7 +7,6 @@ const productController = require("../controllers/user/productController")
 const profileController = require("../controllers/user/profileController");
 const cartController = require("../controllers/user/cartController")
 const orderController = require("../controllers/user/orderController")
-const checkoutController = require('../controllers/user/checkoutController');
 const walletController = require("../controllers/user/walletController");
 const wishlistController = require("../controllers/user/wishlistController");
 
@@ -84,11 +83,12 @@ router.post("/editAddress", userAuth, profileController.postEditAddress);
 router.get("/deleteAddress", userAuth, profileController.deleteAddress)
 
 //order management 
-router.get('/checkout', userAuth, checkoutController.getCheckoutPage);
-router.post('/place-order', userAuth, checkoutController.placeOrder);
-router.get("/orders", userAuth, checkoutController.userOrderDetails)
+
+router.post('/place-order', userAuth, orderController.placeOrder);
+router.get("/orders", userAuth, orderController.userOrderDetails)
 router.post('/cancelOrder', userAuth, orderController.cancelOrder)
 router.post('/cancel-product', userAuth, orderController.cancelProduct);
+router.post('/single-return-product',userAuth,orderController.singleReturnRequest);
 
 // Cart Management
 router.get("/cart", userAuth, cartController.getCartPage)
@@ -143,7 +143,7 @@ router.post("/verify-payment", userAuth, walletController.verify_payment);
 // });
 
 
-
+router.post('/apply-coupon',orderController.applyCoupon)
 
 
 

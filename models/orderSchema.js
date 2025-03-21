@@ -13,17 +13,24 @@ const orderSchema = new Schema({
         required: true
     },
     address: {
-        name: String,
-        phone: String,
-        city: String,
-        state: String,
-        pincode: String
+        addressType: { type: String, required: true },
+        name: { type: String, required: true },
+        city: { type: String, required: true },
+        landMark: { type: String, required: true },
+        state: { type: String, required: true },
+        pincode: { type: Number, required: true },
+        phone: { type: String, required: true },
+        altPhone: { type: String, required: true }
     },    
     orderItems: [
         {
             productId: {  
-                type: Schema.Types.ObjectId,
+                type: mongoose.Schema.Types.ObjectId,
                 ref: "Product",
+                required: true   
+            },
+            image: { 
+                type: String 
             },
             name: {
                 type: String,
@@ -38,21 +45,78 @@ const orderSchema = new Schema({
                 type: Number,
                 required: true
             },
+            deliveryDate:{
+                type:Date,
+            },
             status: {
                 type: String,
-                enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+                enum: ["Pending", "Shipped", "Delivered", "Cancelled","Return_Requested","Returned"],
                 default: "Pending"
             },
             cancellationReason: {
                 type: String,
                 required: false
             },
+            shippingCost: {
+                type: Number,
+                required: true,
+                default: 40  
+            },
             cancelledAt: {
                 type: Date,
                 required: false
-            }
+            }, ReturnReason: {
+                type: String,
+                required: false
+            },
+            ReturnedAt: {
+                type: Date,
+                required: false
+            },
+            paymentMethod: {
+                type: String,
+                enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
+                required: false
+            },
         }
     ],
+    paymentMethod: {
+        type: String,
+        enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
+        required: true
+    },
+    status: {
+        type: String,
+        enum: [ "Pending", "Processing", "Shipped", "Delivered", "Cancelled","Return Request", "Returned"],
+        default: "Pending"
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['Pending', 'paid', 'failed'],
+        default: 'Pending'
+    },
+    deliveryDate:{
+        type:Date,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    invoiceDate: {
+        type: Date
+    },
+    couponApplied: {
+        type: Boolean,
+        default: false
+    },
+    cancellationReason:{
+        type:String,
+        required:false
+    },
+    cancelledAt:{
+        type:Date,
+        required:false,
+    },
     totalPrice: {
         type: Number,
         required: true
@@ -61,19 +125,32 @@ const orderSchema = new Schema({
         type: Number,
         default: 0
     },
+    couponApplied: {
+        type: Boolean,
+        default: false,
+    },
+      couponDiscount: {
+        type: Number,
+        default: 0,
+    },
     finalAmount: {
         type: Number,
         required: true
     },
-    status: {
-        type: String,
-        enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
-        default: "Pending"
-    },
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    razorpayOrderId: {
+        type: String,
+        required: false
+    },
+      razorpayPaymentId: {
+        type: String,
+    },
+      razorpaySignature: {
+        type: String,
+    },
 });
 
 const Order = mongoose.model("Order", orderSchema);

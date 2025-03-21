@@ -175,35 +175,40 @@
             <form method="post" action="/admin/createCoupon" class="w-100">
               <div class="mb-4">
                 <label for="coupon-name" class="form-label">Coupon Name</label>
-                <input type="text" id="coupon-name" name="couponName" placeholder="Type here" class="form-control w-100"
-                  required />
+                <input type="text" id="coupon-name" name="couponName" placeholder="Type here" class="form-control w-100" required />
                 <div id="error-coupon-name" class="error-message"></div>
               </div>
-
+            
               <div class="mb-4">
                 <label for="startingDate" class="form-label">Start Date</label>
                 <input type="date" name="startDate" class="form-control w-100" required id="startingDate" />
                 <div id="error-start-date" class="error-message"></div>
               </div>
-
+            
               <div class="mb-4">
                 <label for="expiringDate" class="form-label">End Date</label>
                 <input type="date" name="endDate" class="form-control w-100" id="expiringDate" required />
                 <div id="error-end-date" class="error-message"></div>
               </div>
-
+            
               <div class="mb-4">
                 <label for="offer-price" class="form-label">Offer Price</label>
                 <input type="number" name="offerPrice" placeholder="Type here" class="form-control w-100" />
                 <div id="error-offer-price" class="error-message"></div>
               </div>
-
+            
               <div class="mb-4">
                 <label for="minimum-price" class="form-label">Minimum Price</label>
                 <input type="number" name="minimumPrice" placeholder="Type here" class="form-control w-100" />
                 <div id="error-minimum-price" class="error-message"></div>
               </div>
-
+            
+              <div class="mb-4">
+                <label for="maximum" class="form-label">Maximum Price</label>
+                <input type="number" name="maximumPrice" placeholder="Type here" class="form-control w-100" />
+                <div id="error-maximum-price" class="error-message"></div>
+              </div>
+            
               <div class="d-grid">
                 <button class="btn btn-primary mt-20 w-100" onclick="return validateForm()" type="submit">
                   Add Coupon
@@ -221,6 +226,7 @@
                     <th>Expire On</th>
                     <th>Offer Price</th>
                     <th>Minimum Price</th>
+                    <th>maximumPrice</th>
                     <th>Status</th>
                     <th>Edit/Delete</th>
                   </tr>
@@ -243,6 +249,9 @@
                         </td>
                         <td class="text-start">
                           <%= coupons[i].minimumPrice %>
+                        </td>
+                        <td class="text-start">
+                          <%= coupons[i].maximumPrice %>
                         </td>
                         <td class="text-start">
                           <%= coupons[i].isListed %>
@@ -323,18 +332,65 @@
         document.getElementById("error-coupon-name").innerHTML = "Invalid coupon name.";
         return false;
       }
-
+      
       const offerPrice = parseFloat(document.getElementsByName("offerPrice")[0].value);
       const minimumPrice = parseFloat(document.getElementsByName("minimumPrice")[0].value);
+      const maximumPrice = parseFloat(document.getElementsByName("maximumPrice")[0].value);
 
       if (isNaN(offerPrice) || isNaN(minimumPrice) || offerPrice >= minimumPrice) {
         document.getElementById("error-offer-price").innerHTML = "Offer price must be less than the minimum price.";
         return false;
       }
+      if (isNaN(maximumPrice) || isNaN(minimumPrice) || minimumPrice >= maximumPrice) {
+        document.getElementById("error-maximum-price").innerHTML = "minimum price must be less than the maximum price.";
+        return false;
+      }
 
       const form = document.querySelector('form');
-      form.submit();
-      return false;
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+
+      fetch('/admin/createCoupon', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+      })
+      .then(async response => {
+          // Check if response is ok before parsing JSON
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json();
+      })
+      .then(result => {
+          if (result.success) {
+              Swal.fire({
+                  title: "Success!",
+                  text: "New coupon created successfully",
+                  icon: "success"
+              }).then(() => {
+                  window.location.reload(); // Reload page after success
+              });
+          } else {
+              Swal.fire({
+                  title: "Error!",
+                  text: result.message || "Failed to create coupon",
+                  icon: "error"
+              });
+          }
+      })
+      .catch(error => {
+          Swal.fire({
+              title: "Error!",
+              text: "Something went wrong while creating the coupon",
+              icon: "error"
+          });
+          console.error('Error:', error);
+      });
+
+      return false; // Prevent form's default submission
     }
 
     function confirmDelete(couponId) {
@@ -360,7 +416,7 @@
         success: function (response) {
           if (response.success) {
             Swal.fire("Deleted!", "The coupon has been deleted.", "success").then(() => {
-              window.location.reload();  // Reload the page after successful deletion
+              window.location.reload();  
             });
           } else {
             Swal.fire("Error!", response.message || "Failed to delete the coupon. Please try again.", "error");

@@ -1,6 +1,7 @@
+const Razorpay = require('razorpay');
 const Order = require('../../models/orderSchema')
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 
 
@@ -8,7 +9,10 @@ const mongoose = require('mongoose');
 
 const getOrderListPageAdmin = async (req, res) => {
   try {
-    const orders = await Order.find({}).sort({ createdAt: -1 }).populate("userId").lean();
+    const orders = await Order.find({})
+      .sort({ createdAt: -1 })
+      .populate("userId")
+      .lean();
 
     for (let order of orders) {
       let shippingCost = order.totalPrice < 1000 ? 100 : 0;
@@ -17,6 +21,9 @@ const getOrderListPageAdmin = async (req, res) => {
       if (order.finalAmount < 0) {
         order.finalAmount = 0;
       }
+
+      order.status = order.status || "Pending";
+      order.paymentMethod = order.paymentMethod || "N/A";
     }
 
     let itemsPerPage = 5;
@@ -26,8 +33,14 @@ const getOrderListPageAdmin = async (req, res) => {
     let totalPages = Math.ceil(orders.length / itemsPerPage);
     const currentOrder = orders.slice(startIndex, endIndex);
 
+    // console.log("Orders sent to template:", JSON.stringify(currentOrder, null, 2));
 
-    res.render("admin/orderList", { orders: currentOrder, totalPages, currentPage });
+    res.render("admin/orderList", {
+      orders: currentOrder,
+      totalPages,
+      currentPage,
+    });
+
   } catch (error) {
     console.error(error);
     res.redirect("/pageerror");
@@ -52,7 +65,7 @@ const getOrderDetailsPageAdmin = async (req, res) => {
 
     if (!findOrder) throw new Error("Order not found.");
 
-    console.log(findOrder)
+    // console.log(findOrder)
     const totalGrant = findOrder.orderItems.reduce(
       (sum, item) => sum + (Number(item.price) * item.quantity || 0),
       0
@@ -78,49 +91,159 @@ const getOrderDetailsPageAdmin = async (req, res) => {
 
 
 
+// const changeOrderStatus = async (req, res) => {
+//   console.log("Updating Order Status...");
+
+//   try {
+//     const { orderId } = req.params;
+//     const { status, productId } = req.body;
+
+//     console.log(orderId)
+//     console.log(req.body)
+
+//     const validStatuses = [
+//       "Pending", "Processing", "Shipped", "Delivered", "Cancelled", 
+//       "Return Request", "Returned"
+//     ];
+
+//     if (!validStatuses.includes(status)) {
+//       return res.status(400).json({ status: false, message: "Invalid status" });
+//     }
+
+//     const order = await Order.findById(new mongoose.Types.ObjectId(orderId))
+//     if (!order) {
+//       return res.status(404).json({ status: false, message: "Order not found" });
+//     }
+//     console.log("Order Found:", order);
+
+
+//     // Find the specific product in orderItems array
+//     const orderItem = order.orderItems.find(item => item.productId.toString() === productId);
+
+//     if (!orderItem) {
+//       return res.status(404).json({ status: false, message: "Product not found in order" });
+//     }
+//     console.log("Order Items:", order.orderItems);
+
+
+
+//     // Update status of specific product
+//     orderItem.status = status;
+
+//     // If status is Delivered, set delivery date
+
+//     if (status === "Delivered") {
+//       orderItem.deliveryDate = new Date();
+//     }
+
+//     await order.save();
+
+//     return res.status(200).json({ status: true, message: "Status updated successfully" });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ status: false, message: "An error occurred" });
+//   }
+// };
+
+// const changeOrderStatus = async (req, res) => {
+//   console.log("Updating Order Status...");
+//   try {
+//     const { orderId } = req.params;
+//     const { status, productId } = req.body;
+
+//     console.log("Received Order ID:", orderId);
+//     console.log("Received Product ID:", productId);
+//     console.log("New Status:", status);
+
+//     // if (!mongoose.Types.ObjectId.isValid(orderId)) {
+//     //   return res.status(400).json({ status: false, message: "Invalid Order ID" });
+//     // }
+//     if (!mongoose.Types.ObjectId.isValid(orderId)) {
+//       return res.status(400).json({ status: false, message: "Invalid Order ID" });
+//     }
+//     if (!mongoose.Types.ObjectId.isValid(productId)) {
+//       return res.status(400).json({ status: false, message: "Invalid Product ID" });
+//     }
+//     productId = new mongoose.Types.ObjectId(productId);
+//     const order = await Order.findById(new mongoose.Types.ObjectId(orderId));
+//     if (!order) {
+//       return res.status(404).json({ status: false, message: "Order not found" });
+//     }
+
+//     console.log("Order Found:", order);
+//     if (!order.orderItems || order.orderItems.length === 0) {
+//       return res.status(404).json({ status: false, message: "No products found in order" });
+//     }
+
+//     const orderItem = order.orderItems.find(item => item.productId.toString() === productId);
+//     if (!orderItem) {
+//       return res.status(404).json({ status: false, message: "Product not found in order" });
+//     }
+
+//     orderItem.status = status;
+//     if (status === "Delivered") {
+//       orderItem.deliveryDate = new Date();
+//     }
+
+//     await order.save();
+//     return res.status(200).json({ status: true, message: "Status updated successfully" });
+
+//   } catch (error) {
+//     console.error("Error:", error);
+//     return res.status(500).json({ status: false, message: "An error occurred" });
+//   }
+// };
+
+
 const changeOrderStatus = async (req, res) => {
   console.log("Updating Order Status...");
-
   try {
-    const { orderId } = req.params;
+    const { orderId } = req.params; 
     const { status } = req.body;
 
-    console.log(orderId)
-    console.log(req.body)
+    console.log("Received Order ID:", orderId);
+    console.log("New Status:", status);
 
-
+    if (!status) {
+      return res.status(400).json({ error: "Status is missing!" });
+  }
 
     const validStatuses = [
-      "Pending", "Processing", "Shipped", "Delivered", "Cancelled",
-      "Return Request", "Returned"
+      "Pending",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+      "Return Request",
+      "Returned",
     ];
-
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ status: false, message: "Invalid status" });
+      console.log("Invalid status value");
+      return res.status(400).json({ status: false, message: "Invalid status value" });
     }
 
-
-    const order = await Order.findOne({ orderId: orderId });
+    const order = await Order.findById({_id:orderId});
     if (!order) {
+      console.log("Order not found with orderId:", orderId);
       return res.status(404).json({ status: false, message: "Order not found" });
     }
 
-    console.log(order)
+    // console.log("Order Found:", JSON.stringify(order, null, 2));
 
-    if (!order.orderItems || order.orderItems.length === 0) {
-      return res.status(400).json({ status: false, message: "No items found in the order" });
-    }
+    order.status = status; // Update top-level status
 
-
-    order.status = status;
     await order.save();
-
-    return res.status(200).json({ status: true, message: "Status updated successfully" });
+    return res.status(200).json({
+      status: true,
+      message: "Status updated successfully",
+      updatedStatus: order.status,
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
     return res.status(500).json({ status: false, message: "An error occurred" });
   }
 };
+
 
 
 

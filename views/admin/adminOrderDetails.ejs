@@ -1,6 +1,7 @@
 <%-include("../../views/partials/admin/header")%>
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .card-custom {
             margin-bottom: 15px;
@@ -16,43 +17,58 @@
         .status-processing { background-color: #17a2b8; color: #fff; }
         .status-shipped { background-color: #28a745; color: #fff; }
         .status-delivered { background-color: #28a745; color: #fff; }
-        .status-return-requested { background-color: #dc3545; color: #fff; }
-        .status-returned { background-color: #6c757d; color: #ffffff; }
+        .status-return-requested { background-color: #dc3545; color:#0d1f30;}
+        .status-returned { background-color: #6c757d; color:#0d1f30; }
+        .modal-content {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px #000000c8;
+        }
+        .card .card-title {
+            color: #1e00ff;
+            margin-bottom: 1.125rem;
+            text-transform: capitalize;
+}
+        .modal-header {
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-success, .btn-danger {
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,255,0,0.3);
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(255,0,0,0.3);
+        }
     </style>
 </head>
 
 <div class="container-fluid">
     <div class="row">
         <!-- Order Summary Card -->
-        <div class="col-md-4">
+        <div class="col-md-4" style="margin-top:70px;">
             <div class="card card-custom">
                 <div class="card-header">
                     <h5 class="card-title">Order Summary</h5>
                 </div>
                 <div class="card-body">
                     <p><strong>Order ID:</strong> <%= orders.orderId %></p>
-                    <p>
-                        <strong>Order Status:</strong>
-                        <span class="status-badge status-<%= orders.status.toLowerCase().replace(' ', '-') %>">
-                            <%= orders.status %>
-                        </span>
-                    </p>
                     <p><strong>Total Price:</strong> ₹<%= orders.totalPrice.toFixed(2) %></p>
                     <p><strong>Discount:</strong> ₹<%= orders.discount.toFixed(2) %></p>
                     <p><strong>Final Amount:</strong> ₹<%= orders.finalAmount.toFixed(2) %></p>
                     <p><strong>Payment Method:</strong> <%= orders.paymentMethod ? orders.paymentMethod.toUpperCase() : "Not Available" %></p>
-                    <p>
-                        <strong>Payment Status:</strong>
-                        <span class="status-badge status-<%= orders.paymentStatus.toLowerCase().replace(' ', '-') %>">
-                            <%= orders.paymentStatus %>
-                        </span>
-                    </p>
                 </div>
             </div>
         </div>
-
         <!-- Customer and Shipping Details Card -->
-        <div class="col-md-4">
+        <div class="col-md-4" style="margin-top:70px;">
             <div class="card card-custom">
                 <div class="card-header">
                     <h5 class="card-title">Customer & Shipping Details</h5>
@@ -63,7 +79,6 @@
                         <p><strong>Email:</strong> <%= orders.userId.email %></p>
                         <p><strong>Phone:</strong> <%= orders.userId.phone %></p>
                     <% } %>
-
                     <% if (orders.address) { %>
                         <h6>Shipping Address:</h6>
                         <p>
@@ -81,9 +96,8 @@
                 </div>
             </div>
         </div>
-
         <!-- Coupon and Invoice Details Card -->
-        <div class="col-md-4">
+        <div class="col-md-4" style="margin-top:70px;">
             <div class="card card-custom">
                 <div class="card-header">
                     <h5 class="card-title">Additional Details</h5>
@@ -98,7 +112,6 @@
         <!-- Order Details Table -->
         <div class="container my-5">
             <h2 class="mb-4">Order Details</h2>
-
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -107,7 +120,7 @@
                         <th>Price</th>
                         <th>Total</th>
                         <th>Status</th>
-                        <th>Payment Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,29 +130,263 @@
                                 <td><%= item.name %></td>
                                 <td><%= item.quantity %></td>
                                 <td>₹<%= item.price %></td>
-                                <td>₹<%= item.price*item.quantity %></td>
-                                <td><%= orders.status %></td>
-                                <td><%= orders.paymentStatus %></td>
+                                <td>₹<%= item.price * item.quantity %></td>
+                                <td>
+                                    <% if (item.status === 'Return_Requested') { %>
+                                        <span class="text-danger">Requested Return</span>
+                                    <% } else { %>
+                                        <%= item.status %>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (item.status === 'Return_Requested') { %>
+                                        <button class="btn btn-primary" onclick="returnRequest('<%= item._id %>')">View</button>
+                                    <% } %>
+                                </td>
                             </tr>
                         <% }) %>
                     <% } else { %>
                         <tr>
-                            <td colspan="5" class="text-center">No products found for this order.</td>
+                            <td colspan="6" class="text-center">No products found for this order.</td>
                         </tr>
                     <% } %>
                 </tbody>
             </table>
         </div>
     </div>
+<!-- Modal -->
+<div class="modal fade" id="returnRequestModal" tabindex="-1" aria-labelledby="returnRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="returnRequestModalLabel">Return Request Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Order Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Product Name:</strong> <span id="modalProductName"></span></p>
+                                <p><strong>Quantity:</strong> <span id="modalQuantity"></span></p>
+                                <p><strong>Price:</strong> ₹<span id="modalPrice"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Total:</strong> ₹<span id="modalTotal"></span></p>
+                                <p><strong>Order Status:</strong> <span class="badge bg-info" id="modalStatus"></span></p>
+                                <p><strong>Order Date:</strong> <span id="modalDate"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Return Request</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="returnReason" class="form-label">Customer's Return Reason:</label>
+                            <textarea class="form-control" id="returnReason" rows="3" disabled></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminComment" class="form-label">Admin Comment:</label>
+                            <textarea class="form-control" id="adminComment" rows="3" placeholder="Enter your comments here..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="acceptReturn()">Accept Return</button>
+                <button type="button" class="btn btn-danger" onclick="rejectReturn()">Reject Return</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
-
-
-
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-<!-- Include previous scripts here -->
+<script>
+function changeOrderStatus(orderId, productId, newStatus) {
+console.log("Product ID before sending:", productId); 
+if (typeof productId === "object" && productId) {
+    productId = productId.toString();  
+}
+if (typeof productId !== "string") {
+    console.error("Invalid Product ID:", productId);
+    return;
+}
+
+Swal.fire({
+    title: `<span style="color: black;">Change Status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?</span>`,
+    html: `<span style="color: black;">Are you sure you want to update this order's status?</span>`,
+    icon: "question",
+    iconHtml: "🔄", 
+    showCancelButton: true,
+    confirmButtonColor: "#28a745", 
+    cancelButtonColor: "#d33", 
+    confirmButtonText: "Yes, Update!",
+    cancelButtonText: "Cancel",
+    background: "#f9f9f9", 
+    backdrop: `rgba(0, 0, 0, 0.4)`, 
+    showLoaderOnConfirm: true, 
+    preConfirm: () => {
+        return $.ajax({
+            url: `/admin/changeStatus/${orderId}`,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ status: newStatus, productId })
+        })
+        .then((response) => {
+            if (response.status) {
+                Swal.fire({
+                    title: `<span style="color: black;">✅ Status Updated!</span>`,
+                    html: `<span style="color: black;">Order status changed to "${newStatus}".</span>`,
+                    icon: "success",
+                    confirmButtonColor: "#28a745",
+                    timer: 2000, 
+                    timerProgressBar: true,
+                    willClose: () => {
+                        location.reload();
+                    }
+                });
+            } else {
+                throw new Error(response.message || "Failed to update order status.");
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            Swal.fire({
+                title: `<span style="color: black;">❌ Update Failed!</span>`,
+                html: `<span style="color: black;">${error.message}</span>`,
+                icon: "error",
+                confirmButtonColor: "#d33"
+            });
+        });
+    }
+});
+}
+
+function returnRequest(itemId) {
+const row = event.target.closest('tr');
+const productName = row.cells[0].textContent;
+const quantity = row.cells[1].textContent;
+const price = row.cells[2].textContent.replace('₹', '');
+const total = row.cells[3].textContent.replace('₹', '');
+const status = row.cells[4].textContent;
+const orderId = '<%= orders.orderId %>';
+
+// Populate modal with data
+document.getElementById('modalProductName').textContent = productName;
+document.getElementById('modalQuantity').textContent = quantity;
+document.getElementById('modalPrice').textContent = price;
+document.getElementById('modalTotal').textContent = total;
+document.getElementById('modalStatus').textContent = status;
+document.getElementById('modalDate').textContent = '<%= orders.invoiceDate ? new Date(orders.invoiceDate).toDateString() : "Not available" %>';
+document.getElementById('returnReason').value = "Customer's return reason goes here"; // Replace with actual data from your backend
+
+// Store itemId in a data attribute for later use
+$('#returnRequestModal').data('itemId', itemId);
+
+// Show the modal
+const modal = new bootstrap.Modal(document.getElementById('returnRequestModal'));
+modal.show();
+}
+
+function acceptReturn() {
+const adminComment = document.getElementById('adminComment').value;
+const orderId = '<%= orders.orderId %>';
+const itemId = $('#returnRequestModal').data('itemId');
+const productName = document.getElementById('modalProductName').textContent;
+
+Swal.fire({
+    title: 'Accept Return Request?',
+    text: 'Are you sure you want to accept this return?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, Accept!'
+}).then((result) => {
+    if (result.isConfirmed) {
+        $.ajax({
+            url: '/admin/acceptReturn', 
+            method: 'POST',
+            data: {
+                orderId: orderId,
+                itemId: itemId,
+                comment: adminComment,
+                productName: productName
+            },
+            success: (response) => {
+                if (response.status) {
+                    Swal.fire('Success', 'Return request accepted', 'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', response.message || 'Failed to accept return', 'error');
+                }
+            },
+            error: (error) => {
+                Swal.fire('Error', 'Failed to accept return', 'error');
+            }
+        });
+    }
+});
+}
+
+function rejectReturn() {
+const adminComment = document.getElementById('adminComment').value;
+const orderId = '<%= orders.orderId %>';
+const itemId = $('#returnRequestModal').data('itemId');
+const productName = document.getElementById('modalProductName').textContent;
+
+if (!adminComment) {
+    Swal.fire('Error', 'Please provide a reason for rejection', 'error');
+    return;
+}
+
+Swal.fire({
+    title: 'Reject Return Request?',
+    text: 'Are you sure you want to reject this return?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, Reject!'
+}).then((result) => {
+    if (result.isConfirmed) {
+        $.ajax({
+            url: '/admin/rejectReturn', 
+            method: 'POST',
+            data: {
+                orderId: orderId,
+                itemId: itemId,
+                comment: adminComment,
+                productName: productName
+            },
+            success: (response) => {
+                if (response.status) {
+                    Swal.fire('Success', 'Return request rejected', 'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', response.message || 'Failed to reject return', 'error');
+                }
+            },
+            error: (error) => {
+                Swal.fire('Error', 'Failed to reject return', 'error');
+            }
+        });
+    }
+});
+}
+</script>
 <script>
 //  function updateItemStatus(itemId, newStatus, orderId) {
 //   Swal.fire({
@@ -256,4 +503,5 @@
 
 
 </script>
+
 

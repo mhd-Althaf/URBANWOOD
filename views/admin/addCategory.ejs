@@ -3,7 +3,7 @@
 <div class="card-body">
     <h4 class="card-title">Basic Form Elements</h4>
     <p class="card-description">Basic form elements</p>
-    <form class="forms-sample" id="categoryForm">
+    <form class="forms-sample" id="addCategory">
       <div class="form-group">
         <label for="categoryName">Name</label>
         <input name="cname" type="text" class="form-control" id="categoryName" placeholder="Name">
@@ -20,7 +20,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  document.getElementById("categoryForm").addEventListener("submit", async function (event) {
+  document.getElementById("addCategory").addEventListener("submit", async function (event) {
     event.preventDefault(); // Prevent default form submission
 
     // Validate form
@@ -100,7 +100,7 @@
   }
 
   function resetForm() {
-    document.getElementById("categoryForm").reset();
+    document.getElementById("addCategory").reset();
     clearErrorMessages();
   }
 </script>
