@@ -1,0 +1,160 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sales Report</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Form -->
+                    <form action="/admin/generate-sales-report" method="POST" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Report Type</label>
+                                    <select name="reportType" class="form-control" id="reportType">
+                                        <option value="daily" <%= dateRange && dateRange.reportType === 'daily' ? 'selected' : '' %>>Daily</option>
+                                        <option value="weekly" <%= dateRange && dateRange.reportType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                                        <option value="monthly" <%= dateRange && dateRange.reportType === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                                        <option value="custom" <%= dateRange && dateRange.reportType === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 custom-date" style="display: <%= dateRange && dateRange.reportType === 'custom' ? 'block' : 'none' %>;">
+                                <div class="form-group">
+                                    <label>Start Date</label>
+                                    <input type="date" name="startDate" class="form-control" value="<%= dateRange && dateRange.startDate ? dateRange.startDate : '' %>">
+                                </div>
+                            </div>
+                            <div class="col-md-3 custom-date" style="display: <%= dateRange && dateRange.reportType === 'custom' ? 'block' : 'none' %>;">
+                                <div class="form-group">
+                                    <label>End Date</label>
+                                    <input type="date" name="endDate" class="form-control" value="<%= dateRange && dateRange.endDate ? dateRange.endDate : '' %>">
+                                </div>
+                            </div>
+                            <div class="col-md-3 align-self-end">
+                                <button type="submit" class="btn btn-primary">Generate Report</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <% if (reportData) { %>
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-info">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Orders</h5>
+                                        <p class="card-text h3"><%= reportData.totalOrders %></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Sales</h5>
+                                        <p class="card-text h3">₹<%= reportData.totalSales.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Discount</h5>
+                                        <p class="card-text h3">₹<%= reportData.totalDiscount.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Download Buttons -->
+                        <div class="mb-4">
+                            <a href="/admin/download-report/excel?startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>&reportType=<%= dateRange.reportType %>" 
+                               class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Download Excel
+                            </a>
+                            <a href="/admin/download-report/pdf?startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>&reportType=<%= dateRange.reportType %>" 
+                               class="btn btn-danger">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </a>
+                        </div>
+
+                        <!-- Orders Table -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Products</th>
+                                        <th>Total Amount</th>
+                                        <th>Discount</th>
+                                        <th>Final Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% reportData.orders.forEach(order => { %>
+                                        <tr>
+                                            <td><%= order.orderId %></td>
+                                            <td><%= order.userId ? order.userId.name : 'N/A' %></td>
+                                            <td><%= order.createdAt.toLocaleDateString() %></td>
+                                            <td>
+                                                <% order.orderItems.forEach(item => { %>
+                                                    <%= item.name %> (<%= item.quantity %>)<br>
+                                                <% }) %>
+                                            </td>
+                                            <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                                            <td>₹<%= (order.discount || 0).toFixed(2) %></td>
+                                            <td>₹<%= order.finalAmount.toFixed(2) %></td>
+                                            <td><%= order.paymentMethod %></td>
+                                            <td><%= order.status %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('reportType').addEventListener('change', function() {
+    const customDateFields = document.querySelectorAll('.custom-date');
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const endDateInput = document.querySelector('input[name="endDate"]');
+    
+    if (this.value === 'custom') {
+        customDateFields.forEach(field => field.style.display = 'block');
+        
+        // Set default dates if not already set
+        if (!startDateInput.value) {
+            const today = new Date();
+            startDateInput.value = today.toISOString().split('T')[0];
+        }
+        if (!endDateInput.value) {
+            const today = new Date();
+            endDateInput.value = today.toISOString().split('T')[0];
+        }
+    } else {
+        customDateFields.forEach(field => field.style.display = 'none');
+    }
+});
+
+// Initialize custom date fields on page load if custom is selected
+window.addEventListener('load', function() {
+    const reportType = document.getElementById('reportType').value;
+    if (reportType === 'custom') {
+        const customDateFields = document.querySelectorAll('.custom-date');
+        customDateFields.forEach(field => field.style.display = 'block');
+    }
+});
+</script>
+

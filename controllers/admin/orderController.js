@@ -2,6 +2,9 @@ const Razorpay = require('razorpay');
 const Order = require('../../models/orderSchema')
 
 const mongoose = require("mongoose");
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 
 
@@ -244,13 +247,350 @@ const changeOrderStatus = async (req, res) => {
   }
 };
 
+const getSalesReport = async (req, res) => {
+    try {
+        // Set default query for daily report
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const query = { createdAt: { $gte: today } };
 
+        const orders = await Order.find(query)
+            .populate('userId', 'name email')
+            .populate('orderItems.productId')
+            .sort({ createdAt: -1 });
 
+        let totalSales = 0;
+        let totalOrders = orders.length;
+        let totalDiscount = 0;
 
+        orders.forEach(order => {
+            totalSales += order.finalAmount;
+            totalDiscount += order.discount || 0;
+        });
 
+        const reportData = {
+            orders,
+            totalSales,
+            totalOrders,
+            totalDiscount,
+            startDate: today,
+            endDate: new Date()
+        };
+
+        res.render('admin/salesReport', {
+            reportData,
+            dateRange: {
+                startDate: today.toISOString().split('T')[0],
+                endDate: new Date().toISOString().split('T')[0],
+                reportType: 'daily'
+            }
+        });
+    } catch (error) {
+        console.error('Error loading sales report page:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const generateSalesReport = async (req, res) => {
+    try {
+        const { startDate, endDate, reportType } = req.body;
+        let query = {};
+
+        if (reportType === 'custom' && startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        } else if (reportType === 'daily') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            query.createdAt = { $gte: today };
+        } else if (reportType === 'weekly') {
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            query.createdAt = { $gte: lastWeek };
+        } else if (reportType === 'monthly') {
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            query.createdAt = { $gte: lastMonth };
+        }
+
+        const orders = await Order.find(query)
+            .populate('userId', 'name email')
+            .populate('orderItems.productId')
+            .sort({ createdAt: -1 });
+
+        let totalSales = 0;
+        let totalOrders = orders.length;
+        let totalDiscount = 0;
+
+        orders.forEach(order => {
+            totalSales += order.finalAmount;
+            totalDiscount += order.discount || 0;
+        });
+
+        const reportData = {
+            orders,
+            totalSales,
+            totalOrders,
+            totalDiscount,
+            startDate: startDate || null,
+            endDate: endDate || null
+        };
+
+        res.render('admin/salesReport', {
+            reportData,
+            dateRange: {
+                startDate,
+                endDate,
+                reportType
+            }
+        });
+
+    } catch (error) {
+        console.error('Error generating sales report:', error);
+        res.status(500).send('Error generating report');
+    }
+};
+
+const downloadReport = async (req, res) => {
+    try {
+        const { format } = req.params;
+        const { startDate, endDate, reportType } = req.query;
+        
+        let query = {};
+        if (reportType === 'custom' && startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        } else if (reportType === 'daily') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            query.createdAt = { $gte: today };
+        } else if (reportType === 'weekly') {
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            query.createdAt = { $gte: lastWeek };
+        } else if (reportType === 'monthly') {
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            query.createdAt = { $gte: lastMonth };
+        }
+
+        const orders = await Order.find(query)
+            .populate('userId', 'name email')
+            .populate('orderItems.productId')
+            .sort({ createdAt: -1 });
+
+        if (format === 'excel') {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sales Report');
+
+            // Add headers
+            worksheet.addRow([
+                'Order ID',
+                'Customer',
+                'Date',
+                'Products',
+                'Total Amount',
+                'Discount',
+                'Final Amount',
+                'Payment Method',
+                'Status'
+            ]);
+
+            // Add data
+            orders.forEach(order => {
+                worksheet.addRow([
+                    order.orderId,
+                    order.userId ? order.userId.name : 'N/A',
+                    order.createdAt.toLocaleDateString(),
+                    order.orderItems.map(item => `${item.name} (${item.quantity})`).join(', '),
+                    order.totalPrice,
+                    order.discount || 0,
+                    order.finalAmount,
+                    order.paymentMethod,
+                    order.status
+                ]);
+            });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=sales-report.xlsx');
+
+            await workbook.xlsx.write(res);
+            return res.end();
+
+        } else if (format === 'pdf') {
+            const doc = new PDFDocument({
+                margin: 50,
+                size: 'A4'
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename=sales-report.pdf');
+            doc.pipe(res);
+
+            // Add company logo and details with better spacing
+            doc.fontSize(24).text('URBANWOOD', { align: 'center' });
+            doc.moveDown(0.5);
+            doc.fontSize(14).text('Premium Furniture Store', { align: 'center' });
+            doc.fontSize(10);
+            doc.text('123 Furniture Street, Woodlands', { align: 'center' });
+            doc.text('Phone: +1234567890 | Email: info@urbanwood.com', { align: 'center' });
+            doc.moveDown(1);
+
+            // Add horizontal line after header
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(1);
+
+            // Add title and report period with better spacing
+            doc.fontSize(16).text('Sales Report', { align: 'center' });
+            doc.moveDown(0.5);
+            const reportPeriod = `Report Period: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`;
+            doc.fontSize(12).text(reportPeriod, { align: 'center' });
+            doc.moveDown(1);
+
+            // Calculate totals
+            let totalSales = 0;
+            let totalDiscount = 0;
+            orders.forEach(order => {
+                totalSales += order.finalAmount;
+                totalDiscount += order.discount || 0;
+            });
+
+            // Summary section with improved box and alignment
+            const summaryStartY = doc.y;
+            // Draw summary box with light gray background
+            doc.rect(50, summaryStartY, 500, 100).fill('#f5f5f5');
+            doc.fill('#000000'); // Reset fill color to black for text
+
+            // Summary title
+            doc.fontSize(14).text('Summary', 50, summaryStartY + 10, { align: 'center', width: 500 });
+            
+            // Summary data with improved alignment
+            const summaryLeftX = 150;
+            const summaryValueX = 350;
+            doc.fontSize(12);
+            
+            // Draw summary items with consistent spacing
+            doc.text('Total Orders:', summaryLeftX, summaryStartY + 35);
+            doc.text(orders.length.toString(), summaryValueX, summaryStartY + 35);
+            
+            doc.text('Total Sales:', summaryLeftX, summaryStartY + 55);
+            doc.text(`Rs: ${totalSales.toFixed(2)}`, summaryValueX, summaryStartY + 55);
+            
+            doc.text('Total Discount:', summaryLeftX, summaryStartY + 75);
+            doc.text(`Rs: ${totalDiscount.toFixed(2)}`, summaryValueX, summaryStartY + 75);
+
+            doc.moveDown(4); // Add space after summary box
+
+            // Order Details section with improved table
+            doc.fontSize(14).text('Order Details', { align: 'left' });
+            doc.moveDown(0.5);
+
+            // Define table structure
+            const tableTop = doc.y;
+            const tableHeaders = ['Order ID', 'Customer', 'Date', 'Amount', 'Status'];
+            const columnWidths = [100, 120, 100, 100, 80];
+            const startX = 50;
+            const rowHeight = 25;
+
+            // Draw table header with background
+            doc.rect(startX, tableTop, 500, rowHeight).fill('#e0e0e0');
+            doc.fill('#000000');
+
+            // Add header text
+            let currentX = startX;
+            tableHeaders.forEach((header, i) => {
+                doc.fontSize(10)
+                   .text(header, 
+                        currentX + 5, 
+                        tableTop + 7,
+                        { width: columnWidths[i] - 5, align: 'left' });
+                currentX += columnWidths[i];
+            });
+
+            // Draw table rows
+            let currentY = tableTop + rowHeight;
+
+            orders.forEach((order, index) => {
+                // Check for page break
+                if (currentY > 700) {
+                    doc.addPage();
+                    currentY = 50;
+                    
+                    // Repeat header on new page
+                    doc.rect(startX, currentY, 500, rowHeight).fill('#e0e0e0');
+                    doc.fill('#000000');
+                    
+                    currentX = startX;
+                    tableHeaders.forEach((header, i) => {
+                        doc.fontSize(10)
+                           .text(header,
+                                currentX + 5,
+                                currentY + 7,
+                                { width: columnWidths[i] - 5, align: 'left' });
+                        currentX += columnWidths[i];
+                    });
+                    currentY += rowHeight;
+                }
+
+                // Draw row background (alternate colors)
+                doc.rect(startX, currentY, 500, rowHeight)
+                   .fill(index % 2 === 0 ? '#ffffff' : '#f9f9f9');
+                doc.fill('#000000');
+
+                // Add row data
+                currentX = startX;
+                [
+                    order.orderId,
+                    order.userId ? order.userId.name : 'N/A',
+                    order.createdAt.toLocaleDateString(),
+                    `Rs: ${order.finalAmount.toFixed(2)}`,
+                    order.status
+                ].forEach((text, i) => {
+                    doc.fontSize(9)
+                       .text(text,
+                            currentX + 5,
+                            currentY + 7,
+                            { 
+                                width: columnWidths[i] - 5,
+                                align: i === 3 ? 'right' : 'left'
+                            });
+                    currentX += columnWidths[i];
+                });
+
+                // Draw row border
+                doc.rect(startX, currentY, 500, rowHeight).stroke();
+                currentY += rowHeight;
+            });
+
+            // Add footer with page numbers
+            const pageCount = doc.pages?.length || 1;
+            for (let i = 0; i < pageCount; i++) {
+                doc.switchToPage(i);
+                const bottomY = doc.page.height - 50;
+                doc.fontSize(8);
+                doc.text(`Generated on: ${new Date().toLocaleString()}`, 50, bottomY, { align: 'left' });
+                doc.text(`Page ${i + 1} of ${pageCount}`, 500, bottomY, { align: 'right' });
+            }
+
+            doc.end();
+        } else {
+            res.status(400).send('Invalid format specified');
+        }
+
+    } catch (error) {
+        console.error('Error downloading report:', error);
+        res.status(500).send('Error downloading report');
+    }
+};
 
 module.exports = {
   getOrderListPageAdmin,
   getOrderDetailsPageAdmin,
   changeOrderStatus,
+  getSalesReport,
+  generateSalesReport,
+  downloadReport
 }

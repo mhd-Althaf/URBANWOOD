@@ -48,6 +48,41 @@
 			});
 		}
 	}
+	async function addToWishlist(productId, event) {
+		try {
+			const response = await fetch('/wishlist/add', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ productId })
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				// Change heart icon to filled
+				
+				
+				Swal.fire({
+					icon: 'success',
+					title: 'Success!',
+					text: 'Product added to wishlist successfully',
+					showConfirmButton: false,
+					timer: 1500
+				});
+			} else {
+				throw new Error(data.message || 'Failed to add to wishlist');
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Oops...',
+				text: error.message || 'Something went wrong!',
+			});
+		}
+	}
+
 </script>
 <html lang="zxx" class="no-js">
 
@@ -85,6 +120,7 @@
 		href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<style>
@@ -892,13 +928,10 @@
 										</div>
 
 										<div class="product-actions">
-											<button class="action-btn wishlist"
-												onclick="addToWhishList('<%= product._id %>')">
-												<i class="fa fa-heart-o"></i>
+											<button class="action-btn wishlist" onclick="addToWishlist('<%= product._id %>', event)" title="Add to Wishlist">
+												<i class="far fa-heart"></i>
 											</button>
-											<button class="action-btn compare" title="Compare">
-												<i class="fa fa-refresh"></i>
-											</button>
+
 										</div>
 									</div>
 									<% }); %>
@@ -1272,4 +1305,3 @@
 </body>
 
 </html>
-implement paginationrs

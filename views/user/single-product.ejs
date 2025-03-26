@@ -1,11 +1,100 @@
 <!DOCTYPE html>
-<html lang="en" class="no-js">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+	async function addToCart(productId) {
+		try {
+			const response = await fetch('/addToCart', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					productId: productId,
+					quantity: 1
+				})
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				if (!response.ok) {
+					throw new Error('You must be logged in to add items to cart');
+				}
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Success!',
+					text: 'Product added to cart successfully',
+					confirmButtonColor: '#2A9D8F'
+				}).then(() => {
+					// Refresh cart count after successful add
+					fetch('/getCartCount')
+						.then(res => res.json())
+						.then(data => {
+							if (data.count) {
+								document.querySelector('.cart-count').textContent = data.count;
+							}
+						});
+				});
+			} else {
+				throw new Error(data.message || 'Failed to add product to cart');
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: error.message || 'Something went wrong. Please try again.',
+				confirmButtonColor: '#2A9D8F'
+			});
+		}
+	}
+
+	async function addToWishlist(productId, event) {
+		try {
+			const response = await fetch('/wishlist/add', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ productId })
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				// Change heart icon to filled
+				const heartIcon = event.target.closest('.wishlist').querySelector('i');
+				heartIcon.classList.remove('fa-heart-o');
+				heartIcon.classList.add('fa-heart');
+				
+				Swal.fire({
+					icon: 'success',
+					title: 'Success!',
+					text: 'Product added to wishlist successfully',
+					showConfirmButton: false,
+					timer: 1500
+				});
+			} else {
+				throw new Error(data.message || 'Failed to add to wishlist');
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Oops...',
+				text: error.message || 'Something went wrong!',
+			});
+		}
+	}
+
+
+</script>
+<html lang="zxx" class="no-js">
 
 <head>
 	<!-- Mobile Specific Meta -->
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<!-- Favicon-->
-	<link rel="shortcut icon" href="img/fav.png">
+	<link rel="shortcut icon" href="/public/userAssets/images/favicon.png/">
 	<!-- Author Meta -->
 	<meta name="author" content="CodePixar">
 	<!-- Meta Description -->
@@ -15,9 +104,27 @@
 	<!-- meta character set -->
 	<meta charset="UTF-8">
 	<!-- Site Title -->
-	<title>
-		<%= product.productName %> - Karma Shop
-	</title>
+	<title><%= product.productName %> - URBANWOOD</title>
+
+	<!-- CSS -->
+	<link rel="stylesheet" href="/css/linearicons.css">
+	<link rel="stylesheet" href="/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/themify-icons.css">
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/css/owl.carousel.css">
+	<link rel="stylesheet" href="/css/nice-select.css">
+	<link rel="stylesheet" href="/css/nouislider.min.css">
+	<link rel="stylesheet" href="/css/ion.rangeSlider.css" />
+	<link rel="stylesheet" href="/css/ion.rangeSlider.skinFlat.css" />
+	<link rel="stylesheet" href="/css/magnific-popup.css">
+	<link rel="stylesheet" href="/css/main.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+	<link href="/css/font-awesome.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<style>
 		/* Zoomed Image Container */
 		.zoomed {
@@ -145,98 +252,17 @@
 			position: relative;
 			overflow: hidden;
 		}
+
+		.lnr-heart.active {
+			color: #FF6F00;
+		}
 	</style>
-	<!--
-			CSS
-			============================================= -->
-	<link rel="stylesheet" href="/css/linearicons.css">
-	<link rel="stylesheet" href="/css/font-awesome.min.css">
-	<link rel="stylesheet" href="/css/themify-icons.css">
-	<link rel="stylesheet" href="/css/bootstrap.css">
-	<link rel="stylesheet" href="/css/owl.carousel.css">
-	<link rel="stylesheet" href="/css/nice-select.css">
-	<link rel="stylesheet" href="/css/nouislider.min.css">
-	<link rel="stylesheet" href="/css/ion.rangeSlider.css" />
-	<link rel="stylesheet" href="/css/ion.rangeSlider.skinFlat.css" />
-	<link rel="stylesheet" href="/css/main.css">
 </head>
 
 <body>
 
 	<!-- Start Header Area -->
-	<header class="header_area sticky-header">
-		<div class="main_menu">
-			<nav class="navbar navbar-expand-lg navbar-light main_box">
-				<div class="container">
-					<!-- Brand and toggle get grouped for better mobile display -->
-					<a class="navbar-brand logo_h" href="/"><img src="/img/Urbenwood_new.png" alt=""></a>
-					<button class="navbar-toggler" type="button" data-toggle="collapse"
-						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-						aria-expanded="false" aria-label="Toggle navigation">
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<!-- Collect the nav links, forms, and other content for toggling -->
-					<div class="collapse navbar-collapse offset" id="navbarSupportedContent">
-
-						<ul class="nav navbar-nav menu_nav ml-auto">
-							<li class="nav-item submenu dropdown">
-								<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
-									aria-haspopup="true" aria-expanded="false">
-									<% if (locals.user) { %>
-										<%= user.name %>
-											<% } else { %>
-												Sign In
-												<% } %>
-								</a>
-
-								<ul class="dropdown-menu">
-									<% if (locals.user) { %>
-										<li class="nav-item"><a class="nav-link" href="/userProfile">Profile</a></li>
-										<li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-										<% } else { %>
-											<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-											<% } %>
-								</ul>
-
-							</li>
-							<li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
-							<li class="nav-item submenu dropdown">
-								<a href="/shop" class="nav-link">Shop</a>
-							</li>
-
-
-							<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-							<li class="nav-item submenu dropdown">
-								<!-- <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-								 aria-expanded="false">user</a> -->
-								<!-- <ul class="dropdown-menu">
-									<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-									
-								</ul> -->
-							</li>
-						</ul>
-						<ul class="nav navbar-nav navbar-right">
-							<li class="nav-item"><a href="/cart" class="cart"><span class="ti-bag"></span></a></li>
-							<li class="nav-item">
-								<button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</nav>
-		</div>
-		<div class="search_input" id="search_input_box">
-			<div class="container">
-				<form class="d-flex justify-content-between">
-					<input type="text" class="form-control" id="search_input" placeholder="Search Here">
-					<button type="submit" class="btn"></button>
-					<span class="lnr lnr-cross" id="close_search" title="Close Search"></span>
-				</form>
-			</div>
-		</div>
-	</header>
+	<%-include("../../views/partials/user/header")%>
 	<!-- End Header Area -->
 
 	<!-- Start Banner Area -->
@@ -316,7 +342,7 @@
 										<div class="card_area d-flex align-items-center">
 											<button class="primary-btn" onclick="addToCart('<%= product._id %>')">Add to
 												Cart</button>
-											<a class="icon_btn" href="#" onclick="addToWishlist('<%= product._id %>')">
+											<a class="icon_btn" href="#" onclick="addToWishlist('<%= product._id %>', event); return false;">
 												<i class="lnr lnr-heart"></i>
 											</a>
 										</div>
@@ -799,9 +825,9 @@
 			};
 
 			// Add to Wishlist Function
-			window.addToWishlist = async function (productId) {
+			window.addToWishlist = async function (productId, event) {
 				try {
-					const response = await fetch('/addToWishlist', {
+					const response = await fetch('/wishlist/add', {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
@@ -810,9 +836,12 @@
 					});
 
 					const data = await response.json();
-					console.log(response.ok);
 
-					if (response.ok) {
+					if (data.success) {
+						// Change heart icon to filled
+						const heartIcon = event.target.closest('a').querySelector('i');
+						heartIcon.classList.add('active');
+						
 						Swal.fire({
 							icon: 'success',
 							title: 'Success!',

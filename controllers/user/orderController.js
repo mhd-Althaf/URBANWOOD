@@ -197,24 +197,20 @@ const getCheckoutPage = async (req, res) => {
         const shippingCost = subtotal > 1000 ? 0 : 100;
         const grandTotal = subtotal + shippingCost;
 
-
         const user = await User.findById(userId);
         const savedAddresses = user?.addresses || [];
-        const userAddress = await Address.find({ userId: userId })
+        const userAddress = await Address.find({ userId: userId });
         const currentDate = new Date();
 
-
-
         const coupons = await Coupon.find({
-            userId: { $nin: [userId] },
             expireOn: { $gte: currentDate },
-            minimumPrice: { $lte: subtotal },
-            maximumPrice: { $gte: subtotal }
+            isListed: true,
+            userId: { $nin: [userId] }
         });
 
-        console.log("sfhgggfshgdhdg", req.body);
-
-        console.log('ccccccccccccccc', coupons)
+        console.log('Available coupons:', coupons);
+        console.log('Current user ID:', userId);
+        console.log('Current subtotal:', subtotal);
 
         res.render('user/checkout', {
             cartItems,
@@ -224,7 +220,7 @@ const getCheckoutPage = async (req, res) => {
             savedAddresses,
             user: req.session.user,
             userAddress,
-            coupons
+            coupons: coupons || []
         });
 
     } catch (error) {
@@ -636,28 +632,31 @@ const singleReturnRequest = async (req, res) => {
 
 
 const applyCoupon = async (req, res) => {
-    console.log('working')
+    console.log('applyCoupon called');
+    console.log('Session:', req.session);
+    console.log('User:', req.session.user);
+    console.log('Request body:', req.body);
+    
     try {
         const { couponCode } = req.body;
-        console.log(couponCode)
+        console.log('Coupon code:', couponCode);
         const userId = req.session.user._id;
-        // couponCode.toString()
+        console.log('User ID:', userId);
 
         const cart = await Cart.findOne({ userid: userId });
         const coupon = await Coupon.findOne({ name: couponCode });
-        console.log(cart, coupon);
+        console.log('Cart:', cart);
+        console.log('Coupon:', coupon);
 
         if (!cart || !coupon) {
             return res.status(404).json({ success: false, message: "Cart or Coupon not found" });
         }
 
-     
         const now = new Date();
         if (now > new Date(coupon.expireOn)) {
             return res.status(400).json({ success: false, message: "Coupon has expired" });
         }
 
-       
         let subtotal = 0;
         for (const item of cart.items) {
             const product = await Product.findById(item.productId);
@@ -666,8 +665,6 @@ const applyCoupon = async (req, res) => {
             }
         }
 
-        // console.log("Cart Total:", cartTotal);
-       
         if (subtotal < coupon.minimumPrice) {
             return res.status(400).json({ success: false, message: "Minimum cart value not met for this coupon" });
         }
@@ -686,7 +683,7 @@ const applyCoupon = async (req, res) => {
         return res.json({
             success: true,
             message: "Coupon applied successfully!",
-            subtotal,         
+            subtotal: discountedTotal,         
             discountAmount,   
             shippingCost,     
             grandTotal       

@@ -1,4 +1,7 @@
 <%-include("../../views/partials/user/header.ejs")%>
+<!-- Add SweetAlert2 library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 	<section class="banner-area organic-breadcrumb">
 		<div class="container">
 			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
@@ -87,6 +90,7 @@
 									<!-- Favorite Button - Top Right Corner -->
 									<div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
 										<button class="btn btn-sm btn-light rounded-circle shadow-sm"
+											onclick="addToWishlist('<%= product._id %>', event)"
 											style="width: 36px; height: 36px; padding: 0;">
 											<i class="far fa-heart align-middle" style="font-size: 1.1rem;"></i>
 										</button>
@@ -205,6 +209,23 @@
 			.btn-light:hover {
 				background-color: rgba(255, 255, 255, 0.9) !important;
 			}
+
+			/* Add styles for the wishlist button */
+			.wishlist-btn {
+				transition: all 0.3s ease;
+			}
+
+			.wishlist-btn:hover {
+				transform: scale(1.1);
+			}
+
+			.wishlist-btn i {
+				transition: color 0.3s ease;
+			}
+
+			.wishlist-btn:hover i {
+				color: #dc3545;
+			}
 		</style>
 
 		<script>
@@ -234,4 +255,50 @@
 			}
 
 			document.addEventListener('DOMContentLoaded', updateTimer);
+
+			async function addToWishlist(productId, event) {
+				try {
+					// Prevent default button behavior
+					event.preventDefault();
+					
+					const response = await fetch('/wishlist/add', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ productId })
+					});
+
+					const data = await response.json();
+
+					if (data.success) {
+						// Get the button element
+						const button = event.currentTarget;
+						// Find the heart icon within the button
+						const heartIcon = button.querySelector('i');
+						
+						if (heartIcon) {
+							heartIcon.classList.remove('far');
+							heartIcon.classList.add('fas');
+							heartIcon.style.color = '#dc3545'; // Add red color
+						}
+						
+						Swal.fire({
+							icon: 'success',
+							title: 'Success!',
+							text: 'Product added to wishlist successfully',
+							showConfirmButton: false,
+							timer: 1500
+						});
+					} else {
+						throw new Error(data.message || 'Failed to add to wishlist');
+					}
+				} catch (error) {
+					Swal.fire({
+						icon: 'error',
+						title: 'Oops...',
+						text: error.message || 'Something went wrong!',
+					});
+				}
+			}
 		</script>

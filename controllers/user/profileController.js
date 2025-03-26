@@ -377,18 +377,17 @@ const postAddAddress = async (req, res) => {
         const userId = req.session.user; 
         if (!userId) {
             console.log("User ID not found in session");
-            return res.redirect("/pageNotFound");
+            return res.status(401).json({ success: false, message: "User not authenticated" });
         }
 
         const userData = await User.findById(userId); 
         if (!userData) {
             console.log("User not found in database with ID:", userId);
-            return res.redirect("/pageNotFound");
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
 
-        
         console.log("Received address data:", req.body);
 
         const userAddress = await Address.findOne({ userId: userData._id });
@@ -405,10 +404,10 @@ const postAddAddress = async (req, res) => {
             console.log("Address added to existing address list for user:", userData._id);
         }
 
-        res.redirect("/userProfile");
+        res.json({ success: true, message: "Address added successfully" });
     } catch (error) {
         console.error("Error adding address:", error);
-        res.redirect("/pageNotFound");
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 

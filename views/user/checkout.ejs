@@ -54,19 +54,91 @@
         .place-order-btn:hover { background: #066661; }
 
         /* Coupon Section */
-        .coupon-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .coupon-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .coupon-input { flex: 1; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; }
-        .apply-btn { background-color: #088178; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
-        .apply-btn:hover { background-color: #066661; }
-        .coupon-card { padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .coupon-code { font-size: 1.1em; font-weight: bold; color: #088178; margin-bottom: 5px; }
-        .coupon-details p { margin: 3px 0; color: #666; font-size: 0.9em; }
-        .use-button, .cancel-button { padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; transition: all 0.3s ease; }
-        .use-button { background-color: #088178; color: white; }
-        .use-button:hover { background-color: #066661; }
-        .cancel-button { background-color: #dc3545; color: white; }
-        .cancel-button:hover { background-color: #c82333; }
+        .coupon-section {
+            margin-top: 20px;
+            padding: 15px;
+        }
+        .coupon-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .coupon-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .apply-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .apply-btn:hover {
+            background-color: #45a049;
+        }
+        .coupon-list {
+            margin-top: 15px;
+        }
+        .coupon-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .coupon-code {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .coupon-description {
+            color: #666;
+            margin: 5px 0;
+        }
+        .expiry-date {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .coupon-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .use-button, .cancel-button {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .use-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .cancel-button {
+            background-color: #f44336;
+            color: white;
+        }
+        .no-coupons {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+        }
+        #couponMessage {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .text-success {
+            color: #4CAF50;
+        }
+        .text-danger {
+            color: #f44336;
+        }
 
         /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; }
@@ -212,23 +284,23 @@
                         </div>
                         <div id="couponMessage" class="text-success" style="display: none;"></div>
                         <% if (coupons && coupons.length > 0) { %>
-                        <div class="coupon-list">
-                            <% coupons.forEach(coupon => { %>
-                            <div class="coupon-card" data-code="<%= coupon.name %>">
-                                <div class="coupon-details">
-                                    <div class="coupon-code"><%= coupon.name %></div>
-                                    <p><%= coupon.offerPrice ? `₹${coupon.offerPrice} off on orders above ₹${coupon.minimumPrice.toLocaleString()}` : 'Discount available' %></p>
-                                    <p class="expiry-date">Expires: <%= new Date(coupon.expireOn).toLocaleDateString() %></p>
-                                </div>
-                                <div class="coupon-actions">
-                                    <button class="use-button" id="useButton_<%= coupon.name %>">Use</button>
-                                    <button class="cancel-button" id="cancelButton_<%= coupon.name %>" style="display: none;">Cancel</button>
-                                </div>
+                            <div class="coupon-list">
+                                <% coupons.forEach(coupon => { %>
+                                    <div class="coupon-card" data-code="<%= coupon.name %>">
+                                        <div class="coupon-details">
+                                            <div class="coupon-code"><%= coupon.name %></div>
+                                            <p class="coupon-description">₹<%= coupon.offerPrice %> off on orders above ₹<%= coupon.minimumPrice.toLocaleString() %></p>
+                                            <p class="expiry-date">Expires: <%= new Date(coupon.expireOn).toLocaleDateString() %></p>
+                                        </div>
+                                        <div class="coupon-actions">
+                                            <button class="use-button" onclick="selectCoupon('<%= coupon.name %>')">Use</button>
+                                            <button class="cancel-button" style="display: none;" onclick="cancelCoupon('<%= coupon.name %>')">Cancel</button>
+                                        </div>
+                                    </div>
+                                <% }); %>
                             </div>
-                            <% }) %>
-                        </div>
                         <% } else { %>
-                        <p class="text-center">No coupons available.</p>
+                            <p class="no-coupons">No coupons available for this order.</p>
                         <% } %>
                     </div>
 
@@ -316,6 +388,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // Define global variables
+        const originalSubtotal = <%= subtotal %>;
+        const originalShippingCost = <%= shippingCost %>;
+
         document.addEventListener('DOMContentLoaded', function () {
             // Modal Control
             const modal = document.getElementById('addAddressModal');
@@ -384,20 +460,38 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(form);
+                const formDataObject = {};
+                
+                // Convert FormData to regular object
+                formData.forEach((value, key) => {
+                    formDataObject[key] = value;
+                });
+                
                 try {
-                    const response = await fetch(form.action, {
+                    const response = await fetch('/addaddress', {
                         method: 'POST',
-                        body: formData
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formDataObject)
                     });
-                    const result = await response.json();
+                    
                     if (response.ok) {
-                        closeModal();
-                        location.reload();
+                        const result = await response.json();
+                        if (result.success) {
+                            closeModal();
+                            location.reload();
+                        } else {
+                            Swal.fire('Error', result.message || 'Failed to save address', 'error');
+                        }
                     } else {
-                        Swal.fire('Error', result.message || 'Failed to save address', 'error');
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        Swal.fire('Error', 'Failed to save address. Please try again.', 'error');
                     }
                 } catch (error) {
-                    Swal.fire('Error', 'An error occurred', 'error');
+                    console.error('Form submission error:', error);
+                    Swal.fire('Error', 'An error occurred while processing your request', 'error');
                 }
             });
 
@@ -435,7 +529,7 @@
             const grandTotalElement = document.getElementById('grandTotal');
             const discountElement = document.getElementById('discount');
             const shippingCostElement = document.getElementById('shippingCost');
-            let shippingCost = shippingCostElement.textContent === 'FREE Shipping' ? 0 : parseFloat(shippingCostElement.textContent.replace('₹', '').replace(',', ''));
+            let currentShippingCost = shippingCostElement.textContent === 'FREE Shipping' ? 0 : parseFloat(shippingCostElement.textContent.replace('₹', '').replace(',', ''));
 
             let usedCoupon = null;
             function selectCoupon(couponCode) {
@@ -446,61 +540,63 @@
                 couponMessage.style.display = 'none';
             }
 
+            function cancelCoupon(couponCode) {
+                const card = document.querySelector(`.coupon-card[data-code="${couponCode}"]`);
+                const useBtn = card.querySelector('.use-button');
+                const cancelBtn = card.querySelector('.cancel-button');
+                useBtn.style.display = 'block';
+                cancelBtn.style.display = 'none';
+                document.getElementById('couponInput').value = '';
+                document.getElementById('couponMessage').style.display = 'none';
+                // Reset the totals to original values
+                document.getElementById('subtotal').textContent = `₹${originalSubtotal.toLocaleString()}`;
+                document.getElementById('discount').textContent = '₹0';
+                document.getElementById('grandTotal').textContent = `₹${(originalSubtotal + currentShippingCost).toLocaleString()}`;
+            }
+
             function applyCoupon() {
                 const couponCode = couponInput.value.trim();
                 if (!couponCode) {
                     Swal.fire('Error', 'Please enter a coupon code!', 'error');
                     return;
                 }
+                
                 fetch('/apply-coupon', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ couponCode })
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const finalTotal = parseFloat(data.finalTotal);
-                            const discount = parseFloat(subtotalElement.textContent.replace('₹', '').replace(',', '')) - finalTotal;
-                            subtotalElement.textContent = `₹${finalTotal.toLocaleString()}`;
-                            discountElement.textContent = `₹${discount.toLocaleString()}`;
-                            grandTotalElement.textContent = `₹${(finalTotal + shippingCost).toLocaleString()}`;
-                            couponMessage.textContent = data.message;
-                            couponMessage.className = 'text-success';
-                            couponMessage.style.display = 'block';
-                            usedCoupon = couponCode;
-                        } else {
-                            couponMessage.textContent = data.message;
-                            couponMessage.className = 'text-danger';
-                            couponMessage.style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire('Error', 'Something went wrong! Please try again.', 'error');
-                    });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const finalTotal = parseFloat(data.subtotal);
+                        const discount = data.discountAmount;
+                        document.getElementById('subtotal').textContent = `₹${finalTotal.toLocaleString()}`;
+                        document.getElementById('discount').textContent = `₹${discount.toLocaleString()}`;
+                        document.getElementById('grandTotal').textContent = `₹${data.grandTotal.toLocaleString()}`;
+                        document.getElementById('couponMessage').textContent = data.message;
+                        document.getElementById('couponMessage').className = 'text-success';
+                        document.getElementById('couponMessage').style.display = 'block';
+                    } else {
+                        document.getElementById('couponMessage').textContent = data.message;
+                        document.getElementById('couponMessage').className = 'text-danger';
+                        document.getElementById('couponMessage').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Something went wrong! Please try again.', 'error');
+                });
             }
-
-            couponCards.forEach(card => {
-                const useBtn = card.querySelector('.use-button');
-                const cancelBtn = card.querySelector('.cancel-button');
-                const couponCode = card.getAttribute('data-code');
-                useBtn.addEventListener('click', () => {
-                    selectCoupon(couponCode);
-                    useBtn.style.display = 'none';
-                    cancelBtn.style.display = 'block';
-                });
-                cancelBtn.addEventListener('click', () => {
-                    couponInput.value = '';
-                    useBtn.style.display = 'block';
-                    cancelBtn.style.display = 'none';
-                    couponMessage.style.display = 'none';
-                    const originalSubtotal = <%= subtotal %>;
-                    subtotalElement.textContent = `₹${originalSubtotal.toLocaleString()}`;
-                    discountElement.textContent = '₹0';
-                    grandTotalElement.textContent = `₹${(originalSubtotal + shippingCost).toLocaleString()}`;
-                    usedCoupon = null;
-                });
-            });
 
             applyCouponBtn.addEventListener('click', applyCoupon);
 

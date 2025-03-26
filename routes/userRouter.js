@@ -86,6 +86,7 @@ router.get("/deleteAddress", userAuth, profileController.deleteAddress)
 
 router.post('/place-order', userAuth, orderController.placeOrder);
 router.get("/orders", userAuth, orderController.userOrderDetails)
+router.post("/apply-coupon", userAuth, orderController.applyCoupon);
 router.post('/cancelOrder', userAuth, orderController.cancelOrder)
 router.post('/cancel-product', userAuth, orderController.cancelProduct);
 router.post('/single-return-product',userAuth,orderController.singleReturnRequest);
@@ -105,9 +106,11 @@ router.post("/payment", userAuth, orderController.verifyPayment);
 // router.get('/downloadInvoice/:orderId',userAuth,orderController.downloadInvoice);
 
 // // Wishlist Management
-router.get("/wishlist",userAuth,wishlistController.loadwishlistPage);
-router.post("/addToWishlist",userAuth,wishlistController.addToWishlist);
-router.get("/removeWishlist",userAuth,wishlistController.removeProduct);
+router.get("/wishlist", userAuth, wishlistController.loadWishlistPage);
+router.post("/wishlist/add", userAuth, wishlistController.addToWishlist);
+router.post("/wishlist/remove", userAuth, wishlistController.removeFromWishlist);
+router.post("/wishlist/move-to-cart", userAuth, wishlistController.moveToCart);
+router.get("/wishlist/share", userAuth, wishlistController.shareWishlist);
 
 // Wallet Management
 router.get("/wallet", userAuth, walletController.getWalletPage);
@@ -141,11 +144,5 @@ router.post("/verify-payment", userAuth, walletController.verify_payment);
 //         });
 //     }
 // });
-
-
-router.post('/apply-coupon',orderController.applyCoupon)
-
-
-
 
 module.exports = router;

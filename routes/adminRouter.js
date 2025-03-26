@@ -60,6 +60,10 @@ router.post("/apply-coupon", adminAuth, couponController.applyCoupon);
 //order
 router.get('/order',adminAuth,orderController.getOrderListPageAdmin);
 router.get("/orderDetailsAdmin",adminAuth,orderController.getOrderDetailsPageAdmin);
-router.patch('/changeStatus/:orderId', adminAuth, orderController.changeOrderStatus);
-    
+
+// Sales Report
+router.get('/sales-report', adminAuth, orderController.getSalesReport);
+router.post('/generate-sales-report', adminAuth, orderController.generateSalesReport);
+router.get('/download-report/:format', adminAuth, orderController.downloadReport);
+
 module.exports = router;

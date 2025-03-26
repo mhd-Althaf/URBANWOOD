@@ -285,18 +285,31 @@
                                         <table class="table mb-0">
                                             <tr>
                                                 <td>Subtotal:</td>
-                                                <td class="text-end">₹<%= order.totalPrice.toFixed(2) %>
-                                                </td>
+                                                <td class="text-end">₹<%= (order.totalPrice || 0).toLocaleString() %></td>
+                                            </tr>
+                                            <% if (order.couponCode) { %>
+                                            <tr>
+                                                <td>Coupon Applied:</td>
+                                                <td class="text-end text-success"><%= order.couponCode %></td>
                                             </tr>
                                             <tr>
                                                 <td>Discount:</td>
-                                                <td class="text-end">₹<%= order.discount.toFixed(2) %>
+                                                <td class="text-end text-success">-₹<%= (order.discount || 0).toLocaleString() %></td>
+                                            </tr>
+                                            <% } %>
+                                            <tr>
+                                                <td>Shipping:</td>
+                                                <td class="text-end">
+                                                    <% if (!order.shippingCost || order.shippingCost === 0) { %>
+                                                        FREE
+                                                    <% } else { %>
+                                                        ₹<%= order.shippingCost.toLocaleString() %>
+                                                    <% } %>
                                                 </td>
                                             </tr>
                                             <tr class="fw-bold">
                                                 <td>Total:</td>
-                                                <td class="text-end">₹<%= order.finalAmount.toFixed(2) %>
-                                                </td>
+                                                <td class="text-end">₹<%= (order.finalAmount || 0).toLocaleString() %></td>
                                             </tr>
                                         </table>
                                     </div>
