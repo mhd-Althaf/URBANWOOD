@@ -78,7 +78,7 @@ console.log("kkkkkkkkkkkkk",req.files);
             description: products.description,
             category: categoryId._id,
             regularPrice: products.regularPrice,
-            salePrice: products.salePrice || products.regularPrice,
+            offerPrice: products.offerPrice || products.regularPrice,
             quantity: products.quantity,
             productImages: images,
             status: "Available",
@@ -158,7 +158,7 @@ const addProductOffer = async (req, res) => {
             return res.json({ status: false, message: "This product already has a better category offer" });
         }
 
-        product.salePrice = product.regularPrice - Math.floor(product.regularPrice * (percentage / 100));
+        product.offerPrice = product.regularPrice - Math.floor(product.regularPrice * (percentage / 100));
         product.productOffer = percentage;
         product.offerType = offerType;
         product.validUntil = validUntil;
@@ -180,7 +180,7 @@ const removeProductOffer = async (req, res) => {
             return res.status(400).json({ status: false, message: "Product not found for offer removal" });
         }
 
-        product.salePrice = product.regularPrice;
+        product.offerPrice = product.regularPrice;
         product.productOffer = 0;
         product.offerType = null;
         product.validUntil = null;
@@ -283,7 +283,7 @@ const editProduct = async (req, res) => {
         
             category: product.category,
             regularPrice: data.regularPrice,
-            salePrice: data.salePrice,
+            offerPrice: data.offerPrice,
             quantity: data.quantity,
         };
         if (req.files.length > 0) {
@@ -355,7 +355,7 @@ const getProducts = async (req, res) => {
             description: product.description || 'No Description',
             category: product.category ? product.category.name : 'Uncategorized',
             regularPrice: product.regularPrice || 0,
-            salePrice: product.salePrice || product.regularPrice || 0,
+            offerPrice: product.offerPrice || product.regularPrice || 0,
             quantity: product.quantity || 0,
             status: product.status || 'Unavailable',
             productImages: product.productImages || [],

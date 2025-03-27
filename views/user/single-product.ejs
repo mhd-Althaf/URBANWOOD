@@ -297,6 +297,10 @@
 							</div>
 							<% }); %>
 					</div>
+
+					<%
+					const originalPrice = product.regularPrice -totalOffer
+					%>
 				</div>
 				<div class="col-lg-5 offset-lg-1">
 					<div class="s_product_text">
@@ -304,11 +308,11 @@
 							<%= product.productName %>
 						</h3>
 						<% if (totalOffer> 0) { %>
-							<h2>$<%= product.salePrice %>
+							<h2>$<%= originalPrice %>
 							</h2>
 							<h6 class="l-through">$<%= product.regularPrice %>
 							</h6>
-							<span class="badge badge-success">Save <%= totalOffer %>%</span>
+							<span class="badge badge-success">Save <%= totalOffer %></span>
 							<% } else { %>
 								<h2>$<%= product.regularPrice %>
 								</h2>

@@ -192,123 +192,124 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Order Details #<%= order.orderId %>
-                        </h5>
+                        <h5 class="modal-title">Order Details #<%= order.orderId %></h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="order-card">
+                            <!-- Order Information Section -->
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <h6 class="mb-3">Order Information</h6>
-                                    <p class="mb-1">Date: <%= order.createdAt.toLocaleString() %>
-                                    </p>
-                                    <p class="mb-2">Order Status: <span
-                                            class="status-badge status-<%= order.status.toLowerCase() %>">
+                                    <p class="mb-1">Date: <%= order.createdAt.toLocaleString() %></p>
+                                    <p class="mb-2">Order Status: 
+                                        <span class="status-badge status-<%= order.status.toLowerCase() %>">
                                             <%= order.status %>
-                                        </span></p>
+                                        </span>
+                                    </p>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="mb-3">Payment Details</h6>
-                                    <p class="mb-1">Method: <%= order.paymentMethod %>
-                                    </p>
-                                    <p class="mb-1">Status: <%= order.paymentStatus %>
-                                    </p>
+                                    <p class="mb-1">Method: <%= order.paymentMethod %></p>
+                                    <p class="mb-1">Status: <%= order.paymentStatus %></p>
                                 </div>
                             </div>
 
+                            <!-- Shipping Address Section -->
                             <div class="row mb-4">
                                 <div class="card-body">
                                     <% if (order.userId) { %>
-                                        <p><strong>Customer Name:</strong>
-                                            <%= order.address.name %>
-                                        </p>
-                                        <% } %>
-                                            <% if (order.address) { %>
-                                                <h6>Shipping Address:</h6>
-                                                <p>
-                                                    <%= order.address.addressType %><br>
-                                                        <%= order.address.landMark ? order.address.landMark : 'N/A' %>,
-                                                            <%= order.address.city %><br>
-                                                                <%= order.address.state %> - <%= order.address.pincode
-                                                                        %><br>
-                                                                        <p class="mb-1">📞 <%= order.address.phone %>
-                                                                        </p>
-                                                                        <% if (order.address.altPhone) { %>
-                                                                            Alt: <%= order.address.altPhone %>
-                                                                                <% } %>
-                                                </p>
-                                                <% } else { %>
-                                                    <p>No address available.</p>
-                                                    <% } %>
+                                        <p><strong>Customer Name:</strong> <%= order.address.name %></p>
+                                    <% } %>
+                                    <% if (order.address) { %>
+                                        <h6>Shipping Address:</h6>
+                                        <div class="address-card p-3 bg-light rounded">
+                                            <p class="mb-1"><strong><%= order.address.addressType %></strong></p>
+                                            <p class="mb-1"><%= order.address.landMark ? order.address.landMark : 'N/A' %></p>
+                                            <p class="mb-1"><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
+                                            <p class="mb-1">📞 <%= order.address.phone %></p>
+                                            <% if (order.address.altPhone) { %>
+                                                <p class="mb-0">📱 Alt: <%= order.address.altPhone %></p>
+                                            <% } %>
+                                        </div>
+                                    <% } else { %>
+                                        <p>No address available.</p>
+                                    <% } %>
                                 </div>
                             </div>
 
+                            <!-- Order Items Section -->
                             <div class="mb-4">
                                 <h6 class="mb-3">Order Items</h6>
+                                <% let subtotal = 0; %>
                                 <% order.orderItems.forEach(item=> { %>
+                                    <% const itemTotal = item.price * item.quantity; %>
+                                    <% subtotal += itemTotal; %>
                                     <div class="product-card">
-                                        <!-- <img src="<%= item.image || '/images/default-product.jpg' %>"
-                                            alt="<%= item.name %>" class="product-image"> -->
                                         <div class="product-details">
-                                            <h6>
-                                                <%= item.name %>
-                                            </h6>
-                                            <p class="mb-1">Qty: <%= item.quantity %> | Price: ₹<%=
-                                                        item.price.toFixed(2) %> | Total: ₹<%= (item.price *
-                                                            item.quantity).toFixed(2) %>
-                                            </p>
-                                            <div>
-                                                <% if ( item.status==="Pending"||item.status==="Processing") { %>
-                                                    <button class="btn btn-danger btn-sm"
-                                                        onclick="cancelProduct('<%= order._id %>', '<%= item.productId._id%>')">
-                                                        Cancel
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="product-name"><%= item.name %></h6>
+                                                    <p class="mb-1 text-muted">SKU: <%= item.productId._id %></p>
+                                                </div>
+                                                <div class="text-end">
+                                                    <p class="mb-1">Unit Price: ₹<%= item.price.toLocaleString() %></p>
+                                                    <p class="mb-1">Quantity: <%= item.quantity %></p>
+                                                    <p class="mb-1 fw-bold">Subtotal: ₹<%= itemTotal.toLocaleString() %></p>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <% if (order.status === "Pending" || order.status === "Processing") { %>
+                                                    <button class="btn btn-danger btn-sm" onclick="cancelProduct('<%= order._id %>', '<%= item.productId._id %>')">
+                                                        Cancel Product
                                                     </button>
-                                                    <% } else { %>
-                                                        <span class="text-muted">Item <%= item.status %></span>
-                                                        <% } %>
-                                                            <% if (item.status==="Delivered" ) { %>
-                                                                <button class="btn btn-danger btn-sm ms-2"
-                                                                    onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>')">
-                                                                    Return Order
-                                                                </button>
-                                                                <% } %>
+                                                <% } %>
+                                                <% if (order.status === "Delivered") { %>
+                                                    <button class="btn btn-danger btn-sm ms-2" onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>')">
+                                                        Return Product
+                                                    </button>
+                                                <% } %>
+                                                <% if (!["Pending", "Processing", "Delivered"].includes(order.status)) { %>
+                                                    <span class="text-muted">Status: <%= item.status %></span>
+                                                <% } %>
                                             </div>
                                         </div>
                                     </div>
-                                    <% }); %>
+                                <% }); %>
                             </div>
 
+                            <!-- Order Summary Section -->
                             <div class="row">
                                 <div class="col-md-6 ms-auto">
                                     <div class="summary-card">
-                                        <table class="table mb-0">
+                                        <h6 class="mb-3">Order Summary</h6>
+                                        <table class="table table-sm mb-0">
                                             <tr>
-                                                <td>Subtotal:</td>
-                                                <td class="text-end">₹<%= (order.totalPrice || 0).toLocaleString() %></td>
+                                                <td>Items Subtotal:</td>
+                                                <td class="text-end">₹<%= subtotal.toLocaleString() %></td>
                                             </tr>
                                             <% if (order.couponCode) { %>
-                                            <tr>
-                                                <td>Coupon Applied:</td>
-                                                <td class="text-end text-success"><%= order.couponCode %></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Discount:</td>
-                                                <td class="text-end text-success">-₹<%= (order.discount || 0).toLocaleString() %></td>
-                                            </tr>
+                                                <tr>
+                                                    <td>Coupon Applied:</td>
+                                                    <td class="text-end text-success"><%= order.couponCode %></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Discount:</td>
+                                                    <td class="text-end text-success">-₹<%= (order.discount || 0).toLocaleString() %></td>
+                                                </tr>
                                             <% } %>
                                             <tr>
                                                 <td>Shipping:</td>
                                                 <td class="text-end">
                                                     <% if (!order.shippingCost || order.shippingCost === 0) { %>
-                                                        FREE
+                                                        <span class="text-success">FREE</span>
                                                     <% } else { %>
                                                         ₹<%= order.shippingCost.toLocaleString() %>
                                                     <% } %>
                                                 </td>
                                             </tr>
                                             <tr class="fw-bold">
-                                                <td>Total:</td>
+                                                <td>Final Total:</td>
                                                 <td class="text-end">₹<%= (order.finalAmount || 0).toLocaleString() %></td>
                                             </tr>
                                         </table>
@@ -316,13 +317,13 @@
                                 </div>
                             </div>
 
-                            <% if (["Pending", "Processing" , "Shipped" ].includes(order.status)) { %>
+                            <% if (order.status === "Pending" || order.status === "Processing") { %>
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-danger" onclick="cancelOrder('<%= order._id %>')">
-                                        Cancel Order
+                                        Cancel Complete Order
                                     </button>
                                 </div>
-                                <% } %>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -445,17 +446,18 @@
                 }
 
                 function returnProduct(orderId, productId) {
-                    console.log("returnProduct called:", orderId, productId); // Debug
-                    if (!productId) {
+                    console.log("returnProduct called:", orderId, productId);
+                    if (!orderId || !productId) {
                         Swal.fire({
                             title: 'Error',
-                            text: 'Product ID is missing. Please contact support.',
+                            text: 'Invalid request data. Please try again.',
                             icon: 'error'
                         });
                         return;
                     }
+
                     Swal.fire({
-                        title: 'Return Order',
+                        title: 'Return Product',
                         text: 'Please provide a reason for returning this product',
                         icon: 'warning',
                         input: 'select',
@@ -476,40 +478,47 @@
                                 Swal.showValidationMessage('Please select a reason');
                                 return false;
                             }
-                            return fetch('/single-return-product', {
+
+                            const data = {
+                                orderId: orderId,
+                                productId: productId,
+                                reason: reason
+                            };
+
+                            return $.ajax({
+                                url: '/single-return-product',
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ orderId, productId, reason })
+                                contentType: 'application/json',
+                                data: JSON.stringify(data)
                             })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        return response.text().then(text => {
-                                            throw new Error(text || `HTTP error! Status: ${response.status}`);
-                                        });
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    if (!data.success) {
-                                        throw new Error(data.message || 'Return request failed');
-                                    }
-                                    return data;
-                                })
-                                .catch(error => {
-                                    Swal.showValidationMessage(`Request failed: ${error.message || "Unexpected error occurred"}`);
-                                });
+                            .then(response => {
+                                if (!response.success) {
+                                    throw new Error(response.message || 'Return request failed');
+                                }
+                                return response;
+                            })
+                            .catch(error => {
+                                console.error('Return request error:', error);
+                                throw new Error(error.message || 'Failed to process return request');
+                            });
                         },
                         allowOutsideClick: () => !Swal.isLoading()
                     }).then((result) => {
-                        if (result.isConfirmed && result.value?.success) {
+                        if (result.isConfirmed) {
                             Swal.fire({
-                                title: 'Return Request Submitted',
-                                text: 'Your return request has been submitted successfully',
+                                title: 'Success!',
+                                text: 'Return request submitted successfully',
                                 icon: 'success'
                             }).then(() => {
-                                window.location.reload();
+                                location.reload();
                             });
                         }
+                    }).catch(error => {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.message || 'Failed to process return request',
+                            icon: 'error'
+                        });
                     });
                 }
             </script>

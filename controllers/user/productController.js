@@ -23,7 +23,9 @@ const productDetails = async (req, res) => {
     const findCategory = product?.category;
     const categoryOffer = findCategory?.categoryOffer || 0;
     const productOffer = product.productOffer || 0;
-    const totalOffer = categoryOffer + productOffer;
+    const totalOffer = Math.max(categoryOffer, productOffer);
+
+    console.log(categoryOffer);
 
     res.render("user/single-product", {
       user: userData,
@@ -114,9 +116,23 @@ const getshop = async (req, res) => {
     // Execute query
     const products = await productQuery.exec();
 
+    // Calculate total offer for each product
+    const productsWithOffers = products.map(product => {
+      const categoryOffer = product.category?.categoryOffer || 0;
+      const productOffer = product.productOffer || 0;
+      const totalOffer = Math.max(categoryOffer, productOffer);
+      
+      // Create a new object with the product data and total offer
+      return {
+        ...product._doc,
+        totalOffer: totalOffer
+      };
+    });
+    console.log(productsWithOffers);
+    
     res.render("user/shop", {
       user: userData,
-      products,
+      products: productsWithOffers,
       currentPage: parseInt(page),
       totalPages,
       categories: await Category.find({ isListed: true }),

@@ -62,7 +62,8 @@
 
 			if (data.success) {
 				// Change heart icon to filled
-				
+				event.target.classList.remove('far');
+				event.target.classList.add('fas');
 				
 				Swal.fire({
 					icon: 'success',
@@ -319,7 +320,18 @@
 		}
 
 		.badge-danger {
-			background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+			background: linear-gradient(45deg, #e74c3c, #c0392b);
+			color: white;
+			padding: 0.5rem 1rem;
+			border-radius: 25px;
+			font-weight: 600;
+			text-transform: uppercase;
+			font-size: 0.75rem;
+			letter-spacing: 0.5px;
+			position: absolute;
+			top: 1rem;
+			right: 1rem;
+			z-index: 2;
 		}
 
 		.badge-primary {
@@ -358,18 +370,20 @@
 			align-items: center;
 			gap: 1rem;
 			margin: 1rem 0;
-		}
-
-		.price-sale {
-			font-size: 1.5rem;
-			font-weight: 800;
-			color: #FF6F00;
+			flex-wrap: wrap;
 		}
 
 		.price-original {
 			font-size: 1rem;
 			color: #718096;
 			text-decoration: line-through;
+			margin-right: 8px;
+		}
+
+		.price-sale {
+			font-size: 1.5rem;
+			font-weight: 800;
+			color: #2ecc71;
 		}
 
 		.product-actions {
@@ -856,51 +870,65 @@
 						<!-- Product Grid -->
 						<div class="container">
 							<div class="product-grid">
-								<% products.forEach(product=> { %>
+								<% products.forEach(product => { %>
 									<div class="product-card">
 										<div class="product-badge">
-											<% if (product.productOffer> 0) { %>
-												<span class="badge badge-danger">SAVE <%= product.productOffer %>
-														%</span>
-												<% } %>
-													<% if (product.isNew) { %>
-														<span class="badge badge-primary">NEW ARRIVAL</span>
-														<% } %>
-															<% if (product.isBestSeller) { %>
-																<span class="badge badge-success">BESTSELLER</span>
-																<% } %>
+											<% 
+											// Calculate actual price difference and discount
+											const actualPriceDiff = product.regularPrice - product.salePrice;
+											const actualDiscountPercentage = Math.round((actualPriceDiff / product.regularPrice) * 100);
+											
+											// Get other applicable offers
+											const productOffer = product.productOffer || 0;
+											const categoryOffer = product.category?.offer || 0;
+											
+											// Calculate highest applicable discount
+											const highestOffer = Math.max(actualDiscountPercentage, productOffer, categoryOffer);
+											
+											// Calculate final price after applying highest discount
+											const finalPrice = product.regularPrice - product.totalOffer
+											
+											if (highestOffer > 0) { 
+											%>
+												<span class="badge badge-danger"><%= highestOffer %>% OFF</span>
+											<% } %>
+											<% if (product.isNew) { %>
+												<span class="badge badge-primary">NEW ARRIVAL</span>
+											<% } %>
+											<% if (product.isBestSeller) { %>
+												<span class="badge badge-success">BESTSELLER</span>
+											<% } %>
 										</div>
 
 										<div class="product-image-wrap">
-											<% if (product.productImages && product.productImages.length> 0) { %>
+											<% if (product.productImages && product.productImages.length > 0) { %>
 												<div class="product-image-slider">
-													<% product.productImages.forEach(image=> { %>
-														<img src="/uploads/product-images/<%= image %>"
-															alt="<%= product.productName %>" class="product-image">
-														<% }) %>
+													<% product.productImages.forEach(image => { %>
+														<img src="/uploads/product-images/<%= image %>" 
+															 alt="<%= product.productName %>" 
+															 class="product-image">
+													<% }) %>
 												</div>
-												<% } else { %>
-													<img src="/default-product.jpg" alt="<%= product.productName %>"
-														class="product-image">
-													<% } %>
+											<% } else { %>
+												<img src="/default-product.jpg" 
+													 alt="<%= product.productName %>" 
+													 class="product-image">
+											<% } %>
 
-														<div class="product-hover-overlay">
-															<a href="/product-details/<%= product._id %>"
-																class="quick-view-btn">
-																View Product</a>
-														</div>
+											<div class="product-hover-overlay">
+												<a href="/product-details/<%= product._id %>" 
+												   class="quick-view-btn">View Product</a>
+											</div>
 										</div>
 
 										<div class="product-info">
 											<div class="product-rating">
 												<div class="stars">
-													<% for(let i=1; i <=5; i++) { %>
-														<i
-															class="fa fa-star<%= i <= product.ratings ? '' : '-o' %>"></i>
-														<% } %>
+													<% for(let i=1; i <= 5; i++) { %>
+														<i class="fa fa-star<%= i <= product.ratings ? '' : '-o' %>"></i>
+													<% } %>
 												</div>
-												<span class="rating-count">(<%= product.reviewCount || 0 %>
-														reviews)</span>
+												<span class="rating-count">(<%= product.reviewCount || 0 %> reviews)</span>
 											</div>
 
 											<h3 class="product-title">
@@ -910,16 +938,12 @@
 											</h3>
 
 											<div class="product-price">
-												<% if (product.salePrice < product.regularPrice) { %>
-													<% if (product.productOffer) { %>
-														<span class="price-sale">₹<%= ((product.salePrice) -
-																(product.salePrice * product.productOffer /
-																100)).toFixed(2) %></span>
-														<% } else { %>
-															<span class="price-sale">₹<%= product.salePrice.toFixed(2)
-																	%></span>
-															<% } %>
-																<% } %>
+												<span class="price-original" style="text-decoration: line-through; color: #999; margin-right: 10px;">
+													₹<%= product.regularPrice.toFixed(2) %>
+												</span>
+												<span class="price-sale" style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">
+													₹<%= finalPrice.toFixed(2) %>
+												</span>
 											</div>
 
 											<button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
@@ -928,13 +952,14 @@
 										</div>
 
 										<div class="product-actions">
-											<button class="action-btn wishlist" onclick="addToWishlist('<%= product._id %>', event)" title="Add to Wishlist">
+											<button class="action-btn wishlist" 
+													onclick="addToWishlist('<%= product._id %>', event)" 
+													title="Add to Wishlist">
 												<i class="far fa-heart"></i>
 											</button>
-
 										</div>
 									</div>
-									<% }); %>
+								<% }); %>
 							</div>
 							<!-- pagianation links -->
 							<div class="pagination" style="margin-top: 57px; margin-left: 44%;">
@@ -953,8 +978,7 @@
 												<% if (currentPage < totalPages) { %>
 													<a href="?page=<%= currentPage + 1 %>"
 														style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
-													<% } %>
-														 
+													<% } %>
 							</div>
 						</div>
 					</div>

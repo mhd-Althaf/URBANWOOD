@@ -614,11 +614,13 @@
                 }
 
                 const grandTotal = parseFloat(grandTotalElement.textContent.replace('₹', '').replace(',', ''));
+                const couponCode = document.getElementById('couponInput').value.trim();
+                
                 const orderDetails = {
                     addressId: selectedAddress.value,
                     paymentMethod: selectedPayment.value,
                     amount: grandTotal,
-                    couponCode: usedCoupon
+                    couponCode: couponCode || null
                 };
 
                 if (selectedPayment.value === 'Razorpay') {

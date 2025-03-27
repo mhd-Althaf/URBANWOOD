@@ -13,18 +13,31 @@ const getCartPage = async (req, res) => {
             return res.render('user/cart', { cartItems: [], subtotal: 0, shippingCost: 0, grandTotal: 0 });
         }
 
-        
         const cartItems = await Promise.all(cart.items.map(async (item) => {
-            const product = await Product.findById(item.productId).lean();
+            const product = await Product.findById(item.productId)
+                .populate('category')
+                .lean();
+            
+            // Calculate the highest applicable offer
+            const categoryOffer = product.category?.categoryOffer || 0;
+            const productOffer = product.productOffer || 0;
+            const totalOffer = Math.max(categoryOffer, productOffer);
+            
+            // Calculate final price after applying highest offer
+            const finalPrice = product.regularPrice - totalOffer;
+
+            console.log("finalPrice",finalPrice);
+            
             return {
                 ...item,
                 productId: item.productId,
                 productName: product.productName,
                 description: product.description,
                 regularPrice: product.regularPrice,
-                salePrice: product.salePrice,
+                salePrice: finalPrice,
                 productImages: product.productImages,
-                quantity: item.quantity 
+                quantity: item.quantity,
+                totalOffer: totalOffer
             };
         }));
 

@@ -268,7 +268,7 @@
                             
                             <div class="item-details">
                                 <h3><%= item.productName %></h3>
-                                <p class="item-price">₹<%= item.salePrice.toLocaleString() %></p>
+                                <p class="item-price">₹<%= item.salePrice %></p>
                                 <% if (item.salePrice < item.regularPrice) { %>
                                     <small><del>₹<%= item.regularPrice.toLocaleString() %></del></small>
                                 <% } %>

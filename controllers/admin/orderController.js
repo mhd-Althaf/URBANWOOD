@@ -199,18 +199,19 @@ const getOrderDetailsPageAdmin = async (req, res) => {
 
 
 const changeOrderStatus = async (req, res) => {
-  console.log("Updating Order Status...");
   try {
     const { orderId } = req.params; 
     const { status } = req.body;
 
-    console.log("Received Order ID:", orderId);
-    console.log("New Status:", status);
+    // Validate inputs
+    if (!orderId || !status) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Order ID and status are required" 
+      });
+    }
 
-    if (!status) {
-      return res.status(400).json({ error: "Status is missing!" });
-  }
-
+    // Validate status value
     const validStatuses = [
       "Pending",
       "Processing",
@@ -218,32 +219,48 @@ const changeOrderStatus = async (req, res) => {
       "Delivered",
       "Cancelled",
       "Return Request",
-      "Returned",
+      "Returned"
     ];
+
     if (!validStatuses.includes(status)) {
-      console.log("Invalid status value");
-      return res.status(400).json({ status: false, message: "Invalid status value" });
+      return res.status(400).json({ 
+        status: false, 
+        message: "Invalid status value" 
+      });
     }
 
-    const order = await Order.findById({_id:orderId});
+    // Find and update the order
+    const order = await Order.findById(orderId);
     if (!order) {
-      console.log("Order not found with orderId:", orderId);
-      return res.status(404).json({ status: false, message: "Order not found" });
+      return res.status(404).json({ 
+        status: false, 
+        message: "Order not found" 
+      });
     }
 
-    // console.log("Order Found:", JSON.stringify(order, null, 2));
+    // Update the order status
+    order.status = status;
+    
+    // If status is Delivered, set delivery date
+    if (status === "Delivered") {
+      order.deliveryDate = new Date();
+    }
 
-    order.status = status; // Update top-level status
-
+    // Save the updated order
     await order.save();
+
     return res.status(200).json({
       status: true,
       message: "Status updated successfully",
-      updatedStatus: order.status,
+      updatedStatus: status
     });
+
   } catch (error) {
-    console.error("Error:", error);
-    return res.status(500).json({ status: false, message: "An error occurred" });
+    console.error("Error in changeOrderStatus:", error);
+    return res.status(500).json({ 
+      status: false, 
+      message: "An error occurred while updating the order status" 
+    });
   }
 };
 

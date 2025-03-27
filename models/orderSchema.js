@@ -57,11 +57,6 @@ const orderSchema = new Schema({
                 type: String,
                 required: false
             },
-            shippingCost: {
-                type: Number,
-                required: true,
-                default: 40  
-            },
             cancelledAt: {
                 type: Date,
                 required: false
@@ -84,6 +79,11 @@ const orderSchema = new Schema({
         type: String,
         enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
         required: true
+    },
+    shippingCost: {
+        type: Number,
+        required: true,
+        default: 0  
     },
     status: {
         type: String,

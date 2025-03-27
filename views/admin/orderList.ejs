@@ -89,9 +89,6 @@
 
 <script>
 function changeOrderStatus(orderId, newStatus) {
-
- 
-
   Swal.fire({
     title: `<span style="color: black;">Change Status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?</span>`,
     html: `<span style="color: black;">Are you sure you want to update this order's status?</span>`,
@@ -108,28 +105,34 @@ function changeOrderStatus(orderId, newStatus) {
     preConfirm: () => {
       return $.ajax({
         url: `/admin/changeStatus/${orderId}`,
-        method: "PATCH",
+        method: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ status:newStatus })
+        data: JSON.stringify({ status: newStatus })
       })
-      .then((response) => {
-        if (!response.success) {
+      .then(response => {
+        if (!response.status) {
           throw new Error(response.message || "Failed to update order status.");
         }
-
+        
+        // Update the status display
         $(`#order-status-${orderId}`).text(newStatus);
 
+        // Update the button for next status
         let nextStatus = "";
         if (newStatus === "Pending") nextStatus = "Processing";
         else if (newStatus === "Processing") nextStatus = "Shipped";
         else if (newStatus === "Shipped") nextStatus = "Delivered";
 
+        const statusContainer = $(`#order-status-container-${orderId}`);
         if (nextStatus) {
-          let button = $(`#status-button-${orderId}`);
-          button.text(nextStatus);
-          button.attr("onclick", `changeOrderStatus('${orderId}', '${nextStatus}')`);
+          statusContainer.html(`
+            <button id="status-button-${orderId}" class="btn btn-success"
+              onclick="changeOrderStatus('${orderId}', '${nextStatus}')">
+              ${nextStatus}
+            </button>
+          `);
         } else {
-          $(`#order-status-container-${orderId}`).html(`<span class="text-success">Delivered</span>`);
+          statusContainer.html('<span class="text-success">Delivered</span>');
         }
 
         return Swal.fire({
@@ -139,11 +142,10 @@ function changeOrderStatus(orderId, newStatus) {
           timer: 2000,
           timerProgressBar: true
         });
-
       })
-      .catch((error) => {
+      .catch(error => {
         Swal.fire({
-          title:`<span style="color: black;">❌ Update Failed!</span>`,
+          title: `<span style="color: black;">❌ Update Failed!</span>`,
           html: `<span style="color: black;">${error.message}</span>`,
           icon: "error",
           confirmButtonColor: "#d33"
