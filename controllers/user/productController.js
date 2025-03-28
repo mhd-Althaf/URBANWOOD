@@ -56,7 +56,7 @@ const getshop = async (req, res) => {
     // Search query
     if (query.trim()) {
       filter.$or = [
-        { name: { $regex: query, $options: "i" } },
+        { productName: { $regex: query, $options: "i" } },
         { description: { $regex: query, $options: "i" } }
       ];
     }
@@ -122,13 +122,11 @@ const getshop = async (req, res) => {
       const productOffer = product.productOffer || 0;
       const totalOffer = Math.max(categoryOffer, productOffer);
       
-      // Create a new object with the product data and total offer
       return {
         ...product._doc,
         totalOffer: totalOffer
       };
     });
-    console.log(productsWithOffers);
     
     res.render("user/shop", {
       user: userData,
@@ -144,14 +142,9 @@ const getshop = async (req, res) => {
   }
 };
 
-
-
 const getFilteredProducts = async (req, res) => {
 
 };
-
-
-
 
 module.exports = {
   getshop,

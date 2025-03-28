@@ -167,6 +167,105 @@
         @media (max-width: 576px) {
             .modal-content { width: 100%; }
         }
+
+        /* Add these styles to your existing CSS */
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+            color: white;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.8em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-group.error input,
+        .form-group.error select {
+            border-color: #dc3545;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* Add these styles to your existing CSS */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #088178;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(8, 129, 120, 0.1);
+        }
+
+        .form-group.error .form-control {
+            border-color: #dc3545;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #088178;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #066661;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 
@@ -208,7 +307,9 @@
                     <div class="address-section">
                         <div class="section-header d-flex justify-content-between align-items-center">
                             <h4 class="section-title">Delivery Address</h4>
-                            <button class="custom-btn" id="openModalBtn"><i class="fas fa-plus"></i> Add New Address</button>
+                            <button class="custom-btn" onclick="openAddAddressModal()">
+                                <i class="fas fa-plus"></i> Add New Address
+                            </button>
                         </div>
                         <div class="address-grid">
                             <% if (locals.userAddress && userAddress.length > 0 && userAddress[0]?.address?.length > 0) { %>
@@ -232,7 +333,12 @@
                                     </label>
                                 </div>
                                 <div class="address-actions">
-                                    <a href="#" class="edit-btn" data-address-id="<%= address._id %>" data-address="<%= JSON.stringify(address) %>"><i class="fas fa-edit"></i> Edit</a>
+                                    <button class="edit-btn" onclick='openEditAddressModal("<%= address._id %>", <%= JSON.stringify(address) %>)'>
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
                                 </div>
                             </div>
                             <% }); %>
@@ -240,7 +346,7 @@
                             <div class="no-address-message">
                                 <i class="fas fa-home mb-3" style="font-size: 2em; color: #088178;"></i>
                                 <p>No delivery addresses found.</p>
-                                <button class="custom-btn" id="openModalBtnNoAddress"><i class="fas fa-plus"></i> Add New Address</button>
+                                <a href="/profile" class="custom-btn"><i class="fas fa-user"></i> Manage Addresses</a>
                             </div>
                             <% } %>
                         </div>
@@ -255,7 +361,9 @@
                         </div>
                         <div class="payment-option">
                             <input class="form-check-input" type="radio" name="payment" id="wallet" value="wallet">
-                            <label class="form-check-label" for="wallet"><i class="fas fa-wallet text-warning"></i> Wallet</label>
+                            <label class="form-check-label" for="wallet">
+                                <i class="fas fa-wallet text-warning"></i> Wallet (₹<%= user?.wallet || 0 %>)
+                            </label>
                         </div>
                         <div class="payment-option">
                             <input class="form-check-input" type="radio" name="payment" id="cod" value="cod">
@@ -331,58 +439,57 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Address Modal -->
-            <div class="modal-overlay" id="addAddressModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 class="modal-title" id="modalTitle">Add New Address</h3>
-                        <button class="close-modal" id="closeModalBtn">×</button>
-                    </div>
-                    <form class="modal-form" id="addressForm" action="/add-address" method="POST">
-                        <input type="hidden" name="addressId" id="addressId">
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addressType">Address Type</label>
-                            <select id="addressType" name="addressType" required>
-                                <option value="Home">Home</option>
-                                <option value="Work">Work</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="landMark">Landmark</label>
-                            <input type="text" id="landMark" name="landMark" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="city">City</label>
-                            <input type="text" id="city" name="city" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="state">State</label>
-                            <input type="text" id="state" name="state" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="pincode">PIN Code</label>
-                            <input type="text" id="pincode" name="pincode" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="phone">Mobile Number</label>
-                            <input type="tel" id="phone" name="phone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="altPhone">Alternate Phone (Optional)</label>
-                            <input type="tel" id="altPhone" name="altPhone">
-                        </div>
-                        <button type="submit" id="submitBtn">Save Address</button>
-                    </form>
-                </div>
-            </div>
         </div>
     </section>
+
+    <!-- Add Address Modal -->
+    <div id="addressModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Address</h3>
+                <button class="close-modal" onclick="closeAddressModal()">&times;</button>
+            </div>
+            <form id="addressForm" class="modal-form" onsubmit="handleAddressSubmit(event)">
+                <input type="hidden" id="addressId" name="addressId">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="addressType">Address Type</label>
+                    <select id="addressType" name="addressType" class="form-control" required>
+                        <option value="Home">Home</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="landMark">Landmark</label>
+                    <input type="text" id="landMark" name="landMark" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="state">State</label>
+                    <input type="text" id="state" name="state" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="pincode">PIN Code</label>
+                    <input type="text" id="pincode" name="pincode" class="form-control" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddressModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -392,133 +499,266 @@
         const originalSubtotal = <%= subtotal %>;
         const originalShippingCost = <%= shippingCost %>;
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Modal Control
-            const modal = document.getElementById('addAddressModal');
-            const openModalBtn = document.getElementById('openModalBtn');
-            const openModalBtnNoAddress = document.getElementById('openModalBtnNoAddress');
-            const closeModalBtn = document.getElementById('closeModalBtn');
-            const modalContent = modal.querySelector('.modal-content');
-            const form = document.getElementById('addressForm');
-            const modalTitle = document.getElementById('modalTitle');
-            const submitBtn = document.getElementById('submitBtn');
+        // Address Modal Functions
+        function openAddAddressModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Address';
+            document.getElementById('addressForm').reset();
+            document.getElementById('addressId').value = '';
+            document.getElementById('addressModal').style.display = 'block';
+            document.querySelector('.modal-content').classList.add('open');
+        }
 
-            function openModal() {
-                modal.style.display = 'block';
-                setTimeout(() => modalContent.classList.add('open'), 10);
-            }
+        function openEditAddressModal(addressId, address) {
+            document.getElementById('modalTitle').textContent = 'Edit Address';
+            document.getElementById('addressId').value = addressId;
+            document.getElementById('name').value = address.name;
+            document.getElementById('phone').value = address.phone;
+            document.getElementById('addressType').value = address.addressType;
+            document.getElementById('landMark').value = address.landMark;
+            document.getElementById('city').value = address.city;
+            document.getElementById('state').value = address.state;
+            document.getElementById('pincode').value = address.pincode;
+            document.getElementById('addressModal').style.display = 'block';
+            document.querySelector('.modal-content').classList.add('open');
+        }
 
-            function closeModal() {
-                modalContent.classList.remove('open');
-                setTimeout(() => modal.style.display = 'none', 500);
-            }
+        function closeAddressModal() {
+            document.getElementById('addressModal').style.display = 'none';
+            document.querySelector('.modal-content').classList.remove('open');
+        }
 
-            function resetForm() {
-                form.reset();
-                form.action = '/add-address';
-                modalTitle.textContent = 'Add New Address';
-                submitBtn.textContent = 'Save Address';
-                document.getElementById('addressId').value = '';
-            }
+        async function handleAddressSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const addressId = formData.get('addressId');
+            const data = {
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                addressType: formData.get('addressType'),
+                landMark: formData.get('landMark'),
+                city: formData.get('city'),
+                state: formData.get('state'),
+                pincode: formData.get('pincode')
+            };
 
-            openModalBtn.addEventListener('click', () => {
-                resetForm();
-                openModal();
-            });
-            if (openModalBtnNoAddress) {
-                openModalBtnNoAddress.addEventListener('click', () => {
-                    resetForm();
-                    openModal();
+            try {
+                const response = await fetch(addressId ? `/edit-address/${addressId}` : '/add-address', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
-            }
 
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const addressData = JSON.parse(btn.getAttribute('data-address'));
-                    modalTitle.textContent = 'Edit Address';
-                    submitBtn.textContent = 'Update Address';
-                    form.action = '/edit-address';
-                    document.getElementById('addressId').value = addressData._id;
-                    document.getElementById('name').value = addressData.name;
-                    document.getElementById('addressType').value = addressData.addressType;
-                    document.getElementById('landMark').value = addressData.landMark;
-                    document.getElementById('city').value = addressData.city;
-                    document.getElementById('state').value = addressData.state;
-                    document.getElementById('pincode').value = addressData.pincode;
-                    document.getElementById('phone').value = addressData.phone;
-                    document.getElementById('altPhone').value = addressData.altPhone || '';
-                    openModal();
-                });
-            });
-
-            closeModalBtn.addEventListener('click', closeModal);
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(form);
-                const formDataObject = {};
+                const result = await response.json();
                 
-                // Convert FormData to regular object
-                formData.forEach((value, key) => {
-                    formDataObject[key] = value;
-                });
-                
-                try {
-                    const response = await fetch('/addaddress', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formDataObject)
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.success) {
-                            closeModal();
-                            location.reload();
-                        } else {
-                            Swal.fire('Error', result.message || 'Failed to save address', 'error');
-                        }
-                    } else {
-                        const errorText = await response.text();
-                        console.error('Server response:', errorText);
-                        Swal.fire('Error', 'Failed to save address. Please try again.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Form submission error:', error);
-                    Swal.fire('Error', 'An error occurred while processing your request', 'error');
+                if (result.success) {
+                    Swal.fire('Success', addressId ? 'Address updated successfully!' : 'Address added successfully!', 'success')
+                        .then(() => {
+                            window.location.reload();
+                        });
+                } else {
+                    Swal.fire('Error', result.message || 'Something went wrong!', 'error');
                 }
-            });
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Something went wrong!', 'error');
+            }
+        }
 
+        async function deleteAddress(addressId) {
+            try {
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                });
+
+                if (result.isConfirmed) {
+                    const response = await fetch(`/delete-address/${addressId}`, {
+                        method: 'POST'
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Deleted!', 'Address has been deleted.', 'success')
+                            .then(() => {
+                                window.location.reload();
+                            });
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to delete address', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Something went wrong!', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
             // Address Selection
             const addressCards = document.querySelectorAll('.address-card');
             const addressRadios = document.querySelectorAll('input[name="selectedAddress"]');
+            const paymentRadios = document.querySelectorAll('input[name="payment"]');
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            const walletBalance = <%= user?.wallet || 0 %>;
+            const grandTotal = <%= grandTotal %>;
+            
             function updateSelectedState(selectedCard) {
                 addressCards.forEach(card => card.classList.remove('selected'));
                 selectedCard.classList.add('selected');
             }
-            addressCards.forEach(card => {
-                card.addEventListener('click', function (e) {
-                    if (e.target.closest('.edit-btn')) return;
-                    const radio = this.querySelector('input[type="radio"]');
-                    radio.checked = true;
-                    updateSelectedState(this);
-                });
-            });
-            addressRadios.forEach(radio => {
-                radio.addEventListener('change', function () {
-                    updateSelectedState(this.closest('.address-card'));
-                });
-            });
-            if (addressRadios.length > 0) {
-                addressRadios[0].checked = true;
-                updateSelectedState(addressCards[0]);
+
+            // Validate payment method selection
+            function validatePaymentMethod() {
+                const selectedPayment = document.querySelector('input[name="payment"]:checked');
+                if (!selectedPayment) {
+                    Swal.fire('Error', 'Please select a payment method', 'error');
+                    return false;
+                }
+
+                if (selectedPayment.value === 'wallet' && walletBalance < grandTotal) {
+                    Swal.fire('Error', 'Insufficient wallet balance', 'error');
+                    return false;
+                }
+
+                return true;
             }
+
+            // Handle place order button click
+            placeOrderBtn.addEventListener('click', async function() {
+                if (!validatePaymentMethod()) return;
+
+                const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+                if (!selectedAddress) {
+                    Swal.fire('Error', 'Please select a delivery address', 'error');
+                    return;
+                }
+
+                const selectedPayment = document.querySelector('input[name="payment"]:checked');
+                const addressId = selectedAddress.value;
+                const paymentMethod = selectedPayment.value;
+
+                try {
+                    // Create order
+                    const orderResponse = await fetch('/place-order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            addressId,
+                            paymentMethod,
+                            amount: grandTotal
+                        })
+                    });
+
+                    const orderData = await orderResponse.json();
+                    
+                    if (!orderData.success) {
+                        throw new Error(orderData.message);
+                    }
+
+                    // Handle payment based on method
+                    if (paymentMethod === 'wallet') {
+                        const walletResponse = await fetch('/wallet-payment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                orderId: orderData.order._id
+                            })
+                        });
+
+                        const walletData = await walletResponse.json();
+                        if (!walletData.success) {
+                            throw new Error(walletData.message);
+                        }
+                    } else if (paymentMethod === 'Razorpay') {
+                        // Create Razorpay order
+                        const razorpayResponse = await fetch('/createRazorpayOrder', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                orderAmount: grandTotal
+                            })
+                        });
+
+                        const razorpayData = await razorpayResponse.json();
+                        if (!razorpayData.success) {
+                            throw new Error(razorpayData.message);
+                        }
+
+                        // Initialize Razorpay
+                        const options = {
+                            key: razorpayData.key,
+                            amount: razorpayData.amount,
+                            currency: razorpayData.currency,
+                            name: "URBANWOOD",
+                            description: "Purchase Payment",
+                            order_id: razorpayData.razorpayOrderId,
+                            handler: async function(response) {
+                                try {
+                                    const verifyResponse = await fetch('/payment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            orderId: orderData.order._id,
+                                            amount: grandTotal
+                                        })
+                                    });
+
+                                    const verifyData = await verifyResponse.json();
+                                    if (verifyData.success) {
+                                        Swal.fire('Success', 'Order placed successfully!', 'success')
+                                            .then(() => {
+                                                window.location.href = '/orders';
+                                            });
+                                    } else {
+                                        throw new Error(verifyData.message);
+                                    }
+                                } catch (error) {
+                                    Swal.fire('Error', error.message, 'error');
+                                }
+                            },
+                            prefill: {
+                                name: razorpayData.userName,
+                                email: razorpayData.userEmail,
+                                contact: razorpayData.userContact
+                            },
+                            theme: {
+                                color: "#088178"
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                        return;
+                    }
+
+                    // For wallet payments or other methods
+                    Swal.fire('Success', 'Order placed successfully!', 'success')
+                        .then(() => {
+                            window.location.href = '/orders';
+                        });
+
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            });
 
             // Coupon Logic
             const couponInput = document.getElementById('couponInput');
@@ -582,135 +822,17 @@
                         const discount = data.discountAmount;
                         document.getElementById('subtotal').textContent = `₹${finalTotal.toLocaleString()}`;
                         document.getElementById('discount').textContent = `₹${discount.toLocaleString()}`;
-                        document.getElementById('grandTotal').textContent = `₹${data.grandTotal.toLocaleString()}`;
-                        document.getElementById('couponMessage').textContent = data.message;
-                        document.getElementById('couponMessage').className = 'text-success';
-                        document.getElementById('couponMessage').style.display = 'block';
+                        document.getElementById('grandTotal').textContent = `₹${(finalTotal + currentShippingCost).toLocaleString()}`;
                     } else {
-                        document.getElementById('couponMessage').textContent = data.message;
-                        document.getElementById('couponMessage').className = 'text-danger';
-                        document.getElementById('couponMessage').style.display = 'block';
+                        Swal.fire('Error', data.message || 'Failed to apply coupon', 'error');
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire('Error', 'Something went wrong! Please try again.', 'error');
+                    console.error('Coupon application error:', error);
+                    Swal.fire('Error', 'An error occurred while applying the coupon. Please try again.', 'error');
                 });
             }
-
-            applyCouponBtn.addEventListener('click', applyCoupon);
-
-            // Place Order Logic
-            document.getElementById('placeOrderBtn').addEventListener('click', async () => {
-                const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
-                const selectedPayment = document.querySelector('input[name="payment"]:checked');
-                if (!selectedAddress) {
-                    Swal.fire('Error', 'Please select a delivery address', 'error');
-                    return;
-                }
-                if (!selectedPayment) {
-                    Swal.fire('Error', 'Please select a payment method', 'error');
-                    return;
-                }
-
-                const grandTotal = parseFloat(grandTotalElement.textContent.replace('₹', '').replace(',', ''));
-                const couponCode = document.getElementById('couponInput').value.trim();
-                
-                const orderDetails = {
-                    addressId: selectedAddress.value,
-                    paymentMethod: selectedPayment.value,
-                    amount: grandTotal,
-                    couponCode: couponCode || null
-                };
-
-                if (selectedPayment.value === 'Razorpay') {
-                    const response = await fetch('/createRazorpayOrder', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderAmount: grandTotal })
-                    });
-                    const data = await response.json();
-                    if (!data.success) {
-                        Swal.fire('Error', data.error || 'Failed to create Razorpay order', 'error');
-                        return;
-                    }
-
-                    const razorpayOptions = {
-                        key: data.key,
-                        amount: data.amount,
-                        currency: data.currency,
-                        name: "URBANWOOD",
-                        description: "Order Payment",
-                        order_id: data.razorpayOrderId,
-                        handler: async function (response) {
-                            const verifyPayload = {
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                                orderId: data.razorpayOrderId,
-                                amount: data.amount
-                            };
-                            const verifyRes = await fetch('/payment', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(verifyPayload)
-                            });
-                            const verifyData = await verifyRes.json();
-                            if (verifyData.success) {
-                                const orderResponse = await fetch('/place-order', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(orderDetails)
-                                });
-                                const orderData = await orderResponse.json();
-                                if (orderData.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Order Placed Successfully!',
-                                        text: 'Thank you for your order',
-                                        timer: 2000
-                                    }).then(() => window.location.href = '/orders');
-                                } else {
-                                    Swal.fire('Error', orderData.message || 'Failed to place order', 'error');
-                                }
-                            } else {
-                                Swal.fire('Error', 'Payment verification failed', 'error');
-                            }
-                        },
-                        prefill: { name: '', email: '', contact: '' },
-                        theme: { color: '#088178' }
-                    };
-                    const razorpayInstance = new Razorpay(razorpayOptions);
-                    razorpayInstance.open();
-                } else {
-                    const loadingAlert = Swal.fire({
-                        title: 'Processing Order',
-                        text: 'Please wait...',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        willOpen: () => Swal.showLoading()
-                    });
-                    const response = await fetch('/place-order', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(orderDetails)
-                    });
-                    const data = await response.json();
-                    loadingAlert.close();
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Order Placed Successfully!',
-                            text: 'Thank you for your order',
-                            timer: 2000
-                        }).then(() => window.location.href = '/orders');
-                    } else {
-                        Swal.fire('Error', data.message || 'Failed to place order', 'error');
-                    }
-                }
-            });
         });
     </script>
 </body>
-
 </html>

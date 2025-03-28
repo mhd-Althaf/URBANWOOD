@@ -529,7 +529,27 @@ const cancelOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order is already cancelled' });
         }
 
+        // If order was paid via Razorpay, refund to wallet
+        if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'paid') {
+            await User.findByIdAndUpdate(
+                order.userId,
+                {
+                    $inc: { wallet: order.finalAmount },
+                    $push: {
+                        history: {
+                            amount: order.finalAmount,
+                            status: "Credit",
+                            date: new Date(),
+                            description: `Refund for cancelled order ${order.orderId}`
+                        }
+                    }
+                }
+            );
+        }
+
         order.status = 'Cancelled';
+        order.cancellationReason = reason;
+        order.cancelledAt = new Date();
 
         order.orderItems.forEach(item => {
             item.status = 'Cancelled';
@@ -618,12 +638,34 @@ const singleReturnRequest = async (req, res) => {
         // Update item status
         item.status = "Return_Requested";
         item.returnReason = reason;
-        item.returnRequestedAt = new Date();
 
-        // Save changes
+        // If all items are returned, update order status
+        const allItemsReturned = order.orderItems.every(item => item.status === "Returned");
+        if (allItemsReturned) {
+            order.status = "Returned";
+            
+            // If order was paid via Razorpay, refund to wallet
+            if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'paid') {
+                await User.findByIdAndUpdate(
+                    order.userId,
+                    {
+                        $inc: { wallet: order.finalAmount },
+                        $push: {
+                            history: {
+                                amount: order.finalAmount,
+                                status: "Credit",
+                                date: new Date(),
+                                description: `Refund for returned order ${order.orderId}`
+                            }
+                        }
+                    }
+                );
+            }
+        }
+
         await order.save();
 
-        return res.status(200).json({
+        return res.json({
             success: true,
             message: "Return request submitted successfully"
         });
@@ -632,7 +674,7 @@ const singleReturnRequest = async (req, res) => {
         console.error("Error in singleReturnRequest:", error);
         return res.status(500).json({
             success: false,
-            message: "An error occurred while processing your return request"
+            message: "Server error, please try again later"
         });
     }
 };
@@ -721,18 +763,70 @@ const userOrderDetails = async (req, res) => {
     }
 }
 
+// Add a new function to handle wallet payments
+const processWalletPayment = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.session.user;
 
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
 
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
+        // Check if user has sufficient wallet balance
+        if (user.wallet < order.finalAmount) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Insufficient wallet balance' 
+            });
+        }
 
+        // Update user's wallet balance
+        await User.findByIdAndUpdate(
+            userId,
+            {
+                $inc: { wallet: -order.finalAmount },
+                $push: {
+                    history: {
+                        amount: -order.finalAmount,
+                        status: "Debit",
+                        date: new Date(),
+                        description: `Payment for order ${order.orderId}`
+                    }
+                }
+            }
+        );
 
+        // Update order payment status
+        order.paymentStatus = 'paid';
+        order.paymentMethod = 'wallet';
+        await order.save();
+
+        return res.json({
+            success: true,
+            message: 'Payment processed successfully'
+        });
+
+    } catch (error) {
+        console.error('Error processing wallet payment:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error, try again later'
+        });
+    }
+};
 
 module.exports = {
     validateObjectId,
     checkStockStatus,
     calculateCartTotals,
     getRecommendedProducts,
-
     getCheckoutPage,
     updateCartQuantity,
     removeFromCart,
@@ -743,5 +837,6 @@ module.exports = {
     cancelProduct,
     singleReturnRequest,
     applyCoupon,
-    userOrderDetails
+    userOrderDetails,
+    processWalletPayment
 };

@@ -963,22 +963,22 @@
 							</div>
 							<!-- pagianation links -->
 							<div class="pagination" style="margin-top: 57px; margin-left: 44%;">
-								<% if (currentPage> 1) { %>
-									<a href="?page=<%= currentPage - 1 %>"
+								<% if (currentPage > 1) { %>
+									<a href="?page=<%= currentPage - 1 %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
 										style="text-decoration: none; padding: 5px 10px;width: 85px; border: 1px solid #ccc; margin-right: 5px;">Previous</a>
-									<% } %>
+								<% } %>
 
-										<% for (let i=1; i <=totalPages; i++) { %>
-											<a href="?page=<%= i %>"
-												style="text-decoration: none; padding: 5px 10px; border: 1px solid #ccc; background-color: '<%= currentPage === i ? '#ddd' : '#fff' %>';">
-												<%= i %>
-											</a>
+									<% for (let i=1; i <=totalPages; i++) { %>
+										<a href="?page=<%= i %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
+											style="text-decoration: none; padding: 5px 10px; border: 1px solid #ccc; background-color: <%= currentPage === i ? '#ddd' : '#fff' %>;">
+											<%= i %>
+										</a>
+										<% } %>
+
+											<% if (currentPage < totalPages) { %>
+												<a href="?page=<%= currentPage + 1 %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
+													style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
 											<% } %>
-
-												<% if (currentPage < totalPages) { %>
-													<a href="?page=<%= currentPage + 1 %>"
-														style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
-													<% } %>
 							</div>
 						</div>
 					</div>
@@ -1163,38 +1163,33 @@
 				// Function to update URL with filter parameters
 				function updateFilters() {
 					const searchValue = document.getElementById('searchInput').value;
-					const sortValue = document.getElementById('sortSelect').value;
+					const sortValue = document.getElementById('sort').value;
 					const categoryValue = document.getElementById('categorySelect').value;
-					const minPrice = document.getElementById('minPrice')?.value;
-					const maxPrice = document.getElementById('maxPrice')?.value;
 
 					const params = new URLSearchParams();
-					if (searchValue) params.set('search', searchValue);
+					if (searchValue) params.set('query', searchValue);
 					if (sortValue) params.set('sort', sortValue);
 					if (categoryValue) params.set('category', categoryValue);
-					if (minPrice) params.set('minPrice', minPrice);
-					if (maxPrice) params.set('maxPrice', maxPrice);
+					params.set('page', '1'); // Reset to first page when filters change
 
-					window.location.href = /user/shop ? ${ params.toString() };
+					window.location.href = `/shop?${params.toString()}`;
 				}
 
 				// Add event listeners
-				document.getElementById('searchInput').addEventListener('keyup', function (e) {
-					if (e.key === 'Enter') updateFilters();
+				document.getElementById('searchInput').addEventListener('keyup', function(e) {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						updateFilters();
+					}
 				});
 
-				document.getElementById('sortSelect').addEventListener('change', updateFilters);
+				document.getElementById('sort').addEventListener('change', updateFilters);
 				document.getElementById('categorySelect').addEventListener('change', updateFilters);
 
-				// Update price filter modal
-				document.querySelector('.apply-btn').addEventListener('click', function () {
+				// Handle form submission
+				document.getElementById('filterForm').addEventListener('submit', function(e) {
+					e.preventDefault();
 					updateFilters();
-					document.getElementById('filterModal').classList.remove('active');
-				});
-
-				// Reset filters
-				document.querySelector('.reset-btn').addEventListener('click', function () {
-					window.location.href = '/user/shop';
 				});
 			</script>
 

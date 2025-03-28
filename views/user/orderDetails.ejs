@@ -146,12 +146,13 @@
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }.swal2-textarea {
-    pointer-events: auto !important;
-    opacity: 1 !important;
-    z-index: 10000 !important;
-}
+        }
 
+        .swal2-textarea {
+            pointer-events: auto !important;
+            opacity: 1 !important;
+            z-index: 10000 !important;
+        }
     </style>
 </head>
 
@@ -192,7 +193,8 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Order Details #<%= order.orderId %></h5>
+                        <h5 class="modal-title">Order Details #<%= order.orderId %>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -201,8 +203,9 @@
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <h6 class="mb-3">Order Information</h6>
-                                    <p class="mb-1">Date: <%= order.createdAt.toLocaleString() %></p>
-                                    <p class="mb-2">Order Status: 
+                                    <p class="mb-1">Date: <%= order.createdAt.toLocaleString() %>
+                                    </p>
+                                    <p class="mb-2">Order Status:
                                         <span class="status-badge status-<%= order.status.toLowerCase() %>">
                                             <%= order.status %>
                                         </span>
@@ -210,8 +213,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="mb-3">Payment Details</h6>
-                                    <p class="mb-1">Method: <%= order.paymentMethod %></p>
-                                    <p class="mb-1">Status: <%= order.paymentStatus %></p>
+                                    <p class="mb-1">Method: <%= order.paymentMethod %>
+                                    </p>
+                                    <p class="mb-1">Status: <%= order.paymentStatus %>
+                                    </p>
                                 </div>
                             </div>
 
@@ -219,63 +224,89 @@
                             <div class="row mb-4">
                                 <div class="card-body">
                                     <% if (order.userId) { %>
-                                        <p><strong>Customer Name:</strong> <%= order.address.name %></p>
-                                    <% } %>
-                                    <% if (order.address) { %>
-                                        <h6>Shipping Address:</h6>
-                                        <div class="address-card p-3 bg-light rounded">
-                                            <p class="mb-1"><strong><%= order.address.addressType %></strong></p>
-                                            <p class="mb-1"><%= order.address.landMark ? order.address.landMark : 'N/A' %></p>
-                                            <p class="mb-1"><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
-                                            <p class="mb-1">📞 <%= order.address.phone %></p>
-                                            <% if (order.address.altPhone) { %>
-                                                <p class="mb-0">📱 Alt: <%= order.address.altPhone %></p>
-                                            <% } %>
-                                        </div>
-                                    <% } else { %>
-                                        <p>No address available.</p>
-                                    <% } %>
+                                        <p><strong>Customer Name:</strong>
+                                            <%= order.address.name %>
+                                        </p>
+                                        <% } %>
+                                            <% if (order.address) { %>
+                                                <h6>Shipping Address:</h6>
+                                                <div class="address-card p-3 bg-light rounded">
+                                                    <p class="mb-1"><strong>
+                                                            <%= order.address.addressType %>
+                                                        </strong></p>
+                                                    <p class="mb-1">
+                                                        <%= order.address.landMark ? order.address.landMark : 'N/A' %>
+                                                    </p>
+                                                    <p class="mb-1">
+                                                        <%= order.address.city %>, <%= order.address.state %> - <%=
+                                                                    order.address.pincode %>
+                                                    </p>
+                                                    <p class="mb-1">📞 <%= order.address.phone %>
+                                                    </p>
+                                                    <% if (order.address.altPhone) { %>
+                                                        <p class="mb-0">📱 Alt: <%= order.address.altPhone %>
+                                                        </p>
+                                                        <% } %>
+                                                </div>
+                                                <% } else { %>
+                                                    <p>No address available.</p>
+                                                    <% } %>
                                 </div>
                             </div>
 
                             <!-- Order Items Section -->
                             <div class="mb-4">
                                 <h6 class="mb-3">Order Items</h6>
-                                <% let subtotal = 0; %>
-                                <% order.orderItems.forEach(item=> { %>
-                                    <% const itemTotal = item.price * item.quantity; %>
-                                    <% subtotal += itemTotal; %>
-                                    <div class="product-card">
-                                        <div class="product-details">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    <h6 class="product-name"><%= item.name %></h6>
-                                                    <p class="mb-1 text-muted">SKU: <%= item.productId._id %></p>
+                                <% let subtotal=0; %>
+                                    <% order.orderItems.forEach(item=> { %>
+                                        <% const itemTotal=item.price * item.quantity; %>
+                                            <% subtotal +=itemTotal; %>
+                                                <div class="product-card">
+                                                    <div class="product-details">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="product-name">
+                                                                    <%= item.name %>
+                                                                </h6>
+                                                                <p class="mb-1 text-muted">SKU: <%= item.productId._id
+                                                                        %>
+                                                                </p>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <p class="mb-1">Unit Price: ₹<%=
+                                                                        item.price.toLocaleString() %>
+                                                                </p>
+                                                                <p class="mb-1">Quantity: <%= item.quantity %>
+                                                                </p>
+                                                                <p class="mb-1 fw-bold">Subtotal: ₹<%=
+                                                                        itemTotal.toLocaleString() %>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <% if (order.status==="Pending" ||
+                                                                order.status==="Processing" ) { %>
+                                                                <button class="btn btn-danger btn-sm"
+                                                                    onclick="cancelProduct('<%= order._id %>', '<%= item.productId._id %>')">
+                                                                    Cancel Product
+                                                                </button>
+                                                                <% } %>
+                                                                    <% if (order.status==="Delivered" ) { %>
+                                                                        <button class="btn btn-danger btn-sm ms-2"
+                                                                            onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>')">
+                                                                            Return Product
+                                                                        </button>
+                                                                        <% } %>
+                                                                            <% if (!["Pending", "Processing"
+                                                                                , "Delivered" ].includes(order.status))
+                                                                                { %>
+                                                                                <span class="text-muted">Status: <%=
+                                                                                        item.status %></span>
+                                                                                <% } %>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="text-end">
-                                                    <p class="mb-1">Unit Price: ₹<%= item.price.toLocaleString() %></p>
-                                                    <p class="mb-1">Quantity: <%= item.quantity %></p>
-                                                    <p class="mb-1 fw-bold">Subtotal: ₹<%= itemTotal.toLocaleString() %></p>
-                                                </div>
-                                            </div>
-                                            <div class="mt-2">
-                                                <% if (order.status === "Pending" || order.status === "Processing") { %>
-                                                    <button class="btn btn-danger btn-sm" onclick="cancelProduct('<%= order._id %>', '<%= item.productId._id %>')">
-                                                        Cancel Product
-                                                    </button>
-                                                <% } %>
-                                                <% if (order.status === "Delivered") { %>
-                                                    <button class="btn btn-danger btn-sm ms-2" onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>')">
-                                                        Return Product
-                                                    </button>
-                                                <% } %>
-                                                <% if (!["Pending", "Processing", "Delivered"].includes(order.status)) { %>
-                                                    <span class="text-muted">Status: <%= item.status %></span>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% }); %>
+                                                <% }); %>
                             </div>
 
                             <!-- Order Summary Section -->
@@ -286,44 +317,51 @@
                                         <table class="table table-sm mb-0">
                                             <tr>
                                                 <td>Items Subtotal:</td>
-                                                <td class="text-end">₹<%= subtotal.toLocaleString() %></td>
+                                                <td class="text-end">₹<%= subtotal.toLocaleString() %>
+                                                </td>
                                             </tr>
                                             <% if (order.couponCode) { %>
                                                 <tr>
                                                     <td>Coupon Applied:</td>
-                                                    <td class="text-end text-success"><%= order.couponCode %></td>
+                                                    <td class="text-end text-success">
+                                                        <%= order.couponCode %>
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td>Discount:</td>
-                                                    <td class="text-end text-success">-₹<%= (order.discount || 0).toLocaleString() %></td>
+                                                    <td class="text-end text-success">-₹<%= (order.discount ||
+                                                            0).toLocaleString() %>
+                                                    </td>
                                                 </tr>
-                                            <% } %>
-                                            <tr>
-                                                <td>Shipping:</td>
-                                                <td class="text-end">
-                                                    <% if (!order.shippingCost || order.shippingCost === 0) { %>
-                                                        <span class="text-success">FREE</span>
-                                                    <% } else { %>
-                                                        ₹<%= order.shippingCost.toLocaleString() %>
-                                                    <% } %>
-                                                </td>
-                                            </tr>
-                                            <tr class="fw-bold">
-                                                <td>Final Total:</td>
-                                                <td class="text-end">₹<%= (order.finalAmount || 0).toLocaleString() %></td>
-                                            </tr>
+                                                <% } %>
+                                                    <tr>
+                                                        <td>Shipping:</td>
+                                                        <td class="text-end">
+                                                            <% if (!order.shippingCost || order.shippingCost===0) { %>
+                                                                <span class="text-success">FREE</span>
+                                                                <% } else { %>
+                                                                    ₹<%= order.shippingCost.toLocaleString() %>
+                                                                        <% } %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="fw-bold">
+                                                        <td>Final Total:</td>
+                                                        <td class="text-end">₹<%= (order.finalAmount ||
+                                                                0).toLocaleString() %>
+                                                        </td>
+                                                    </tr>
                                         </table>
                                     </div>
                                 </div>
                             </div>
 
-                            <% if (order.status === "Pending" || order.status === "Processing") { %>
+                            <% if (order.status==="Pending" || order.status==="Processing" ) { %>
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-danger" onclick="cancelOrder('<%= order._id %>')">
                                         Cancel Complete Order
                                     </button>
                                 </div>
-                            <% } %>
+                                <% } %>
                         </div>
                     </div>
                 </div>
@@ -352,12 +390,12 @@
                     console.log("sfghjkdsfadfasfasd", productId);
                     Swal.fire({
                         title: 'Confirm Cancellation',
-    text: 'Are you sure you want to cancel this product?',
-    icon: 'warning',
-    showCancelButton: true,
-    cancelButtonText: 'No, keep it',
-    confirmButtonText: 'Yes, cancel it!',
-    html: `
+                        text: 'Are you sure you want to cancel this product?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        cancelButtonText: 'No, keep it',
+                        confirmButtonText: 'Yes, cancel it!',
+                        html: `
         <select id="cancelReason" class="swal2-select">
             <option value="" disabled selected>Select a reason</option>
             <option value="Changed my mind">Changed my mind</option>
@@ -366,20 +404,20 @@
             <option value="Product issue">Product issue</option>
         </select>
     `,
-    preConfirm: () => {
-        const select = document.getElementById("cancelReason");
-        const reason = select.value;
+                        preConfirm: () => {
+                            const select = document.getElementById("cancelReason");
+                            const reason = select.value;
 
-        if (!reason) {
-            Swal.showValidationMessage('Please select a reason');
-            return false;
-        }
+                            if (!reason) {
+                                Swal.showValidationMessage('Please select a reason');
+                                return false;
+                            }
 
-        return fetch('/cancel-product', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId, productId, reason })
-        })
+                            return fetch('/cancel-product', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId, productId, reason })
+                            })
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.success) {
@@ -491,16 +529,16 @@
                                 contentType: 'application/json',
                                 data: JSON.stringify(data)
                             })
-                            .then(response => {
-                                if (!response.success) {
-                                    throw new Error(response.message || 'Return request failed');
-                                }
-                                return response;
-                            })
-                            .catch(error => {
-                                console.error('Return request error:', error);
-                                throw new Error(error.message || 'Failed to process return request');
-                            });
+                                .then(response => {
+                                    if (!response.success) {
+                                        throw new Error(response.message || 'Return request failed');
+                                    }
+                                    return response;
+                                })
+                                .catch(error => {
+                                    console.error('Return request error:', error);
+                                    throw new Error(error.message || 'Failed to process return request');
+                                });
                         },
                         allowOutsideClick: () => !Swal.isLoading()
                     }).then((result) => {

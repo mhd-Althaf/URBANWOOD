@@ -103,7 +103,7 @@ router.post("/clearCart", userAuth, cartController.clearCart)
 // Payment & Invoice
 router.post("/createRazorpayOrder", userAuth, orderController.createRazorpayOrder);
 router.post("/payment", userAuth, orderController.verifyPayment);
-// router.get('/downloadInvoice/:orderId',userAuth,orderController.downloadInvoice);
+router.post("/wallet-payment", userAuth, orderController.processWalletPayment);
 
 // // Wishlist Management
 router.get("/wishlist", userAuth, wishlistController.loadWishlistPage);
@@ -144,5 +144,10 @@ router.post("/verify-payment", userAuth, walletController.verify_payment);
 //         });
 //     }
 // });
+
+// Address Management
+router.post("/add-address", userAuth, profileController.addAddress);
+router.post("/edit-address/:addressId", userAuth, profileController.editAddress);
+router.post("/delete-address/:addressId", userAuth, profileController.deleteAddress);
 
 module.exports = router;
