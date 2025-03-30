@@ -360,9 +360,12 @@
                             <label class="form-check-label" for="Razorpay"><i class="fas fa-credit-card text-primary"></i> Online Payment (Razorpay)</label>
                         </div>
                         <div class="payment-option">
-                            <input class="form-check-input" type="radio" name="payment" id="wallet" value="wallet">
-                            <label class="form-check-label" for="wallet">
-                                <i class="fas fa-wallet text-warning"></i> Wallet (₹<%= user?.wallet || 0 %>)
+                            <input class="form-check-input" type="radio" name="payment" id="wallet" value="wallet" <%= parseFloat(user?.wallet || 0) < grandTotal ? 'disabled' : '' %>>
+                            <label class="form-check-label <%= parseFloat(user?.wallet || 0) < grandTotal ? 'text-muted' : '' %>" for="wallet">
+                                <i class="fas fa-wallet text-warning"></i> Wallet (₹<%= parseFloat(user?.wallet || 0).toFixed(2) %>)
+                                <% if (parseFloat(user?.wallet || 0) < grandTotal) { %>
+                                    <span class="text-danger small">Insufficient balance</span>
+                                <% } %>
                             </label>
                         </div>
                         <div class="payment-option">
@@ -379,7 +382,22 @@
                         <h2 class="section-title">Wallet</h2>
                         <div class="wallet-balance">
                             <span>Available Balance</span>
-                            <span>₹<%= user?.wallet || 0 %></span>
+                            <span>₹<%= parseFloat(user?.wallet || 0).toFixed(2) %></span>
+                        </div>
+                        <% if (parseFloat(user?.wallet || 0) < grandTotal) { %>
+                            <div class="alert alert-info mt-2 mb-0">
+                                <i class="fas fa-info-circle"></i> Your wallet balance is insufficient for this order. 
+                                <a href="/wallet" class="alert-link">Add funds</a> or choose another payment method.
+                            </div>
+                        <% } else { %>
+                            <div class="alert alert-success mt-2 mb-0">
+                                <i class="fas fa-check-circle"></i> You have sufficient balance to pay for this order using your wallet!
+                            </div>
+                        <% } %>
+                        <div class="text-center mt-3">
+                            <a href="/wallet" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-plus-circle"></i> Top up Wallet
+                            </a>
                         </div>
                     </div>
 
@@ -498,6 +516,94 @@
         // Define global variables
         const originalSubtotal = <%= subtotal %>;
         const originalShippingCost = <%= shippingCost %>;
+        
+        // Function declarations (moved outside of DOMContentLoaded)
+        function selectCoupon(couponCode) {
+            const couponCards = document.querySelectorAll('.coupon-card');
+            const couponInput = document.getElementById('couponInput');
+            const couponMessage = document.getElementById('couponMessage');
+            const subtotalElement = document.getElementById('subtotal');
+            const discountElement = document.getElementById('discount');
+            const grandTotalElement = document.getElementById('grandTotal');
+            const shippingCostElement = document.getElementById('shippingCost');
+            let currentShippingCost = shippingCostElement.textContent === 'FREE Shipping' ? 0 : parseFloat(shippingCostElement.textContent.replace('₹', '').replace(/,/g, ''));
+            
+            // Store coupon information in a global variable to access it during checkout
+            window.appliedCoupon = null;
+            
+            // Find the selected coupon card and get its discount amount
+            const selectedCard = document.querySelector(`.coupon-card[data-code="${couponCode}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                
+                // Show cancel button and hide use button
+                const useBtn = selectedCard.querySelector('.use-button');
+                const cancelBtn = selectedCard.querySelector('.cancel-button');
+                useBtn.style.display = 'none';
+                cancelBtn.style.display = 'block';
+                
+                // Get coupon discount amount from the description
+                const description = selectedCard.querySelector('.coupon-description').textContent;
+                const offerMatch = description.match(/₹(\d+)/);
+                if (offerMatch && offerMatch[1]) {
+                    const discount = parseInt(offerMatch[1]);
+                    
+                    // Calculate new total
+                    const newSubtotal = originalSubtotal - discount;
+                    const newGrandTotal = newSubtotal + currentShippingCost;
+                    
+                    // Update the DOM with the new values
+                    subtotalElement.textContent = `₹${newSubtotal.toLocaleString()}`;
+                    discountElement.textContent = `₹${discount.toLocaleString()}`;
+                    grandTotalElement.textContent = `₹${newGrandTotal.toLocaleString()}`;
+                    
+                    // Store coupon information to be used during checkout
+                    window.appliedCoupon = {
+                        code: couponCode,
+                        discount: discount
+                    };
+                    
+                    // Display success message
+                    couponMessage.textContent = `Coupon "${couponCode}" applied successfully!`;
+                    couponMessage.classList.remove('text-danger');
+                    couponMessage.classList.add('text-success');
+                    couponMessage.style.display = 'block';
+                }
+            }
+            
+            // Deselect other coupon cards
+            couponCards.forEach(card => {
+                if (card !== selectedCard) {
+                    card.classList.remove('selected');
+                    card.querySelector('.use-button').style.display = 'block';
+                    card.querySelector('.cancel-button').style.display = 'none';
+                }
+            });
+            
+            // Set the coupon code in the input field
+            couponInput.value = couponCode;
+        }
+        
+        function cancelCoupon(couponCode) {
+            const card = document.querySelector(`.coupon-card[data-code="${couponCode}"]`);
+            const useBtn = card.querySelector('.use-button');
+            const cancelBtn = card.querySelector('.cancel-button');
+            useBtn.style.display = 'block';
+            cancelBtn.style.display = 'none';
+            
+            // Reset the input field and hide messages
+            document.getElementById('couponInput').value = '';
+            const couponMessage = document.getElementById('couponMessage');
+            couponMessage.style.display = 'none';
+            
+            // Reset the totals to original values
+            document.getElementById('subtotal').textContent = `₹${originalSubtotal.toLocaleString()}`;
+            document.getElementById('discount').textContent = '₹0';
+            document.getElementById('grandTotal').textContent = `₹${(originalSubtotal + originalShippingCost).toLocaleString()}`;
+            
+            // Clear the applied coupon
+            window.appliedCoupon = null;
+        }
 
         // Address Modal Functions
         function openAddAddressModal() {
@@ -606,7 +712,7 @@
             const addressRadios = document.querySelectorAll('input[name="selectedAddress"]');
             const paymentRadios = document.querySelectorAll('input[name="payment"]');
             const placeOrderBtn = document.getElementById('placeOrderBtn');
-            const walletBalance = <%= user?.wallet || 0 %>;
+            const walletBalance = <%= parseFloat(user?.wallet || 0) %>;
             const grandTotal = <%= grandTotal %>;
             
             function updateSelectedState(selectedCard) {
@@ -622,9 +728,24 @@
                     return false;
                 }
 
-                if (selectedPayment.value === 'wallet' && walletBalance < grandTotal) {
-                    Swal.fire('Error', 'Insufficient wallet balance', 'error');
-                    return false;
+                if (selectedPayment.value === 'wallet') {
+                    const currentGrandTotal = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', '').replace(/,/g, ''));
+                    
+                    if (walletBalance < currentGrandTotal) {
+                        Swal.fire({
+                            title: 'Insufficient Balance',
+                            text: `Your wallet balance (₹${walletBalance.toFixed(2)}) is less than the order total (₹${currentGrandTotal.toFixed(2)})`,
+                            icon: 'error',
+                            confirmButtonText: 'Add Funds',
+                            showCancelButton: true,
+                            cancelButtonText: 'Choose Another Method'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/wallet';
+                            }
+                        });
+                        return false;
+                    }
                 }
 
                 return true;
@@ -643,25 +764,38 @@
                 const selectedPayment = document.querySelector('input[name="payment"]:checked');
                 const addressId = selectedAddress.value;
                 const paymentMethod = selectedPayment.value;
+                
+                // Get current grand total from the displayed value rather than using the initial grandTotal
+                const currentGrandTotal = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', '').replace(/,/g, ''));
 
                 try {
-                    // Create order
+                    // Create order with coupon information if any
+                    const orderData = {
+                        addressId,
+                        paymentMethod,
+                        amount: currentGrandTotal
+                    };
+                    
+                    // Add coupon information if a coupon was applied
+                    if (window.appliedCoupon) {
+                        orderData.coupon = {
+                            code: window.appliedCoupon.code,
+                            discount: window.appliedCoupon.discount
+                        };
+                    }
+                    
                     const orderResponse = await fetch('/place-order', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            addressId,
-                            paymentMethod,
-                            amount: grandTotal
-                        })
+                        body: JSON.stringify(orderData)
                     });
 
-                    const orderData = await orderResponse.json();
+                    const orderResult = await orderResponse.json();
                     
-                    if (!orderData.success) {
-                        throw new Error(orderData.message);
+                    if (!orderResult.success) {
+                        throw new Error(orderResult.message);
                     }
 
                     // Handle payment based on method
@@ -672,7 +806,8 @@
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                orderId: orderData.order._id
+                                orderId: orderResult.order._id,
+                                amount: currentGrandTotal
                             })
                         });
 
@@ -680,6 +815,16 @@
                         if (!walletData.success) {
                             throw new Error(walletData.message);
                         }
+                        
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: `₹${currentGrandTotal.toFixed(2)} has been deducted from your wallet. Your new wallet balance is ₹${walletData.newBalance.toFixed(2)}`,
+                            icon: 'success',
+                            confirmButtonText: 'View Order'
+                        }).then(() => {
+                            window.location.href = '/orders';
+                        });
+                        return;
                     } else if (paymentMethod === 'Razorpay') {
                         // Create Razorpay order
                         const razorpayResponse = await fetch('/createRazorpayOrder', {
@@ -688,7 +833,7 @@
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                orderAmount: grandTotal
+                                orderAmount: currentGrandTotal
                             })
                         });
 
@@ -707,6 +852,8 @@
                             order_id: razorpayData.razorpayOrderId,
                             handler: async function(response) {
                                 try {
+                                    console.log("Razorpay payment successful, verifying with server:", response);
+                                    
                                     const verifyResponse = await fetch('/payment', {
                                         method: 'POST',
                                         headers: {
@@ -716,22 +863,34 @@
                                             razorpay_order_id: response.razorpay_order_id,
                                             razorpay_payment_id: response.razorpay_payment_id,
                                             razorpay_signature: response.razorpay_signature,
-                                            orderId: orderData.order._id,
-                                            amount: grandTotal
+                                            orderId: orderResult.order._id,
+                                            amount: currentGrandTotal
                                         })
                                     });
 
                                     const verifyData = await verifyResponse.json();
+                                    console.log("Payment verification response:", verifyData);
+                                    
                                     if (verifyData.success) {
-                                        Swal.fire('Success', 'Order placed successfully!', 'success')
-                                            .then(() => {
-                                                window.location.href = '/orders';
-                                            });
+                                        Swal.fire({
+                                            title: 'Payment Successful!',
+                                            text: 'Your order has been placed successfully and payment has been received.',
+                                            icon: 'success',
+                                            confirmButtonText: 'View My Orders'
+                                        }).then(() => {
+                                            window.location.href = '/orders';
+                                        });
                                     } else {
-                                        throw new Error(verifyData.message);
+                                        throw new Error(verifyData.message || "Payment verification failed");
                                     }
                                 } catch (error) {
-                                    Swal.fire('Error', error.message, 'error');
+                                    console.error("Payment verification error:", error);
+                                    Swal.fire({
+                                        title: 'Payment Error',
+                                        text: error.message || 'An error occurred during payment verification. Please contact support with your order ID.',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
                                 }
                             },
                             prefill: {
@@ -772,28 +931,8 @@
             let currentShippingCost = shippingCostElement.textContent === 'FREE Shipping' ? 0 : parseFloat(shippingCostElement.textContent.replace('₹', '').replace(',', ''));
 
             let usedCoupon = null;
-            function selectCoupon(couponCode) {
-                couponCards.forEach(card => card.classList.remove('selected'));
-                const selectedCard = document.querySelector(`.coupon-card[data-code="${couponCode}"]`);
-                if (selectedCard) selectedCard.classList.add('selected');
-                couponInput.value = couponCode;
-                couponMessage.style.display = 'none';
-            }
-
-            function cancelCoupon(couponCode) {
-                const card = document.querySelector(`.coupon-card[data-code="${couponCode}"]`);
-                const useBtn = card.querySelector('.use-button');
-                const cancelBtn = card.querySelector('.cancel-button');
-                useBtn.style.display = 'block';
-                cancelBtn.style.display = 'none';
-                document.getElementById('couponInput').value = '';
-                document.getElementById('couponMessage').style.display = 'none';
-                // Reset the totals to original values
-                document.getElementById('subtotal').textContent = `₹${originalSubtotal.toLocaleString()}`;
-                document.getElementById('discount').textContent = '₹0';
-                document.getElementById('grandTotal').textContent = `₹${(originalSubtotal + currentShippingCost).toLocaleString()}`;
-            }
-
+            // selectCoupon and cancelCoupon functions are now defined globally above
+            
             function applyCoupon() {
                 const couponCode = couponInput.value.trim();
                 if (!couponCode) {

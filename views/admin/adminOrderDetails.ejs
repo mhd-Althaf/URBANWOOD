@@ -158,7 +158,7 @@
 <div class="modal fade" id="returnRequestModal" tabindex="-1" aria-labelledby="returnRequestModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title" id="returnRequestModalLabel">Return Request Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -198,7 +198,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer bg-dark text-white">
                 <button type="button" class="btn btn-success" onclick="acceptReturn()">Accept Return</button>
                 <button type="button" class="btn btn-danger" onclick="rejectReturn()">Reject Return</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -225,8 +225,8 @@ if (typeof productId !== "string") {
 }
 
 Swal.fire({
-    title: `<span style="color: black;">Change Status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?</span>`,
-    html: `<span style="color: black;">Are you sure you want to update this order's status?</span>`,
+    title: `Change Status to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}"?`,
+    html: `Are you sure you want to update this order's status?`,
     icon: "question",
     iconHtml: "🔄", 
     showCancelButton: true,
@@ -234,8 +234,10 @@ Swal.fire({
     cancelButtonColor: "#d33", 
     confirmButtonText: "Yes, Update!",
     cancelButtonText: "Cancel",
-    background: "#f9f9f9", 
-    backdrop: `rgba(0, 0, 0, 0.4)`, 
+    background: "#2d2d2d", 
+    color: "#ffffff",
+    iconColor: "#3fc3ee",
+    backdrop: `rgba(0, 0, 0, 0.6)`, 
     showLoaderOnConfirm: true, 
     preConfirm: () => {
         return $.ajax({
@@ -247,10 +249,13 @@ Swal.fire({
         .then((response) => {
             if (response.status) {
                 Swal.fire({
-                    title: `<span style="color: black;">✅ Status Updated!</span>`,
-                    html: `<span style="color: black;">Order status changed to "${newStatus}".</span>`,
+                    title: `✅ Status Updated!`,
+                    html: `Order status changed to "${newStatus}".`,
                     icon: "success",
                     confirmButtonColor: "#28a745",
+                    background: "#2d2d2d",
+                    color: "#ffffff",
+                    iconColor: "#a5dc86",
                     timer: 2000, 
                     timerProgressBar: true,
                     willClose: () => {
@@ -264,10 +269,13 @@ Swal.fire({
         .catch((error) => {
             console.log(error);
             Swal.fire({
-                title: `<span style="color: black;">❌ Update Failed!</span>`,
-                html: `<span style="color: black;">${error.message}</span>`,
+                title: `❌ Update Failed!`,
+                html: `${error.message}`,
                 icon: "error",
-                confirmButtonColor: "#d33"
+                confirmButtonColor: "#d33",
+                background: "#2d2d2d",
+                color: "#ffffff",
+                iconColor: "#f27474"
             });
         });
     }
@@ -281,19 +289,46 @@ const quantity = row.cells[1].textContent;
 const price = row.cells[2].textContent.replace('₹', '');
 const total = row.cells[3].textContent.replace('₹', '');
 const status = row.cells[4].textContent;
-const orderId = '<%= orders.orderId %>';
+const orderId = '<%= orders._id %>'; // Use actual order _id for database queries
 
-// Populate modal with data
-document.getElementById('modalProductName').textContent = productName;
-document.getElementById('modalQuantity').textContent = quantity;
-document.getElementById('modalPrice').textContent = price;
-document.getElementById('modalTotal').textContent = total;
-document.getElementById('modalStatus').textContent = status;
-document.getElementById('modalDate').textContent = '<%= orders.invoiceDate ? new Date(orders.invoiceDate).toDateString() : "Not available" %>';
-document.getElementById('returnReason').value = "Customer's return reason goes here"; // Replace with actual data from your backend
+// Find the item in the order data to get the return reason
+<% if (orders.orderItems && orders.orderItems.length > 0) { %>
+  let returnReason = '';
+  <% orders.orderItems.forEach((item, index) => { %>
+    if (itemId === '<%= item._id %>') {
+      returnReason = '<%= item.ReturnReason || "No reason provided" %>';
+    }
+  <% }); %>
+  
+  // Populate modal with data
+  document.getElementById('modalProductName').textContent = productName;
+  document.getElementById('modalQuantity').textContent = quantity;
+  document.getElementById('modalPrice').textContent = price;
+  document.getElementById('modalTotal').textContent = total;
+  document.getElementById('modalStatus').textContent = status;
+  document.getElementById('modalDate').textContent = '<%= orders.createdAt ? new Date(orders.createdAt).toDateString() : "Not available" %>';
+  document.getElementById('returnReason').value = returnReason;
+<% } %>
 
 // Store itemId in a data attribute for later use
 $('#returnRequestModal').data('itemId', itemId);
+
+// Apply dark theme to modal
+document.querySelector('#returnRequestModal .modal-content').style.backgroundColor = '#2d2d2d';
+document.querySelector('#returnRequestModal .modal-content').style.color = '#ffffff';
+document.querySelectorAll('#returnRequestModal .card').forEach(card => {
+    card.style.backgroundColor = '#3d3d3d';
+    card.style.color = '#ffffff';
+});
+document.querySelectorAll('#returnRequestModal .card-header').forEach(header => {
+    header.style.backgroundColor = '#4d4d4d';
+    header.style.color = '#ffffff';
+});
+document.querySelectorAll('#returnRequestModal .form-control').forEach(input => {
+    input.style.backgroundColor = '#2d2d2d';
+    input.style.color = '#ffffff';
+    input.style.borderColor = '#4d4d4d';
+});
 
 // Show the modal
 const modal = new bootstrap.Modal(document.getElementById('returnRequestModal'));
@@ -302,9 +337,11 @@ modal.show();
 
 function acceptReturn() {
 const adminComment = document.getElementById('adminComment').value;
-const orderId = '<%= orders.orderId %>';
+const orderId = '<%= orders._id %>';
 const itemId = $('#returnRequestModal').data('itemId');
 const productName = document.getElementById('modalProductName').textContent;
+
+console.log("Accept Return data:", { orderId, itemId, comment: adminComment, productName });
 
 Swal.fire({
     title: 'Accept Return Request?',
@@ -313,28 +350,57 @@ Swal.fire({
     showCancelButton: true,
     confirmButtonColor: '#28a745',
     cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, Accept!'
+    confirmButtonText: 'Yes, Accept!',
+    background: '#2d2d2d',
+    color: '#ffffff',
+    iconColor: '#3fc3ee'
 }).then((result) => {
     if (result.isConfirmed) {
+        const postData = {
+            orderId: orderId,
+            itemId: itemId,
+            comment: adminComment,
+            productName: productName
+        };
+        
+        console.log("Sending AJAX request to /admin/acceptReturn with data:", postData);
+        
         $.ajax({
             url: '/admin/acceptReturn', 
             method: 'POST',
-            data: {
-                orderId: orderId,
-                itemId: itemId,
-                comment: adminComment,
-                productName: productName
-            },
+            data: postData,
             success: (response) => {
+                console.log("Received response:", response);
                 if (response.status) {
-                    Swal.fire('Success', 'Return request accepted', 'success')
-                        .then(() => location.reload());
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Return request accepted',
+                        icon: 'success',
+                        background: '#2d2d2d',
+                        color: '#ffffff',
+                        iconColor: '#a5dc86'
+                    }).then(() => location.reload());
                 } else {
-                    Swal.fire('Error', response.message || 'Failed to accept return', 'error');
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message || 'Failed to accept return',
+                        icon: 'error',
+                        background: '#2d2d2d',
+                        color: '#ffffff',
+                        iconColor: '#f27474'
+                    });
                 }
             },
             error: (error) => {
-                Swal.fire('Error', 'Failed to accept return', 'error');
+                console.error("AJAX error:", error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to accept return',
+                    icon: 'error',
+                    background: '#2d2d2d',
+                    color: '#ffffff',
+                    iconColor: '#f27474'
+                });
             }
         });
     }
@@ -343,12 +409,21 @@ Swal.fire({
 
 function rejectReturn() {
 const adminComment = document.getElementById('adminComment').value;
-const orderId = '<%= orders.orderId %>';
+const orderId = '<%= orders._id %>';
 const itemId = $('#returnRequestModal').data('itemId');
 const productName = document.getElementById('modalProductName').textContent;
 
+console.log("Reject Return data:", { orderId, itemId, comment: adminComment, productName });
+
 if (!adminComment) {
-    Swal.fire('Error', 'Please provide a reason for rejection', 'error');
+    Swal.fire({
+        title: 'Error',
+        text: 'Please provide a reason for rejection',
+        icon: 'error',
+        background: '#2d2d2d',
+        color: '#ffffff',
+        iconColor: '#f27474'
+    });
     return;
 }
 
@@ -359,28 +434,57 @@ Swal.fire({
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, Reject!'
+    confirmButtonText: 'Yes, Reject!',
+    background: '#2d2d2d',
+    color: '#ffffff',
+    iconColor: '#f8bb86'
 }).then((result) => {
     if (result.isConfirmed) {
+        const postData = {
+            orderId: orderId,
+            itemId: itemId,
+            comment: adminComment,
+            productName: productName
+        };
+        
+        console.log("Sending AJAX request to /admin/rejectReturn with data:", postData);
+        
         $.ajax({
             url: '/admin/rejectReturn', 
             method: 'POST',
-            data: {
-                orderId: orderId,
-                itemId: itemId,
-                comment: adminComment,
-                productName: productName
-            },
+            data: postData,
             success: (response) => {
+                console.log("Received response:", response);
                 if (response.status) {
-                    Swal.fire('Success', 'Return request rejected', 'success')
-                        .then(() => location.reload());
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Return request rejected',
+                        icon: 'success',
+                        background: '#2d2d2d',
+                        color: '#ffffff',
+                        iconColor: '#a5dc86'
+                    }).then(() => location.reload());
                 } else {
-                    Swal.fire('Error', response.message || 'Failed to reject return', 'error');
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message || 'Failed to reject return',
+                        icon: 'error',
+                        background: '#2d2d2d',
+                        color: '#ffffff',
+                        iconColor: '#f27474'
+                    });
                 }
             },
             error: (error) => {
-                Swal.fire('Error', 'Failed to reject return', 'error');
+                console.error("AJAX error:", error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to reject return',
+                    icon: 'error',
+                    background: '#2d2d2d',
+                    color: '#ffffff',
+                    iconColor: '#f27474'
+                });
             }
         });
     }

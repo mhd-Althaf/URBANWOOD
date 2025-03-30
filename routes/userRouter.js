@@ -89,7 +89,7 @@ router.get("/orders", userAuth, orderController.userOrderDetails)
 router.post("/apply-coupon", userAuth, orderController.applyCoupon);
 router.post('/cancelOrder', userAuth, orderController.cancelOrder)
 router.post('/cancel-product', userAuth, orderController.cancelProduct);
-router.post('/single-return-product',userAuth,orderController.singleReturnRequest);
+router.post('/return-product', userAuth, orderController.returnProduct);
 
 // Cart Management
 router.get("/cart", userAuth, cartController.getCartPage)
@@ -116,6 +116,7 @@ router.get("/wishlist/share", userAuth, wishlistController.shareWishlist);
 router.get("/wallet", userAuth, walletController.getWalletPage);
 router.post("/addMoney", userAuth, walletController.addMoneyToWallet);
 router.post("/verify-payment", userAuth, walletController.verify_payment);
+router.post("/add-funds", userAuth, walletController.addFunds);
 // router.get("/wallet-history", userAuth, walletController.getWalletHistory)
 
 // Referral

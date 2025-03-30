@@ -603,11 +603,213 @@ const downloadReport = async (req, res) => {
     }
 };
 
+const acceptReturn = async (req, res) => {
+  try {
+    const { orderId, itemId, comment, productName } = req.body;
+    console.log("Accept Return Request:", { orderId, itemId, comment, productName });
+    
+    if (!orderId || !itemId) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Order ID and Item ID are required" 
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      console.log("Order not found with ID:", orderId);
+      return res.status(404).json({ 
+        status: false, 
+        message: "Order not found" 
+      });
+    }
+    console.log("Found order:", order._id);
+
+    // Find the specific product item in order
+    let productItem;
+    if (order.orderItems.id) {
+      productItem = order.orderItems.id(itemId);
+    }
+    
+    // If id() method doesn't work, try to find it manually
+    if (!productItem) {
+      console.log("Using manual find for item with ID:", itemId);
+      productItem = order.orderItems.find(item => item._id.toString() === itemId);
+    }
+    
+    if (!productItem) {
+      console.log("Product item not found in order. Available items:", 
+        order.orderItems.map(i => ({ id: i._id.toString(), name: i.name })));
+      return res.status(404).json({ 
+        status: false, 
+        message: "Product not found in order" 
+      });
+    }
+    console.log("Found product item:", productItem._id);
+
+    // Update status to Returned
+    productItem.status = "Returned";
+    productItem.adminComment = comment || "Return approved";
+    console.log("Updated product status to Returned");
+    
+    // Update product stock if available
+    if (productItem.productId) {
+      const Product = require('../../models/productSchema');
+      const product = await Product.findById(productItem.productId);
+      if (product) {
+        product.quantity += productItem.quantity;
+        await product.save();
+        console.log("Updated product stock. Added", productItem.quantity, "to inventory");
+      }
+    }
+
+    // Update user wallet if applicable
+    if (order.userId) {
+      const Wallet = require('../../models/walletSchema');
+      
+      // Calculate refund amount
+      const refundAmount = productItem.price * productItem.quantity;
+      
+      // Find or create wallet for the user
+      let wallet = await Wallet.findOne({ userId: order.userId });
+      
+      if (!wallet) {
+        wallet = new Wallet({
+          userId: order.userId,
+          balance: 0,
+          transactions: []
+        });
+      }
+      
+      // Update wallet balance
+      wallet.balance += refundAmount;
+      
+      // Add transaction to wallet history
+      wallet.transactions.push({
+        amount: refundAmount,
+        type: 'credit',
+        description: `Refund for returned product: ${productName || productItem.name || 'Product'}`,
+        orderId: order._id,
+        productId: productItem.productId,
+        createdAt: new Date()
+      });
+      
+      await wallet.save();
+      console.log("Updated user wallet. Added refund of", refundAmount);
+      
+      // Also update the legacy wallet in user schema for backward compatibility
+      const User = require('../../models/userSchema');
+      const user = await User.findById(order.userId);
+      if (user) {
+        if (typeof user.wallet !== 'number') {
+          user.wallet = 0;
+        }
+        user.wallet += refundAmount;
+        
+        if (!Array.isArray(user.walletHistory)) {
+          user.walletHistory = [];
+        }
+        
+        user.walletHistory.push({
+          amount: refundAmount,
+          transactionType: 'credit',
+          timestamp: new Date()
+        });
+        
+        await user.save();
+        console.log("Updated legacy user wallet for backward compatibility");
+      }
+    }
+
+    await order.save();
+    console.log("Saved order with returned item");
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Return accepted successfully" 
+    });
+  } catch (error) {
+    console.error("Error accepting return:", error);
+    return res.status(500).json({ 
+      status: false, 
+      message: "An error occurred while processing the return" 
+    });
+  }
+};
+
+const rejectReturn = async (req, res) => {
+  try {
+    const { orderId, itemId, comment } = req.body;
+    console.log("Reject Return Request:", { orderId, itemId, comment });
+    
+    if (!orderId || !itemId) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Order ID and Item ID are required" 
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      console.log("Order not found with ID:", orderId);
+      return res.status(404).json({ 
+        status: false, 
+        message: "Order not found" 
+      });
+    }
+    console.log("Found order:", order._id);
+
+    // Find the specific product item in order
+    let productItem;
+    if (order.orderItems.id) {
+      productItem = order.orderItems.id(itemId);
+    }
+    
+    // If id() method doesn't work, try to find it manually
+    if (!productItem) {
+      console.log("Using manual find for item with ID:", itemId);
+      productItem = order.orderItems.find(item => item._id.toString() === itemId);
+    }
+    
+    if (!productItem) {
+      console.log("Product item not found in order. Available items:", 
+        order.orderItems.map(i => ({ id: i._id.toString(), name: i.name })));
+      return res.status(404).json({ 
+        status: false, 
+        message: "Product not found in order" 
+      });
+    }
+    console.log("Found product item:", productItem._id);
+    console.log("Current product status:", productItem.status);
+
+    // Update status to Return_Rejected
+    productItem.status = "Return_Rejected";
+    productItem.adminComment = comment || "Return request rejected";
+    console.log("Updated product status to Return_Rejected");
+    
+    await order.save();
+    console.log("Saved order with rejected return item");
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Return rejected successfully" 
+    });
+  } catch (error) {
+    console.error("Error rejecting return:", error);
+    return res.status(500).json({ 
+      status: false, 
+      message: "An error occurred while processing the return rejection" 
+    });
+  }
+};
+
 module.exports = {
   getOrderListPageAdmin,
   getOrderDetailsPageAdmin,
   changeOrderStatus,
   getSalesReport,
   generateSalesReport,
-  downloadReport
+  downloadReport,
+  acceptReturn,
+  rejectReturn
 }

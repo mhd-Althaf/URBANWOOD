@@ -50,7 +50,7 @@ const orderSchema = new Schema({
             },
             status: {
                 type: String,
-                enum: ["Pending", "Shipped", "Delivered", "Cancelled","Return_Requested","Returned"],
+                enum: ["Pending", "Shipped", "Delivered", "Cancelled", "Return_Requested", "Returned", "Return_Rejected"],
                 default: "Pending"
             },
             cancellationReason: {
@@ -68,16 +68,20 @@ const orderSchema = new Schema({
                 type: Date,
                 required: false
             },
+            adminComment: {
+                type: String,
+                required: false
+            },
             paymentMethod: {
                 type: String,
-                enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
+                enum: ['cod','Credit Card', 'Debit Card', 'Razorpay', 'wallet','Wallet'],
                 required: false
             },
         }
     ],
     paymentMethod: {
         type: String,
-        enum: ['cod','Credit Card', 'Debit Card', 'Razorpay'],
+        enum: ['cod','Credit Card', 'Debit Card', 'Razorpay', 'Wallet','wallet'],
         required: true
     },
     shippingCost: {
@@ -87,7 +91,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: [ "Pending", "Processing", "Shipped", "Delivered", "Cancelled","Return Request", "Returned"],
+        enum: [ "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
         default: "Pending"
     },
     paymentStatus: {
@@ -129,9 +133,13 @@ const orderSchema = new Schema({
         type: Boolean,
         default: false,
     },
-      couponDiscount: {
+    couponDiscount: {
         type: Number,
         default: 0,
+    },
+    couponCode: {
+        type: String,
+        default: null,
     },
     finalAmount: {
         type: Number,
@@ -145,10 +153,10 @@ const orderSchema = new Schema({
         type: String,
         required: false
     },
-      razorpayPaymentId: {
+    razorpayPaymentId: {
         type: String,
     },
-      razorpaySignature: {
+    razorpaySignature: {
         type: String,
     },
 });

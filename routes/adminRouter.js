@@ -61,6 +61,10 @@ router.post("/apply-coupon", adminAuth, couponController.applyCoupon);
 router.get('/order',adminAuth,orderController.getOrderListPageAdmin);
 router.get("/orderDetailsAdmin",adminAuth,orderController.getOrderDetailsPageAdmin);
 router.post('/changeStatus/:orderId', adminAuth, orderController.changeOrderStatus);
+router.post('/acceptReturn', adminAuth, orderController.acceptReturn);
+router.post('/rejectReturn', adminAuth, orderController.rejectReturn);
+
+
 
 // Sales Report
 router.get('/sales-report', adminAuth, orderController.getSalesReport);

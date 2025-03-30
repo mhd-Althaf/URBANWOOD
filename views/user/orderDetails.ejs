@@ -68,6 +68,11 @@
             color: #856404;
         }
 
+        .status-processing {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
         .status-shipped {
             background-color: #cce5ff;
             color: #004085;
@@ -79,6 +84,21 @@
         }
 
         .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-return_requested {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-returned {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-return_rejected {
             background-color: #f8d7da;
             color: #721c24;
         }
@@ -187,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Modal for each order -->
+    <!-- Modal for each order -->m
     <% orders.forEach(order=> { %>
         <div class="modal fade" id="orderModal<%= order.orderId %>" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -206,16 +226,30 @@
                                     <p class="mb-1">Date: <%= order.createdAt.toLocaleString() %>
                                     </p>
                                     <p class="mb-2">Order Status:
-                                        <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                                        <span class="badge status-<%= order.status.toLowerCase() %>">
                                             <%= order.status %>
                                         </span>
                                     </p>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="mb-3">Payment Details</h6>
-                                    <p class="mb-1">Method: <%= order.paymentMethod %>
+                                    <p class="mb-1">Method: 
+                                        <% if (order.paymentMethod === 'Wallet') { %>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-wallet"></i> Wallet
+                                            </span>
+                                        <% } else if (order.paymentMethod === 'Razorpay') { %>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-credit-card"></i> Online Payment
+                                            </span>
+                                        <% } else { %>
+                                            <%= order.paymentMethod %>
+                                        <% } %>
                                     </p>
-                                    <p class="mb-1">Status: <%= order.paymentStatus %>
+                                    <p class="mb-1">Status: 
+                                        <span class="badge <%= (order.paymentStatus === 'Paid' || order.paymentStatus === 'paid') ? 'bg-success' : 'bg-warning' %>">
+                                            <%= order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus %>
+                                        </span>
                                     </p>
                                 </div>
                             </div>
@@ -284,25 +318,31 @@
                                                             </div>
                                                         </div>
                                                         <div class="mt-2">
-                                                            <% if (order.status==="Pending" ||
-                                                                order.status==="Processing" ) { %>
+                                                            <% if (item.status !== "Cancelled" && order.status !== "Delivered" && (item.status==="Pending" || item.status==="Processing" )) { %>
                                                                 <button class="btn btn-danger btn-sm"
                                                                     onclick="cancelProduct('<%= order._id %>', '<%= item.productId._id %>')">
                                                                     Cancel Product
                                                                 </button>
-                                                                <% } %>
-                                                                    <% if (order.status==="Delivered" ) { %>
-                                                                        <button class="btn btn-danger btn-sm ms-2"
-                                                                            onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>')">
-                                                                            Return Product
-                                                                        </button>
-                                                                        <% } %>
-                                                                            <% if (!["Pending", "Processing"
-                                                                                , "Delivered" ].includes(order.status))
-                                                                                { %>
-                                                                                <span class="text-muted">Status: <%=
-                                                                                        item.status %></span>
-                                                                                <% } %>
+                                                            <% } %>
+                                                            
+                                                            <% if (item.status !== "Cancelled" && item.status !== "Return_Requested" && item.status !== "Returned" && item.status !== "Return_Rejected" && order.status === "Delivered" && !item.adminComment) { %>
+                                                                <button class="btn btn-warning btn-sm"
+                                                                    onclick="returnProduct('<%= order._id %>', '<%= item.productId._id %>', '<%= item.name %>')">
+                                                                    Return Product
+                                                                </button>
+                                                            <% } else { %>
+                                                                <div>
+                                                                    <span class="badge status-<%= item.status.toLowerCase() %>">
+                                                                        <%= item.status %>
+                                                                    </span>
+                                                                </div>
+                                                            <% } %>
+                                                            
+                                                            <% if (item.status === "Return_Rejected" && item.adminComment) { %>
+                                                                <button class="btn btn-sm btn-info mt-1" onclick="showAdminComment(`<%= item.adminComment %>`)">
+                                                                    View Rejection Reason
+                                                                </button>
+                                                            <% } %>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -375,16 +415,51 @@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
             <script>
-                // All existing functions (cancelProduct, cancelOrder, returnorder) remain unchanged
-
-                // function cancelProduct(orderId, productId) {
-                //     console.log("cancelProduct called:", orderId, productId);
-                //     Swal.fire({
-                //         title: 'Test Cancel',
-                //         text: 'Cancel working?',
-                //         icon: 'info'
-                //     });
-                // }
+                // Helper function to get the appropriate status badge
+                function getStatusBadge(status) {
+                    let badgeClass = '';
+                    let statusText = '';
+                    
+                    switch(status) {
+                        case 'Pending':
+                            badgeClass = 'bg-warning';
+                            statusText = 'Pending';
+                            break;
+                        case 'Processing':
+                            badgeClass = 'bg-info';
+                            statusText = 'Processing';
+                            break;
+                        case 'Shipped':
+                            badgeClass = 'bg-primary';
+                            statusText = 'Shipped';
+                            break;
+                        case 'Delivered':
+                            badgeClass = 'bg-success';
+                            statusText = 'Delivered';
+                            break;
+                        case 'Cancelled':
+                            badgeClass = 'bg-danger';
+                            statusText = 'Cancelled';
+                            break;
+                        case 'Return_Requested':
+                            badgeClass = 'bg-warning';
+                            statusText = 'Return Requested - Waiting for Approval';
+                            break;
+                        case 'Returned':
+                            badgeClass = 'bg-success';
+                            statusText = 'Return Approved - Refund Processed';
+                            break;
+                        case 'Return_Rejected':
+                            badgeClass = 'bg-danger';
+                            statusText = 'Return Rejected';
+                            break;
+                        default:
+                            badgeClass = 'bg-secondary';
+                            statusText = status;
+                    }
+                    
+                    return `<span class="badge ${badgeClass}">${statusText}</span>`;
+                }
 
                 function cancelProduct(orderId, productId) {
                     console.log("sfghjkdsfadfasfasd", productId);
@@ -433,7 +508,11 @@
                         allowOutsideClick: () => !Swal.isLoading(),
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Swal.fire('Cancelled!', 'The product has been cancelled successfully.', 'success').then(() => {
+                            const successMessage = result.value.walletRefunded 
+                                ? 'The product has been cancelled successfully. The refund amount has been added to your wallet.'
+                                : 'The product has been cancelled successfully.';
+                            
+                            Swal.fire('Cancelled!', successMessage, 'success').then(() => {
                                 location.reload();
                             });
                         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -474,7 +553,11 @@
                         allowOutsideClick: () => !Swal.isLoading(),
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Swal.fire('Cancelled!', 'Your order has been cancelled successfully.', 'success').then(() => {
+                            const successMessage = result.value.walletRefunded 
+                                ? 'Your order has been cancelled successfully. The full amount has been refunded to your wallet.'
+                                : 'Your order has been cancelled successfully.';
+                            
+                            Swal.fire('Cancelled!', successMessage, 'success').then(() => {
                                 window.location.reload();
                             });
                         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -483,80 +566,70 @@
                     });
                 }
 
-                function returnProduct(orderId, productId) {
-                    console.log("returnProduct called:", orderId, productId);
-                    if (!orderId || !productId) {
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'Invalid request data. Please try again.',
-                            icon: 'error'
-                        });
-                        return;
-                    }
-
+                function returnProduct(orderId, productId, productName) {
                     Swal.fire({
                         title: 'Return Product',
-                        text: 'Please provide a reason for returning this product',
+                        text: `Are you sure you want to return "${productName}"?`,
                         icon: 'warning',
-                        input: 'select',
-                        inputOptions: {
-                            'Damaged Product': 'Damaged Product',
-                            'Wrong Product Delivered': 'Wrong Product Delivered',
-                            'Quality Issue': 'Quality Issue',
-                            'Size/Fit Issue': 'Size/Fit Issue',
-                            'Other': 'Other'
-                        },
-                        inputPlaceholder: 'Select a reason',
                         showCancelButton: true,
-                        confirmButtonText: 'Submit Return Request',
-                        cancelButtonText: 'Cancel',
-                        showLoaderOnConfirm: true,
-                        preConfirm: (reason) => {
+                        cancelButtonText: 'No, keep it',
+                        confirmButtonText: 'Yes, return it!',
+                        html: `
+                            <select id="returnReason" class="swal2-select">
+                                <option value="" disabled selected>Select a reason</option>
+                                <option value="Damaged product">Damaged product</option>
+                                <option value="Wrong item received">Wrong item received</option>
+                                <option value="Product defective">Product defective</option>
+                                <option value="Does not match description">Does not match description</option>
+                                <option value="No longer needed">No longer needed</option>
+                            </select>
+                        `,
+                        preConfirm: () => {
+                            const select = document.getElementById("returnReason");
+                            const reason = select.value;
+
                             if (!reason) {
                                 Swal.showValidationMessage('Please select a reason');
                                 return false;
                             }
 
-                            const data = {
-                                orderId: orderId,
-                                productId: productId,
-                                reason: reason
-                            };
-
-                            return $.ajax({
-                                url: '/single-return-product',
+                            return fetch('/return-product', {
                                 method: 'POST',
-                                contentType: 'application/json',
-                                data: JSON.stringify(data)
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId, productId, reason })
                             })
-                                .then(response => {
-                                    if (!response.success) {
-                                        throw new Error(response.message || 'Return request failed');
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        return data;
+                                    } else {
+                                        throw new Error(data.message || "Return request failed");
                                     }
-                                    return response;
                                 })
                                 .catch(error => {
-                                    console.error('Return request error:', error);
-                                    throw new Error(error.message || 'Failed to process return request');
+                                    Swal.showValidationMessage(`Request failed: ${error.message}`);
                                 });
                         },
-                        allowOutsideClick: () => !Swal.isLoading()
+                        allowOutsideClick: () => !Swal.isLoading(),
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Return request submitted successfully',
-                                icon: 'success'
-                            }).then(() => {
+                            Swal.fire('Return Requested!', 'Your return request has been submitted successfully.', 'success').then(() => {
                                 location.reload();
                             });
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            Swal.fire('Not Returned', 'Your product remains in the order.', 'info');
                         }
-                    }).catch(error => {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: error.message || 'Failed to process return request',
-                            icon: 'error'
-                        });
+                    });
+                }
+
+                function showAdminComment(comment) {
+                    Swal.fire({
+                        title: 'Return Request Disapproved',
+                        text: comment,
+                        icon: 'info',
+                        confirmButtonText: 'OK',
+                        background: '#fff',
+                        color: '#333'
                     });
                 }
             </script>

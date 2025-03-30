@@ -13,7 +13,6 @@ const Cart = require("../../models/cartSchema");
 const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Coupon = require("../../models/couponSchema");
-const ReturnOrder = require("../../models/returnOrder");
 const { log } = require("console");
 
 
@@ -207,6 +206,7 @@ const removeFromCart = async (req, res) => {
 const getCheckoutPage = async (req, res) => {
     try {
         const userId = req.session.user;
+        console.log("Checkout page requested for user:", userId);
 
         const cart = await Cart.findOne({ userid: userId }).populate({
             path: 'items.productId',
@@ -236,8 +236,27 @@ const getCheckoutPage = async (req, res) => {
         const shippingCost = subtotal > 1000 ? 0 : 100;
         const grandTotal = subtotal + shippingCost;
 
-        const user = await User.findById(userId);
-        const savedAddresses = user?.addresses || [];
+        // Get complete user data including wallet balance
+        const userDetails = await User.findById(userId);
+        if (!userDetails) {
+            console.error("User not found:", userId);
+            return res.redirect('/login');
+        }
+        
+        // Get wallet balance from the new wallet schema
+        const Wallet = require('../../models/walletSchema');
+        const wallet = await Wallet.findOne({ userId });
+        const walletBalance = wallet ? wallet.balance : 0;
+        
+        // Use the wallet balance from the new schema if available, otherwise use the legacy wallet
+        const userWithWallet = {
+            ...userDetails.toObject(),
+            wallet: wallet ? walletBalance : userDetails.wallet || 0
+        };
+        
+        console.log("User wallet balance:", userWithWallet.wallet);
+        
+        const savedAddresses = userDetails?.addresses || [];
         const userAddress = await Address.find({ userId: userId });
         const currentDate = new Date();
 
@@ -253,7 +272,7 @@ const getCheckoutPage = async (req, res) => {
             shippingCost,
             grandTotal,
             savedAddresses,
-            user: req.session.user,
+            user: userWithWallet, // Pass the user object with the correct wallet balance
             userAddress,
             coupons: coupons || []
         });
@@ -310,6 +329,7 @@ const createRazorpayOrder = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
     try {
+        console.log("Payment verification request received:", req.body);
         const {
             razorpay_order_id,
             razorpay_payment_id,
@@ -318,21 +338,64 @@ const verifyPayment = async (req, res) => {
             amount
         } = req.body;
 
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            console.error("Missing required Razorpay parameters");
+            return res.status(400).json({
+                success: false,
+                message: "Missing required payment parameters"
+            });
+        }
+
+        // Create signature verification
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign.toString())
             .digest("hex");
 
+        console.log("Signature verification:", {
+            expected: expectedSignature,
+            received: razorpay_signature
+        });
+
         const isAuthentic = expectedSignature === razorpay_signature;
 
         if (isAuthentic) {
+            console.log("Payment signature verified successfully");
+            
+            // Update the order payment status
+            if (orderId) {
+                console.log(`Updating order ${orderId} payment status to paid`);
+                const order = await Order.findById(orderId);
+                
+                if (order) {
+                    // Update payment information
+                    order.paymentStatus = "paid";
+                    order.razorpayOrderId = razorpay_order_id;
+                    order.razorpayPaymentId = razorpay_payment_id;
+                    order.razorpaySignature = razorpay_signature;
+                    
+                    // Update order status to Processing if it was Pending
+                    if (order.status === "Pending") {
+                        order.status = "Processing";
+                    }
+                    
+                    await order.save();
+                    console.log(`Order ${orderId} updated: Payment status = paid, Order status = ${order.status}`);
+                } else {
+                    console.error(`Order not found with ID: ${orderId}`);
+                }
+            } else {
+                console.error("No orderId provided for payment verification");
+            }
+
             return res.json({
                 success: true,
                 payment_id: razorpay_payment_id,
                 message: "Payment verified successfully"
             });
         } else {
+            console.error("Payment signature verification failed");
             return res.json({
                 success: false,
                 message: "Invalid payment signature"
@@ -341,14 +404,18 @@ const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error('Error verifying payment:', error);
-        return res.status(500).json({ error: 'Failed to verify payment' });
+        return res.status(500).json({ 
+            success: false,
+            error: 'Failed to verify payment',
+            message: error.message
+        });
     }
 };
 
 
 const placeOrder = async (req, res) => {
     try {
-      const { addressId, paymentMethod, amount, couponCode } = req.body;
+      const { addressId, paymentMethod, amount, coupon } = req.body;
       const userId = req.session.user;
   
       if (!addressId || !paymentMethod || typeof amount !== 'number') {
@@ -384,20 +451,18 @@ const placeOrder = async (req, res) => {
   
       let discount = 0;
       let finalAmount = totalPrice;
+      let couponCode = null;
   
-      if (couponCode) {
-        const coupon = await Coupon.findOne({ name: couponCode });
-        if (!coupon) {
-          return res.status(400).json({ success: false, message: 'Invalid coupon code.' });
-        }
-        const maxAllowedDiscount = Math.min(coupon.offerPrice, totalPrice * 0.9);
-        discount = Math.min(maxAllowedDiscount, totalPrice - 1);
-        finalAmount = Math.max(totalPrice - discount, 1);
+      // Check if coupon information is provided in the request
+      if (coupon && coupon.code) {
+        couponCode = coupon.code;
+        discount = coupon.discount || 0;
+        finalAmount = totalPrice - discount;
       }
   
       const shippingCost = totalPrice > 1000 ? 0 : 100;
       finalAmount += shippingCost;
-      console.log("finalAmount",finalAmount);
+      console.log("finalAmount", finalAmount);
 
   
       if (Math.abs(finalAmount - amount) > 1) {
@@ -417,8 +482,8 @@ const placeOrder = async (req, res) => {
           });
         }
       }
-      console.log("totalPrice",totalPrice);
-      console.log("finalAmount",finalAmount);
+      console.log("totalPrice", totalPrice);
+      console.log("finalAmount", finalAmount);
       const order = new Order({
         orderId: Math.floor(100000 + Math.random() * 900000).toString(),
         userId,
@@ -437,7 +502,8 @@ const placeOrder = async (req, res) => {
         status: 'Pending',
         paymentStatus: 'Pending',
         couponApplied: !!couponCode,
-        couponDiscount: discount
+        couponDiscount: discount,
+        couponCode: couponCode
       });
   
       await order.save();
@@ -458,17 +524,25 @@ const cancelProduct = async (req, res) => {
         const order = await Order.findById(orderId);
 
         if (!order) {
+            console.log("Order not found:", orderId);
             return res.status(404).json({
                 success: false,
                 message: "Order not found"
             });
         }
 
+        console.log("Found order:", {
+            orderId: order._id,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus
+        });
+
         const productItem = order.orderItems.find(
             item => item.productId.toString() === productId
         );
 
         if (!productItem) {
+            console.log("Product not found in order:", productId);
             return res.status(404).json({
                 success: false,
                 message: "Product not found in order"
@@ -476,11 +550,21 @@ const cancelProduct = async (req, res) => {
         }
 
         if (productItem.status === "Cancelled") {
+            console.log("Product already cancelled");
             return res.status(400).json({
                 success: false,
                 message: "Product is already cancelled"
             });
         }
+
+        // Save the product price before changing status for refund calculation
+        const productPrice = productItem.price * productItem.quantity;
+        console.log("Product cancellation details:", {
+            productId,
+            productName: productItem.name,
+            productPrice,
+            quantity: productItem.quantity
+        });
 
         productItem.status = "Cancelled";
         productItem.cancellationReason = reason;
@@ -493,17 +577,115 @@ const cancelProduct = async (req, res) => {
         }
 
         const activeItems = order.orderItems.filter(item => item.status !== "Cancelled");
-        order.finalAmount = activeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const activeProductsCount = activeItems.length;
+        const activeProductsFinalAmount = activeItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        if (activeItems.length === 0) {
-            order.status = "Cancelled";
-        }
-
+        // Update the final amount in the order
+        order.finalAmount = activeProductsFinalAmount;
+        
+        // Calculate order status based on active items
+        order.status = activeProductsCount === 0 ? "Cancelled" : "Processing";
+        
         await order.save();
 
-        return res.json({
+        let walletRefunded = false;
+
+        // Check if payment was made with Razorpay and payment status is paid
+        console.log("Checking payment method and status for refund:", {
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            shouldRefund: (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'razorpay') && 
+                         (order.paymentStatus === 'paid' || order.paymentStatus === 'Paid')
+        });
+        if ((order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') && 
+            (order.paymentStatus === 'paid' )) {
+            try {
+                // Find the user's wallet or create a new one
+                console.log("Starting wallet refund process for user:", order.userId);
+                const Wallet = require('../../models/walletSchema');
+                let wallet = await Wallet.findOne({ userId: order.userId });
+                
+                if (!wallet) {
+                    console.log("No wallet found for user, creating new wallet");
+                    // Create a new wallet if it doesn't exist
+                    const user = await User.findById(order.userId);
+                    if (!user) {
+                        console.log("User not found:", order.userId);
+                        throw new Error("User not found");
+                    }
+                    
+                    const legacyBalance = user && typeof user.wallet === 'number' ? user.wallet : 0;
+                    console.log("Using legacy wallet balance:", legacyBalance);
+                    
+                    wallet = new Wallet({
+                        userId: order.userId,
+                        balance: legacyBalance,
+                        transactions: []
+                    });
+                } else {
+                    console.log("Found existing wallet with balance:", wallet.balance);
+                }
+                
+                // Add the refund amount to wallet
+                const oldBalance = wallet.balance;
+                wallet.balance += productPrice;
+                console.log(`Updating wallet balance: ${oldBalance} + ${productPrice} = ${wallet.balance}`);
+                
+                // Add transaction record
+                wallet.transactions.push({
+                    amount: productPrice,
+                    type: 'credit',
+                    description: `Refund for cancelled product in order #${order.orderId}`,
+                    orderId: order._id,
+                    createdAt: new Date()
+                });
+                
+                await wallet.save();
+                console.log("Wallet updated successfully with new balance:", wallet.balance);
+                
+                // Update legacy wallet for backward compatibility
+                const user = await User.findById(order.userId);
+                if (user) {
+                    console.log("Updating legacy wallet");
+                    if (typeof user.wallet !== 'number') {
+                        user.wallet = 0;
+                    }
+                    
+                    const oldUserWallet = user.wallet;
+                    user.wallet += productPrice;
+                    console.log(`Updating legacy wallet: ${oldUserWallet} + ${productPrice} = ${user.wallet}`);
+                    
+                    if (!Array.isArray(user.walletHistory)) {
+                        user.walletHistory = [];
+                    }
+                    
+                    user.walletHistory.push({
+                        amount: productPrice,
+                        transactionType: 'refund',
+                        timestamp: new Date()
+                    });
+                    
+                    await user.save();
+                    console.log("Legacy wallet updated successfully");
+                } else {
+                    console.log("User not found for legacy wallet update:", order.userId);
+                }
+                
+                walletRefunded = true;
+                console.log(`Refund of ${productPrice} added to wallet for user ${order.userId} for cancelled product`);
+            } catch (walletError) {
+                console.error("Error processing wallet refund:", walletError);
+                // Continue with cancellation even if wallet refund fails
+            }
+        }
+
+        res.status(200).json({
             success: true,
-            message: "Product cancelled successfully"
+            message: "Product cancelled successfully",
+            walletRefunded,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            refundAmount: walletRefunded ? productPrice : 0
         });
 
     } catch (error) {
@@ -529,160 +711,98 @@ const cancelOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order is already cancelled' });
         }
 
-        // If order was paid via Razorpay, refund to wallet
-        if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'paid') {
-            await User.findByIdAndUpdate(
-                order.userId,
-                {
-                    $inc: { wallet: order.finalAmount },
-                    $push: {
-                        history: {
-                            amount: order.finalAmount,
-                            status: "Credit",
-                            date: new Date(),
-                            description: `Refund for cancelled order ${order.orderId}`
-                        }
-                    }
+        // If order was paid, refund to wallet
+        if ((order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') && order.paymentStatus === 'paid') {
+            console.log(`Processing refund of ₹${order.finalAmount} to wallet for cancelled order`);
+            
+            // Add to new wallet schema
+            const Wallet = require('../../models/walletSchema');
+            let wallet = await Wallet.findOne({ userId: order.userId });
+            
+            if (!wallet) {
+                // Create new wallet if it doesn't exist
+                const user = await User.findById(order.userId);
+                const legacyBalance = user && typeof user.wallet === 'number' ? user.wallet : 0;
+                
+                wallet = new Wallet({
+                    userId: order.userId,
+                    balance: legacyBalance,
+                    transactions: []
+                });
+            }
+            
+            // Update wallet balance
+            wallet.balance += order.finalAmount;
+            
+            // Add transaction to wallet history
+            wallet.transactions.push({
+                amount: order.finalAmount,
+                type: 'credit',
+                description: `Refund for cancelled order #${order.orderId}`,
+                orderId: order._id,
+                createdAt: new Date()
+            });
+            
+            await wallet.save();
+            console.log(`Added ₹${order.finalAmount} to wallet for cancelled order`);
+            
+            // Also update legacy wallet for backward compatibility
+            const user = await User.findById(order.userId);
+            if (user) {
+                if (typeof user.wallet !== 'number') {
+                    user.wallet = 0;
                 }
-            );
+                
+                user.wallet += order.finalAmount;
+                
+                if (!Array.isArray(user.walletHistory)) {
+                    user.walletHistory = [];
+                }
+                
+                user.walletHistory.push({
+                    amount: order.finalAmount,
+                    transactionType: 'refund',
+                    timestamp: new Date()
+                });
+                
+                await user.save();
+                console.log("Also updated legacy wallet for backward compatibility");
+            }
         }
 
+        // Update order status and set cancellation details
         order.status = 'Cancelled';
-        order.cancellationReason = reason;
+        order.cancellationReason = reason || 'Cancelled by user';
         order.cancelledAt = new Date();
-
+        
+        // Update all order items to cancelled
         order.orderItems.forEach(item => {
             item.status = 'Cancelled';
         });
-
+        
+        // Update product inventory
         for (const item of order.orderItems) {
             const product = await Product.findById(item.productId);
             if (product) {
                 product.quantity += item.quantity;
                 await product.save();
+                console.log(`Restored ${item.quantity} units to product ${product.productName}`);
             }
         }
 
         await order.save();
+        console.log(`Order ${orderId} has been cancelled`);
 
-        return res.json({
-            success: true,
-            message: 'Order cancelled successfully, stock quantities updated'
+        return res.json({ 
+            success: true, 
+            message: 'Order cancelled successfully, stock quantities updated', 
+            walletRefunded: (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet') && order.paymentStatus === 'paid'
         });
-
     } catch (error) {
-        console.error('Error cancelling order:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error, try again later'
-        });
+        console.error("Error cancelling order:", error);
+        return res.status(500).json({ success: false, message: 'Server error, please try again later' });
     }
 };
-
-const singleReturnRequest = async (req, res) => {
-    try {
-        const { orderId, productId, reason } = req.body;
-        console.log("Return request data:", req.body);
-
-        // Validate inputs
-        if (!orderId || !productId || !reason) {
-            return res.status(400).json({
-                success: false,
-                message: "Order ID, Product ID, and return reason are required"
-            });
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid order ID or product ID format"
-            });
-        }
-
-        // Find the order
-        const order = await Order.findById(orderId).populate('orderItems.productId');
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
-
-        // Find the specific product in the order
-        const item = order.orderItems.find(item => 
-            item.productId && item.productId._id && item.productId._id.toString() === productId
-        );
-
-        if (!item) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found in the order"
-            });
-        }
-
-        // Validate item status
-        if (item.status !== "Delivered") {
-            return res.status(400).json({
-                success: false,
-                message: "Only delivered items can be returned"
-            });
-        }
-
-        if (item.status === "Return_Requested" || item.status === "Returned") {
-            return res.status(400).json({
-                success: false,
-                message: "Return request already exists for this item"
-            });
-        }
-
-        // Update item status
-        item.status = "Return_Requested";
-        item.returnReason = reason;
-
-        // If all items are returned, update order status
-        const allItemsReturned = order.orderItems.every(item => item.status === "Returned");
-        if (allItemsReturned) {
-            order.status = "Returned";
-            
-            // If order was paid via Razorpay, refund to wallet
-            if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'paid') {
-                await User.findByIdAndUpdate(
-                    order.userId,
-                    {
-                        $inc: { wallet: order.finalAmount },
-                        $push: {
-                            history: {
-                                amount: order.finalAmount,
-                                status: "Credit",
-                                date: new Date(),
-                                description: `Refund for returned order ${order.orderId}`
-                            }
-                        }
-                    }
-                );
-            }
-        }
-
-        await order.save();
-
-        return res.json({
-            success: true,
-            message: "Return request submitted successfully"
-        });
-
-    } catch (error) {
-        console.error("Error in singleReturnRequest:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error, please try again later"
-        });
-    }
-};
-
-
-
-
-
 
 const applyCoupon = async (req, res) => {
     console.log('applyCoupon called');
@@ -766,58 +886,187 @@ const userOrderDetails = async (req, res) => {
 // Add a new function to handle wallet payments
 const processWalletPayment = async (req, res) => {
     try {
-        const { orderId } = req.body;
+        const { orderId, amount } = req.body;
         const userId = req.session.user;
 
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        // Check if user has sufficient wallet balance
-        if (user.wallet < order.finalAmount) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Insufficient wallet balance' 
+        if (!orderId || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Order ID and amount are required"
             });
         }
 
-        // Update user's wallet balance
-        await User.findByIdAndUpdate(
-            userId,
-            {
-                $inc: { wallet: -order.finalAmount },
-                $push: {
-                    history: {
-                        amount: -order.finalAmount,
-                        status: "Debit",
-                        date: new Date(),
-                        description: `Payment for order ${order.orderId}`
-                    }
-                }
+        // Get the wallet using the new wallet schema
+        const Wallet = require('../../models/walletSchema');
+        let wallet = await Wallet.findOne({ userId });
+
+        if (!wallet) {
+            // If no wallet exists in the new schema, check the legacy user schema
+            const user = await User.findById(userId);
+            const legacyBalance = user && typeof user.wallet === 'number' ? user.wallet : 0;
+            
+            // Create a new wallet with the legacy balance
+            wallet = new Wallet({
+                userId,
+                balance: legacyBalance,
+                transactions: []
+            });
+            
+            // Migrate legacy transactions if they exist
+            if (user && Array.isArray(user.walletHistory) && user.walletHistory.length > 0) {
+                const migratedTransactions = user.walletHistory.map(transaction => ({
+                    amount: transaction.amount,
+                    type: transaction.transactionType === 'debit' ? 'debit' : 'credit',
+                    description: transaction.transactionType === 'refund' 
+                        ? 'Refund from return' 
+                        : transaction.transactionType === 'debit' 
+                            ? 'Payment' 
+                            : 'Credit',
+                    createdAt: transaction.timestamp
+                }));
+                
+                wallet.transactions.push(...migratedTransactions);
             }
-        );
+            
+            await wallet.save();
+        }
+
+        // Check if wallet has sufficient balance
+        if (wallet.balance < amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Insufficient wallet balance"
+            });
+        }
+
+        // Find the order and update its payment status
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            });
+        }
+
+        // Update wallet balance
+        wallet.balance -= amount;
+
+        // Add transaction to wallet history
+        wallet.transactions.push({
+            amount,
+            type: 'debit',
+            description: `Payment for order #${order.orderId}`,
+            orderId: order._id,
+            createdAt: new Date()
+        });
+
+        await wallet.save();
+
+        // Update legacy wallet for backward compatibility
+        const user = await User.findById(userId);
+        if (user) {
+            if (typeof user.wallet !== 'number') {
+                user.wallet = 0;
+            }
+            
+            if (user.wallet < amount) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Insufficient wallet balance"
+                });
+            }
+            
+            user.wallet -= amount;
+            
+            if (!Array.isArray(user.walletHistory)) {
+                user.walletHistory = [];
+            }
+            
+            user.walletHistory.push({
+                amount,
+                transactionType: 'debit',
+                timestamp: new Date()
+            });
+            
+            await user.save();
+        }
 
         // Update order payment status
-        order.paymentStatus = 'paid';
-        order.paymentMethod = 'wallet';
+        order.paymentStatus = "paid";
+        order.paymentMethod = "Wallet";
         await order.save();
 
         return res.json({
             success: true,
-            message: 'Payment processed successfully'
+            message: "Payment processed successfully",
+            order,
+            newBalance: wallet.balance
+        });
+    } catch (error) {
+        console.error("Error processing wallet payment:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error, please try again later"
+        });
+    }
+};
+
+const returnProduct = async (req, res) => {
+    const { orderId, productId, reason } = req.body;
+    console.log("Return Product Request:", { orderId, productId, reason });
+
+    try {
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            });
+        }
+
+        const productItem = order.orderItems.find(
+            item => item.productId.toString() === productId
+        );
+
+        if (!productItem) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found in order"
+            });
+        }
+
+        if (order.status !== "Delivered") {
+            return res.status(400).json({
+                success: false,
+                message: "Only delivered orders can be returned"
+            });
+        }
+
+        if (["Cancelled", "Return_Requested", "Returned", "Return_Rejected"].includes(productItem.status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Product is already ${productItem.status}`
+            });
+        }
+
+        // Update item status to Return_Requested
+        productItem.status = "Return_Requested";
+        productItem.ReturnReason = reason;
+        productItem.ReturnedAt = new Date();
+
+        await order.save();
+
+        return res.json({
+            success: true,
+            message: "Return request submitted successfully"
         });
 
     } catch (error) {
-        console.error('Error processing wallet payment:', error);
+        console.error("Error processing return request:", error);
         return res.status(500).json({
             success: false,
-            message: 'Server error, try again later'
+            message: "Server error, please try again later"
         });
     }
 };
@@ -835,8 +1084,8 @@ module.exports = {
     placeOrder,
     cancelOrder,
     cancelProduct,
-    singleReturnRequest,
     applyCoupon,
     userOrderDetails,
-    processWalletPayment
+    processWalletPayment,
+    returnProduct
 };
