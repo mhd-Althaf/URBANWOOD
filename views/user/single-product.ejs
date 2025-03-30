@@ -63,9 +63,8 @@
 
 			if (data.success) {
 				// Change heart icon to filled
-				const heartIcon = event.target.closest('.wishlist').querySelector('i');
-				heartIcon.classList.remove('fa-heart-o');
-				heartIcon.classList.add('fa-heart');
+				const heartIcon = event.target.closest('a').querySelector('i');
+				heartIcon.classList.add('active');
 				
 				Swal.fire({
 					icon: 'success',
@@ -126,135 +125,166 @@
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<style>
-		/* Zoomed Image Container */
-		.zoomed {
+		/* Lightbox Gallery */
+		.product-gallery {
+			position: relative;
+		}
+		
+		.product-image {
+			cursor: pointer;
+			transition: transform 0.3s ease;
+		}
+		
+		.product-image:hover {
+			transform: scale(1.02);
+		}
+		
+		/* Lightbox */
+		.lightbox {
+			display: none;
 			position: fixed;
 			top: 0;
 			left: 0;
 			width: 100%;
 			height: 100%;
-			background: rgba(0, 0, 0, 0.9);
-			display: flex;
+			background-color: rgba(0, 0, 0, 0.9);
+			z-index: 9999;
 			justify-content: center;
 			align-items: center;
-			z-index: 1000;
+			flex-direction: column;
 		}
-
-		/* Zoomed Image */
-		.zoomed-img {
+		
+		.lightbox.active {
+			display: flex;
+		}
+		
+		.lightbox-content {
+			position: relative;
 			max-width: 90%;
-			max-height: 90vh;
-			object-fit: contain;
-			cursor: zoom-out;
-			transition: transform 0.3s ease;
+			max-height: 80vh;
+			margin: 20px auto;
 		}
-
-		/* Close Button */
-		.zoom-close {
+		
+		.lightbox-img {
+			display: none;
+			max-width: 100%;
+			max-height: 80vh;
+			object-fit: contain;
+			border-radius: 4px;
+		}
+		
+		.lightbox-img.active {
+			display: block;
+		}
+		
+		.lightbox-close {
 			position: absolute;
 			top: 20px;
 			right: 20px;
-			color: white;
 			font-size: 30px;
+			color: #fff;
 			cursor: pointer;
-			z-index: 1001;
 			background: none;
 			border: none;
-			padding: 10px;
+			z-index: 10000;
 		}
-
-		.zoom-close:hover {
-			transform: scale(1.1);
-		}
-
-		/* Navigation Buttons */
-		.zoom-nav {
+		
+		.lightbox-nav {
 			position: absolute;
 			top: 50%;
 			transform: translateY(-50%);
-			color: white;
-			font-size: 40px;
-			cursor: pointer;
-			background: rgba(255, 255, 255, 0.1);
-			border: none;
-			padding: 20px 15px;
-			transition: background 0.3s ease;
-		}
-
-		.zoom-nav:hover {
 			background: rgba(255, 255, 255, 0.2);
+			color: white;
+			font-size: 24px;
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: background 0.3s;
+			border: none;
 		}
-
-		.zoom-prev {
+		
+		.lightbox-nav:hover {
+			background: rgba(255, 255, 255, 0.3);
+		}
+		
+		.lightbox-prev {
 			left: 20px;
 		}
-
-		.zoom-next {
+		
+		.lightbox-next {
 			right: 20px;
 		}
-
-		/* Thumbnail Navigation */
-		.zoom-thumbnails {
-			position: absolute;
-			bottom: 20px;
-			left: 50%;
-			transform: translateX(-50%);
+		
+		.lightbox-thumbnails {
 			display: flex;
 			gap: 10px;
-			background: rgba(0, 0, 0, 0.5);
-			padding: 10px;
-			border-radius: 10px;
+			margin-top: 15px;
+			flex-wrap: wrap;
+			justify-content: center;
+			max-width: 90%;
 		}
-
-		.zoom-thumbnail {
+		
+		.lightbox-thumbnail {
 			width: 60px;
 			height: 60px;
 			object-fit: cover;
 			cursor: pointer;
 			border: 2px solid transparent;
-			transition: border-color 0.3s ease;
+			border-radius: 4px;
+			transition: all 0.3s;
 		}
-
-		.zoom-thumbnail.active {
-			border-color: white;
+		
+		.lightbox-thumbnail:hover {
+			transform: scale(1.05);
 		}
-
-		/* Make product images clickable */
-		.s_Product_carousel .single-prd-item img {
-			cursor: zoom-in;
+		
+		.lightbox-thumbnail.active {
+			border-color: #fff;
 		}
-
-		.product-image-container {
-			position: relative;
-			overflow: hidden;
-		}
-
-		.magnifier-lens {
-			position: absolute;
-			width: 150px;
-			height: 150px;
-			border: 2px solid #ccc;
-			border-radius: 50%;
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity 0.2s;
-			background-repeat: no-repeat;
-			z-index: 999;
-		}
-
-		.product-image-container img {
-			max-width: 100%;
-			display: block;
-		}
-
-		/* Ensure the carousel item has relative positioning */
+		
+		/* Product carousel item */
 		.single-prd-item {
 			position: relative;
 			overflow: hidden;
 		}
-
+		
 		.lnr-heart.active {
 			color: #FF6F00;
+		}
+		
+		/* Price styling */
+		.price-section {
+			margin: 15px 0;
+		}
+		
+		.original-price {
+			font-size: 1.8rem;
+			font-weight: 700;
+			color: #2a9d8f;
+			margin-right: 15px;
+		}
+		
+		.regular-price {
+			font-size: 1.3rem;
+			color: #777;
+			text-decoration: line-through;
+			font-weight: 500;
+		}
+		
+		.discount-badge {
+			background-color: #2a9d8f;
+			color: white;
+			padding: 5px 10px;
+			border-radius: 4px;
+			font-size: 0.9rem;
+			font-weight: 600;
+			margin-left: 10px;
+			display: inline-block;
+			vertical-align: middle;
 		}
 	</style>
 </head>
@@ -262,7 +292,7 @@
 <body>
 
 	<!-- Start Header Area -->
-	<%-include("../../views/partials/user/header")%>
+	<!-- <%-include("../../views/partials/user/header")%> -->
 	<!-- End Header Area -->
 
 	<!-- Start Banner Area -->
@@ -289,13 +319,45 @@
 		<div class="container">
 			<div class="row s_product_inner">
 				<div class="col-lg-6">
-					<div class="s_Product_carousel">
-						<% product.productImages.forEach(function(image) { %>
-							<div class="single-prd-item product-image-container">
-								<img class="img-fluid product-image" src="/uploads/re-image/<%= image %>"
-									alt="<%= product.productName %>">
-							</div>
+					<div class="product-gallery">
+						<div class="s_Product_carousel">
+							<% product.productImages.forEach(function(image, index) { %>
+								<div class="single-prd-item">
+									<img class="img-fluid product-image" src="/uploads/re-image/<%= image %>"
+										alt="<%= product.productName %>" data-index="<%= index %>">
+								</div>
 							<% }); %>
+						</div>
+					</div>
+
+					<!-- Lightbox Gallery -->
+					<div class="lightbox" id="product-lightbox">
+						<button class="lightbox-close" id="lightbox-close">&times;</button>
+						
+						<div class="lightbox-content">
+							<% product.productImages.forEach(function(image, index) { %>
+								<img class="lightbox-img <%= index === 0 ? 'active' : '' %>" 
+									 src="/uploads/re-image/<%= image %>" 
+									 alt="<%= product.productName %>" 
+									 data-index="<%= index %>">
+							<% }); %>
+							
+							<button class="lightbox-nav lightbox-prev" id="lightbox-prev">
+								<i class="fa fa-chevron-left"></i>
+							</button>
+							<button class="lightbox-nav lightbox-next" id="lightbox-next">
+								<i class="fa fa-chevron-right"></i>
+							</button>
+						</div>
+						
+						<div class="lightbox-thumbnails">
+							<% product.productImages.forEach(function(image, index) { %>
+								<img class="lightbox-thumbnail <%= index === 0 ? 'active' : '' %>" 
+									 src="/uploads/re-image/<%= image %>" 
+									 alt="Thumbnail" 
+									 data-index="<%= index %>">
+							<% }); %>
+						</div>
 					</div>
 
 					<%
@@ -307,54 +369,50 @@
 						<h3>
 							<%= product.productName %>
 						</h3>
-						<% if (totalOffer> 0) { %>
-							<h2>$<%= originalPrice %>
-							</h2>
-							<h6 class="l-through">$<%= product.regularPrice %>
-							</h6>
-							<span class="badge badge-success">Save <%= totalOffer %></span>
+						<div class="price-section">
+							<% if (totalOffer > 0) { %>
+								<span class="original-price">$<%= originalPrice %></span>
+								<span class="regular-price">$<%= product.regularPrice %></span>
+								<span class="discount-badge">Save $<%= totalOffer %></span>
 							<% } else { %>
-								<h2>$<%= product.regularPrice %>
-								</h2>
-								<% } %>
-									<ul class="list">
-										<li><span>Category</span> : <%= category.name %>
-										</li>
-										<li><span>Availability</span> : <%= quantity> 0 ? 'In Stock' : 'Out of Stock' %>
-										</li>
-										<li><Span>Stock </Span> :<%= quantity %>
-										</li>
-									</ul>
-									<p>
-										<%= product.description %>
-									</p>
+								<span class="original-price">$<%= product.regularPrice %></span>
+							<% } %>
+						</div>
+						<ul class="list">
+							<li><span>Category</span> : <%= category.name %></li>
+							<li><span>Availability</span> : <%= quantity > 0 ? 'In Stock' : 'Out of Stock' %></li>
+							<li><span>Stock</span> : <%= quantity %></li>
+						</ul>
+						<p>
+							<%= product.description %>
+						</p>
 
-									<% if (quantity> 0) { %>
-										<div class="product_count">
-											<label for="qty">Quantity:</label>
-											<input type="text" name="qty" id="sst" maxlength="12" value="1"
-												title="Quantity:" class="input-text qty">
-											<button
-												onclick="var result = document.getElementById('sst'); var sst = result.value; if( !isNaN( sst )) result.value++;return false;"
-												class="increase items-count" type="button"><i
-													class="lnr lnr-chevron-up"></i></button>
-											<button
-												onclick="var result = document.getElementById('sst'); var sst = result.value; if( !isNaN( sst ) && sst > 0 ) result.value--;return false;"
-												class="reduced items-count" type="button"><i
-													class="lnr lnr-chevron-down"></i></button>
-										</div>
-										<div class="card_area d-flex align-items-center">
-											<button class="primary-btn" onclick="addToCart('<%= product._id %>')">Add to
-												Cart</button>
-											<a class="icon_btn" href="#" onclick="addToWishlist('<%= product._id %>', event); return false;">
-												<i class="lnr lnr-heart"></i>
-											</a>
-										</div>
-										<% } else { %>
-											<div class="alert alert-warning">
-												This product is currently out of stock
-											</div>
-											<% } %>
+						<% if (quantity> 0) { %>
+							<div class="product_count">
+								<label for="qty">Quantity:</label>
+								<input type="text" name="qty" id="sst" maxlength="12" value="1"
+									title="Quantity:" class="input-text qty">
+								<button
+									onclick="var result = document.getElementById('sst'); var sst = result.value; if( !isNaN( sst )) result.value++;return false;"
+									class="increase items-count" type="button"><i
+										class="lnr lnr-chevron-up"></i></button>
+								<button
+									onclick="var result = document.getElementById('sst'); var sst = result.value; if( !isNaN( sst ) && sst > 0 ) result.value--;return false;"
+									class="reduced items-count" type="button"><i
+										class="lnr lnr-chevron-down"></i></button>
+							</div>
+							<div class="card_area d-flex align-items-center">
+								<button class="primary-btn" onclick="addToCart('<%= product._id %>')">Add to
+									Cart</button>
+								<a class="icon_btn" href="#" onclick="addToWishlist('<%= product._id %>', event); return false;">
+									<i class="lnr lnr-heart"></i>
+								</a>
+							</div>
+							<% } else { %>
+								<div class="alert alert-warning">
+									This product is currently out of stock
+								</div>
+								<% } %>
 					</div>
 				</div>
 			</div>
@@ -774,7 +832,7 @@
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
-			// Initialize Product Image Carousel
+			// Initialize Owl Carousel
 			$('.s_Product_carousel').owlCarousel({
 				items: 1,
 				loop: true,
@@ -785,10 +843,94 @@
 				autoplayHoverPause: true
 			});
 
-			// Quantity Controls - Using your existing implementation
+			// Lightbox Gallery
+			const lightbox = document.getElementById('product-lightbox');
+			const lightboxClose = document.getElementById('lightbox-close');
+			const lightboxImages = document.querySelectorAll('.lightbox-img');
+			const lightboxThumbnails = document.querySelectorAll('.lightbox-thumbnail');
+			const lightboxPrev = document.getElementById('lightbox-prev');
+			const lightboxNext = document.getElementById('lightbox-next');
+			const productImages = document.querySelectorAll('.product-image');
+			
+			let currentIndex = 0;
+			
+			// Open lightbox when clicking product image
+			productImages.forEach(image => {
+				image.addEventListener('click', function() {
+					currentIndex = parseInt(this.dataset.index);
+					updateActiveLightboxImage();
+					lightbox.classList.add('active');
+					document.body.style.overflow = 'hidden'; // Prevent scrolling
+				});
+			});
+			
+			// Close lightbox
+			lightboxClose.addEventListener('click', function() {
+				lightbox.classList.remove('active');
+				document.body.style.overflow = ''; // Restore scrolling
+			});
+			
+			// Also close when clicking outside the image
+			lightbox.addEventListener('click', function(e) {
+				if (e.target === lightbox) {
+					lightbox.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+			});
+			
+			// Navigate through images with buttons
+			lightboxPrev.addEventListener('click', function(e) {
+				e.stopPropagation();
+				currentIndex = (currentIndex - 1 + lightboxImages.length) % lightboxImages.length;
+				updateActiveLightboxImage();
+			});
+			
+			lightboxNext.addEventListener('click', function(e) {
+				e.stopPropagation();
+				currentIndex = (currentIndex + 1) % lightboxImages.length;
+				updateActiveLightboxImage();
+			});
+			
+			// Navigate with keyboard arrows
+			document.addEventListener('keydown', function(e) {
+				if (!lightbox.classList.contains('active')) return;
+				
+				if (e.key === 'ArrowLeft') {
+					currentIndex = (currentIndex - 1 + lightboxImages.length) % lightboxImages.length;
+					updateActiveLightboxImage();
+				} else if (e.key === 'ArrowRight') {
+					currentIndex = (currentIndex + 1) % lightboxImages.length;
+					updateActiveLightboxImage();
+				} else if (e.key === 'Escape') {
+					lightbox.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+			});
+			
+			// Thumbnail navigation
+			lightboxThumbnails.forEach(thumbnail => {
+				thumbnail.addEventListener('click', function(e) {
+					e.stopPropagation();
+					currentIndex = parseInt(this.dataset.index);
+					updateActiveLightboxImage();
+				});
+			});
+			
+			// Update active image
+			function updateActiveLightboxImage() {
+				lightboxImages.forEach((img, index) => {
+					img.classList.toggle('active', index === currentIndex);
+				});
+				
+				lightboxThumbnails.forEach((thumb, index) => {
+					thumb.classList.toggle('active', index === currentIndex);
+				});
+			}
+
+			// Quantity Controls
 			const quantityInput = document.getElementById('sst');
 
-			// Add to Cart Function - Modified to match your existing implementation
+			// Add to Cart Function
 			window.addToCart = async function (productId) {
 				const quantity = document.getElementById('sst').value;
 
@@ -811,11 +953,18 @@
 					Swal.fire({
 						icon: 'success',
 						title: 'Success!',
-						text: data.message,
+						text: data.message || 'Product added to cart successfully',
 						showConfirmButton: false,
 						timer: 1500
 					}).then(() => {
-						window.location.href = '#'; // Redirect to cart after success
+						// Refresh cart count after successful add
+						fetch('/getCartCount')
+							.then(res => res.json())
+							.then(data => {
+								if (data.count) {
+									document.querySelector('.cart-count').textContent = data.count;
+								}
+							});
 					});
 
 				} catch (error) {
@@ -865,72 +1014,6 @@
 				}
 			};
 
-			// Initialize Image Zoom Functionality
-			document.addEventListener('DOMContentLoaded', function() {
-				const containers = document.querySelectorAll('.product-image-container');
-
-				containers.forEach(container => {
-					const img = container.querySelector('img');
-					const lens = document.createElement('div');
-					lens.className = 'magnifier-lens';
-					container.appendChild(lens);
-
-					function getRelativePos(e) {
-						const rect = container.getBoundingClientRect();
-						return {
-							x: e.pageX - rect.left - window.scrollX,
-							y: e.pageY - rect.top - window.scrollY
-						};
-					}
-
-					function moveLens(e) {
-						const pos = getRelativePos(e);
-						const lensWidth = lens.offsetWidth;
-						const lensHeight = lens.offsetHeight;
-						const imgWidth = img.offsetWidth;
-						const imgHeight = img.offsetHeight;
-
-						// Calculate lens position
-						let x = pos.x - lensWidth / 2;
-						let y = pos.y - lensHeight / 2;
-
-						// Prevent lens from going outside the image
-						x = Math.max(0, Math.min(x, imgWidth - lensWidth));
-						y = Math.max(0, Math.min(y, imgHeight - lensHeight));
-
-						// Calculate zoom ratio
-						const zoomRatio = 2; // Adjust this value to change zoom level
-
-						// Update lens position and background
-						lens.style.left = `${x}px`;
-						lens.style.top = `${y}px`;
-						lens.style.backgroundImage = `url(${img.src})`;
-						lens.style.backgroundSize = `${imgWidth * zoomRatio}px ${imgHeight * zoomRatio}px`;
-						lens.style.backgroundPosition = `-${x * zoomRatio}px -${y * zoomRatio}px`;
-					}
-
-					// Event listeners for mouse interactions
-					container.addEventListener('mouseenter', function(e) {
-						lens.style.opacity = '1';
-						moveLens(e);
-					});
-
-					container.addEventListener('mouseleave', function() {
-						lens.style.opacity = '0';
-					});
-
-					container.addEventListener('mousemove', moveLens);
-
-					// Handle carousel slide changes
-					if (typeof $.fn.owlCarousel !== 'undefined') {
-						$('.s_Product_carousel').on('translated.owl.carousel', function() {
-							// Reset lens visibility when sliding
-							lens.style.opacity = '0';
-						});
-					}
-				});
-			});
-
 			// Tab Navigation
 			$('.nav-tabs a').on('click', function (e) {
 				e.preventDefault();
@@ -938,33 +1021,19 @@
 			});
 
 			// Rating Stars Interaction
-			document.querySelectorAll('.rating-star').forEach(star => {
-				star.addEventListener('click', function () {
-					const value = parseInt(this.dataset.value);
-					const stars = document.querySelectorAll('.rating-star');
-
-					stars.forEach((s, index) => {
-						s.classList.toggle('fas', index < value);
-						s.classList.toggle('far', index >= value);
+			document.querySelectorAll('.list a i.fa-star').forEach(star => {
+				star.addEventListener('click', function (e) {
+					e.preventDefault();
+					const starContainer = this.closest('a');
+					const allStars = starContainer.querySelectorAll('i.fa-star');
+					const rating = Array.from(allStars).indexOf(this) + 1;
+					
+					// Update visual UI
+					starContainer.parentElement.querySelectorAll('a i.fa-star').forEach((s, i) => {
+						s.style.color = i < rating ? '#fbd600' : '#d8d8d8';
 					});
-
-					document.getElementById('selectedRating').value = value;
 				});
 			});
-
-			// Review Form Submission
-			const reviewForm = document.getElementById('reviewForm');
-			if (reviewForm) {
-				reviewForm.addEventListener('submit', function (e) {
-					e.preventDefault();
-					Swal.fire('Thank you!', 'Your review has been submitted.', 'success');
-					this.reset();
-					document.querySelectorAll('.rating-star').forEach(star => {
-						star.classList.remove('fas');
-						star.classList.add('far');
-					});
-				});
-			}
 		});
 	</script>
 

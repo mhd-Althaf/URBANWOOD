@@ -41,6 +41,15 @@ const addProducts = async (req, res) => {
             });
         }
 
+        // Validate product offer if provided
+        const productOffer = products.productOffer ? parseFloat(products.productOffer) : 0;
+        if (productOffer < 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Product offer cannot be negative."
+            });
+        }
+
         // Handle images
         const images = [];
         if (req.files && req.files.length > 0) {
@@ -78,7 +87,8 @@ console.log("kkkkkkkkkkkkk",req.files);
             description: products.description,
             category: categoryId._id,
             regularPrice: products.regularPrice,
-            offerPrice: products.offerPrice || products.regularPrice,
+            salePrice: products.salePrice || products.regularPrice,
+            productOffer: productOffer,
             quantity: products.quantity,
             productImages: images,
             status: "Available",
@@ -270,6 +280,13 @@ const editProduct = async (req, res) => {
             
             return res.status(400).json({ error: "Product with this name already exists. Please try with another name." });
         }
+        
+        // Validate product offer
+        const productOffer = data.productOffer ? parseFloat(data.productOffer) : 0;
+        if (productOffer < 0) {
+            return res.status(400).json({ error: "Product offer cannot be negative." });
+        }
+        
         const images = [];
         if (req.files && req.files.length > 0) {
             for (let i = 0; i < req.files.length; i++) {
@@ -280,10 +297,10 @@ const editProduct = async (req, res) => {
         const updateFields = {
             productName: data.productName,
             description: data.description,
-        
             category: product.category,
             regularPrice: data.regularPrice,
-            offerPrice: data.offerPrice,
+            salePrice: data.salePrice,
+            productOffer: productOffer,
             quantity: data.quantity,
         };
         if (req.files.length > 0) {

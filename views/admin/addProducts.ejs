@@ -312,18 +312,25 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="mb-4">
-                                    <label class="form-label">offer price</label>
-                                    <input placeholder="₹" name="offerPrice" type="text" class="form-control">
-                                    <div id="offerPrice-error" class="error-message"></div>
+                                    <label class="form-label">Product Offer (₹)</label>
+                                    <input placeholder="₹" name="productOffer" type="number" min="0" class="form-control">
+                                    <small class="form-text text-muted">Enter the discount amount to be applied to this product.</small>
+                                    <div id="productOffer-error" class="error-message"></div>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="mb-4">
-                                    <label class="form-label">Quantity</label>
-                                    <input placeholder="" name="quantity" type="text" class="form-control">
-                                    <div id="quantity-error" class="error-message"></div>
+                                    <label class="form-label">Sale price</label>
+                                    <input placeholder="₹" name="salePrice" type="text" class="form-control">
+                                    <div id="salePrice-error" class="error-message"></div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Quantity</label>
+                            <input placeholder="" name="quantity" type="text" class="form-control">
+                            <div id="quantity-error" class="error-message"></div>
                         </div>
 
                         <div class="mb-4">
@@ -593,6 +600,26 @@
                     if (!regularPrice.value.trim() || isNaN(regularPrice.value) || parseFloat(regularPrice.value) <= 0) {
                         const error = document.getElementById('regularPrice-error') || createErrorElement(regularPrice, 'regularPrice-error');
                         error.textContent = 'Please enter a valid price';
+                        error.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    // Validate product offer - it's optional but should be valid if provided
+                    const productOffer = document.querySelector('input[name="productOffer"]');
+                    if (productOffer && productOffer.value.trim() !== '') {
+                        if (isNaN(productOffer.value) || parseFloat(productOffer.value) < 0) {
+                            const error = document.getElementById('productOffer-error') || createErrorElement(productOffer, 'productOffer-error');
+                            error.textContent = 'Product offer must be a non-negative number';
+                            error.style.display = 'block';
+                            isValid = false;
+                        }
+                    }
+                    
+                    // Validate sale price
+                    const salePrice = document.querySelector('input[name="salePrice"]');
+                    if (salePrice && (!salePrice.value.trim() || isNaN(salePrice.value) || parseFloat(salePrice.value) <= 0)) {
+                        const error = document.getElementById('salePrice-error') || createErrorElement(salePrice, 'salePrice-error');
+                        error.textContent = 'Please enter a valid sale price';
                         error.style.display = 'block';
                         isValid = false;
                     }
