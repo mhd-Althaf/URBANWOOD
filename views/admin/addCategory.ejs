@@ -13,6 +13,13 @@
         <label for="categoryDescription">Description</label>
         <textarea name="description" class="form-control" id="categoryDescription" rows="4"></textarea>
       </div>
+      
+      <div class="form-group">
+        <label for="categoryOffer">Category Offer (₹)</label>
+        <input name="categoryOffer" type="number" min="0" class="form-control" id="categoryOffer" placeholder="Enter offer amount">
+        <small class="form-text text-muted">Enter the discount amount to be applied to all products in this category.</small>
+      </div>
+      
       <button type="submit" class="btn btn-primary mr-2">Submit</button>
       <button type="button" class="btn btn-dark" onclick="resetForm()">Cancel</button>
     </form>
@@ -29,7 +36,8 @@
     // Prepare form data
     const formData = {
       cname: document.getElementById("categoryName").value.trim(),
-      description: document.getElementById("categoryDescription").value.trim()
+      description: document.getElementById("categoryDescription").value.trim(),
+      categoryOffer: document.getElementById("categoryOffer").value.trim() || 0
     };
 
     console.log(formData);  // Debugging: log the form data to ensure it is correct
@@ -72,6 +80,7 @@
 
     const nameField = document.getElementById("categoryName");
     const descriptionField = document.getElementById("categoryDescription");
+    const offerField = document.getElementById("categoryOffer");
 
     let isValid = true;
 
@@ -82,6 +91,11 @@
 
     if (descriptionField.value.trim() === "") {
       showError(descriptionField, "Description is required.");
+      isValid = false;
+    }
+    
+    if (offerField.value.trim() !== "" && (isNaN(offerField.value) || parseInt(offerField.value) < 0)) {
+      showError(offerField, "Category offer must be a non-negative number.");
       isValid = false;
     }
 
