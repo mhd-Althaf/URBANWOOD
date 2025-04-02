@@ -283,7 +283,6 @@
 			width: 100%;
 			height: 100%;
 			display: flex;
-			transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
 		.product-image {
@@ -294,10 +293,6 @@
 			height: 100%;
 			object-fit: cover;
 			transition: opacity 0.3s ease;
-		}
-
-		.product-card:hover .product-image-slider {
-			transform: translateX(-100%);
 		}
 
 		.product-badge {
@@ -903,11 +898,9 @@
 										<div class="product-image-wrap">
 											<% if (product.productImages && product.productImages.length > 0) { %>
 												<div class="product-image-slider">
-													<% product.productImages.forEach(image => { %>
-														<img src="/uploads/re-image/<%= image %>" 
-															 alt="<%= product.productName %>" 
-															 class="product-image">
-													<% }) %>
+													<img src="/uploads/re-image/<%= product.productImages[0] %>" 
+														 alt="<%= product.productName %>" 
+														 class="product-image">
 												</div>
 											<% } else { %>
 												<img src="/default-product.jpg" 
