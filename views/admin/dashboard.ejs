@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Admin</title>
+    <title>Admin Dashboard - URBANWOOD</title>
    <!-- plugins:css -->
 <link rel="stylesheet" href="/assets/vendors/mdi/css/materialdesignicons.min.css">
 <link rel="stylesheet" href="/assets/vendors/css/vendor.bundle.base.css">
@@ -21,116 +21,398 @@
 <link rel="stylesheet" href="/assets/css/style.css">
 <!-- End layout styles -->
 <link rel="shortcut icon" href="/assets/images/favicon.png">
-
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    .filter-btn {
+        border-radius: 20px;
+        padding: 8px 20px;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+    }
+    .filter-btn.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .stat-card {
+        background: linear-gradient(45deg, #007bff, #00bcd4);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .stat-card i {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    .stat-card h3 {
+        font-size: 2rem;
+        margin: 10px 0;
+    }
+    .stat-card p {
+        font-size: 1rem;
+        margin: 0;
+    }
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+</style>
   </head>
   <body>
-    <div class="container-scroller">
-      <!-- partial:partials/_sidebar.html -------------------------------------------------------------------------------->
-      <nav class="sidebar sidebar-offcanvas" id="sidebar">
-        <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
-          <a class="sidebar-brand brand-logo" href="/"><img src="/assets/images/Urbenwood log.png" alt="logo" /></a>
-          <a class="sidebar-brand brand-logo-mini" href="/"><img src="/assets/images/logo-mini.svg" alt="logo" /></a>
+    <%- include('../partials/adminHeader') %>
+
+    <div class="container-fluid py-4">
+        <!-- Filter Buttons -->
+        <div class="text-center mb-4">
+            <button class="btn filter-btn active" data-filter="daily">Daily</button>
+            <button class="btn filter-btn" data-filter="weekly">Weekly</button>
+            <button class="btn filter-btn" data-filter="monthly">Monthly</button>
+            <button class="btn filter-btn" data-filter="yearly">Yearly</button>
         </div>
 
-        <!-- ----------------------------------------------------------------------------------------------------------------------------- -->
-        <ul class="nav">
-         
-          <li class="nav-item nav-category">
-            <span class="nav-link">Navigation</span>
-          </li>
-          <li class="nav-item menu-items">
-            <a class="nav-link" href="/admin/customers">
-              <span class="menu-icon">
-                <i class="mdi mdi-speedometer"></i>
-              </span>
-              <span class="menu-title">User management</span>
-            </a>
-          </li>
-          <li class="nav-item menu-items">
-            <a class="nav-link" href="/admin/category">
-              <span class="menu-icon">
-                <i class="mdi mdi-speedometer"></i>
-              </span>
-              <span class="menu-title">Category management</span>
-            </a>
-          </li>
-          <li class="nav-item menu-items">
-            <a class="nav-link" href="/admin/productGet">
-              <span class="menu-icon">
-                <i class="mdi mdi-playlist-play"></i>
-              </span>
-              <span class="menu-title">Product management</span>
-            </a>
-          </li>
-          <li class="nav-item menu-items">
-            <a class="nav-link" href="/admin/coupon">
-              <span class="menu-icon">
-                <i class="mdi mdi-speedometer"></i>
-              </span>
-              <span class="menu-title">coupon management</span>
-            </a>
-          </li>
-          <li class="nav-item menu-items">
-            <a class="nav-link" href="/admin/order">
-              <span class="menu-icon">
-                <i class="mdi mdi-speedometer"></i>
-              </span>
-              <span class="menu-title">order management</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <!-- partial ----------------------------------------------------------------------------------------------------->
-      <div class="container-fluid page-body-wrapper">
-        <!-- partial:partials/_navbar.html -->
-        <nav class="navbar p-0 fixed-top d-flex flex-row">
-          <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
-            <a class="navbar-brand brand-logo-mini" href="/admin/dashboard"><img src="/assets/images/logo-mini.svg" alt="logo" /></a>
-          </div>
-          <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
-            <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
-              <span class="mdi mdi-menu"></span>
-            </button>
-            <ul class="navbar-nav w-100">
-              <li class="nav-item w-100">
-                <!-- <form class="nav-link mt-2 mt-md-0 d-none d-lg-flex search">
-                  <input type="text" class="form-control" placeholder="Search products">
-                </form> -->
-              </li>
-            </ul>
-            <ul class="navbar-nav navbar-nav-right">
-             
-              
-              
-              <li class="nav-item dropdown">
-                <a class="nav-link" id="profileDropdown" href="#" data-toggle="dropdown">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3><%= totalOrders %></h3>
+                    <p>Total Orders</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <i class="fas fa-dollar-sign"></i>
+                    <h3>₹<%= totalSales.toFixed(2) %></h3>
+                    <p>Total Sales</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(45deg, #ffc107, #ff9800);">
+                    <i class="fas fa-users"></i>
+                    <h3><%= totalCustomers %></h3>
+                    <p>Total Customers</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(45deg, #dc3545, #f44336);">
+                    <i class="fas fa-box"></i>
+                    <h3><%= totalProducts %></h3>
+                    <p>Total Products</p>
+                </div>
+            </div>
+        </div>
 
-                  <div class="navbar-profile">
-                    <img class="img-xs rounded-circle" src="/assets/images/faces/face15.jpg" alt="">
-                    <p class="mb-0 d-none d-sm-block navbar-profile-name">Henry Klein</p>
-                    <i class="mdi mdi-menu-down d-none d-sm-block"></i>
-                  </div>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list" aria-labelledby="profileDropdown">
-                  <h6 class="p-3 mb-0">Profile</h6>
-                  <div class="dropdown-divider"></div>
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Sales Overview</h5>
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Sales Distribution</h5>
+                        <div class="chart-container">
+                            <canvas id="salesDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products and Categories -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top 10 Products</h5>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Sales</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% topProducts.forEach(product => { %>
+                                    <tr>
+                                        <td><%= product.name %></td>
+                                        <td><%= product.quantity %></td>
+                                        <td>₹<%= product.revenue.toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top 10 Categories</h5>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Sales</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% topCategories.forEach(category => { %>
+                                    <tr>
+                                        <td><%= category.name %></td>
+                                        <td><%= category.quantity %></td>
+                                        <td>₹<%= category.revenue.toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Brands -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top 10 Brands</h5>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Brand</th>
+                                        <th>Products</th>
+                                        <th>Sales</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% topBrands.forEach(brand => { %>
+                                    <tr>
+                                        <td><%= brand.name %></td>
+                                        <td><%= brand.productCount %></td>
+                                        <td><%= brand.salesCount %></td>
+                                        <td>₹<%= brand.revenue.toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger Book -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Ledger Book</h5>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" id="exportExcel">
+                                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" id="exportPdf">
+                                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="table table-striped" id="ledgerTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Products</th>
+                                        <th>Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% orders.forEach(order => { %>
+                                    <tr>
+                                        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                        <td><%= order.orderId %></td>
+                                        <td><%= order.userId ? order.userId.name : 'N/A' %></td>
+                                        <td>
+                                            <% order.orderItems.forEach(item => { %>
+                                                <span class="badge bg-info me-1"><%= item.productId ? item.productId.productName : 'N/A' %> (<%= item.quantity %>)</span>
+                                            <% }); %>
+                                        </td>
+                                        <td>₹<%= order.finalAmount.toFixed(2) %></td>
+                                        <td><span class="badge bg-secondary"><%= order.paymentMethod %></span></td>
+                                        <td>
+                                            <span class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-info' %>">
+                                                <%= order.status %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        let salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: JSON.parse('<%- JSON.stringify(chartData.labels) %>'),
+                datasets: [{
+                    label: 'Sales',
+                    data: JSON.parse('<%- JSON.stringify(chartData.sales) %>'),
+                    borderColor: '#007bff',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sales Distribution Chart
+        const distributionCtx = document.getElementById('salesDistributionChart').getContext('2d');
+        const distributionChart = new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: JSON.parse('<%- JSON.stringify(chartData.distributionLabels) %>'),
+                datasets: [{
+                    data: JSON.parse('<%- JSON.stringify(chartData.distributionData) %>'),
+                    backgroundColor: [
+                        '#007bff',
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545',
+                        '#17a2b8'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Filter Buttons
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
                 
-                 
-                  <a onclick="window.location.href = '/admin/logout'" class="dropdown-item preview-item">
-                    <div class="preview-thumbnail">
-                      <div class="preview-icon bg-dark rounded-circle">
-                        <i class="mdi mdi-logout text-danger"></i>
-                      </div>
-                    </div>
-                    <div  class="preview-item-content">
-                      <p  class="preview-subject mb-1">Log out</p>
-                    </div>
-                  </a>
-                  
-              </li>
-            </ul>
-            <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
-              <span class="mdi mdi-format-line-spacing"></span>
-            </button>
-          </div>
-        </nav>
+                const filter = this.dataset.filter;
+                try {
+                    const response = await fetch(`/admin/dashboard/filter?filter=${filter}`);
+                    const data = await response.json();
+                    
+                    // Update sales chart
+                    salesChart.data.labels = data.labels;
+                    salesChart.data.datasets[0].data = data.sales;
+                    salesChart.update();
+                } catch (error) {
+                    console.error('Error updating chart:', error);
+                }
+            });
+        });
+
+        // Initialize DataTable for Ledger
+        $(document).ready(function() {
+            $('#ledgerTable').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 10,
+                language: {
+                    search: "Search records:"
+                }
+            });
+
+            // Export buttons
+            $('#exportExcel').click(function() {
+                window.location.href = '/admin/download-report/excel?reportType=ledger';
+            });
+
+            $('#exportPdf').click(function() {
+                window.location.href = '/admin/download-report/pdf?reportType=ledger';
+            });
+        });
+    </script>
+  </body>
+</html>

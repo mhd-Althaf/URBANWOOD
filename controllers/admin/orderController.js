@@ -271,13 +271,22 @@ const getSalesReport = async (req, res) => {
         today.setHours(0, 0, 0, 0);
         const query = { createdAt: { $gte: today } };
 
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; 
+        const skip = (page - 1) * limit;
+
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
         const orders = await Order.find(query)
             .populate('userId', 'name email')
             .populate('orderItems.productId')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         let totalSales = 0;
-        let totalOrders = orders.length;
         let totalDiscount = 0;
 
         orders.forEach(order => {
@@ -300,7 +309,9 @@ const getSalesReport = async (req, res) => {
                 startDate: today.toISOString().split('T')[0],
                 endDate: new Date().toISOString().split('T')[0],
                 reportType: 'daily'
-            }
+            },
+            currentPage: page,
+            totalPages
         });
     } catch (error) {
         console.error('Error loading sales report page:', error);
@@ -310,7 +321,8 @@ const getSalesReport = async (req, res) => {
 
 const generateSalesReport = async (req, res) => {
     try {
-        const { startDate, endDate, reportType } = req.body;
+        // Get parameters from either POST body or GET query
+        const { startDate, endDate, reportType } = req.method === 'POST' ? req.body : req.query;
         let query = {};
 
         if (reportType === 'custom' && startDate && endDate) {
@@ -332,13 +344,22 @@ const generateSalesReport = async (req, res) => {
             query.createdAt = { $gte: lastMonth };
         }
 
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; // Number of orders per page
+        const skip = (page - 1) * limit;
+
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
         const orders = await Order.find(query)
             .populate('userId', 'name email')
             .populate('orderItems.productId')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
         let totalSales = 0;
-        let totalOrders = orders.length;
         let totalDiscount = 0;
 
         orders.forEach(order => {
@@ -361,7 +382,9 @@ const generateSalesReport = async (req, res) => {
                 startDate,
                 endDate,
                 reportType
-            }
+            },
+            currentPage: page,
+            totalPages
         });
 
     } catch (error) {

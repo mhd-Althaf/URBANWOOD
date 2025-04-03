@@ -20,7 +20,7 @@ const login = async (req, res) => {
             const passwordMatch = await bcrypt.compare(password, admin.password); 
             if (passwordMatch) {
                 req.session.admin = true;
-                return res.render("admin/dashboard");
+                return res.redirect("/admin/dashboard");
             }
         }
 
@@ -30,20 +30,6 @@ const login = async (req, res) => {
         return res.redirect("/pageerror");
     }
 };
-
-const loadDashboard = async (req, res) => {
-    if (req.session.admin) {
-        return res.render("admin/dashboard");
-    } else {
-        return res.redirect("/login");
-    }
-};
-
-
-
-// const loadProductGet = async (req,res) =>{
-//     res.render("admin/product")
-// }
 
 const loadcatogoryget = async (req,res)=>{
     
@@ -77,8 +63,6 @@ module.exports = {
     loadAddCategory,
     loadLogin,
     login,
-    loadDashboard, 
-    // loadProductGet,
     loadAddProducts, 
     logoutUser,
 
