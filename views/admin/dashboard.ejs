@@ -1,93 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Admin Dashboard - URBANWOOD</title>
-   <!-- plugins:css -->
-<link rel="stylesheet" href="/assets/vendors/mdi/css/materialdesignicons.min.css">
-<link rel="stylesheet" href="/assets/vendors/css/vendor.bundle.base.css">
-<!-- endinject -->
-<!-- Plugin css for this page -->
-<link rel="stylesheet" href="/assets/vendors/jvectormap/jquery-jvectormap.css">
-<link rel="stylesheet" href="/assets/vendors/flag-icon-css/css/flag-icon.min.css">
-<link rel="stylesheet" href="/assets/vendors/owl-carousel-2/owl.carousel.min.css">
-<link rel="stylesheet" href="/assets/vendors/owl-carousel-2/owl.theme.default.min.css">
-<!-- End plugin css for this page -->
-<!-- inject:css -->
-<!-- endinject -->
-<!-- Layout styles -->
-<link rel="stylesheet" href="/assets/css/style.css">
-<!-- End layout styles -->
-<link rel="shortcut icon" href="/assets/images/favicon.png">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-        margin-bottom: 20px;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-    }
-    .chart-container {
-        position: relative;
-        height: 300px;
-        margin-bottom: 30px;
-    }
-    .filter-btn {
-        border-radius: 20px;
-        padding: 8px 20px;
-        margin: 0 5px;
-        transition: all 0.3s ease;
-    }
-    .filter-btn.active {
-        background-color: #007bff;
-        color: white;
-    }
-    .stat-card {
-        background: linear-gradient(45deg, #007bff, #00bcd4);
-        color: white;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    .stat-card i {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }
-    .stat-card h3 {
-        font-size: 2rem;
-        margin: 10px 0;
-    }
-    .stat-card p {
-        font-size: 1rem;
-        margin: 0;
-    }
-    .table-container {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .table th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
-    }
-    .badge {
-        padding: 8px 12px;
-        border-radius: 20px;
-    }
-</style>
-  </head>
-  <body>
-    <%- include('../partials/adminHeader') %>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="/assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/assets/vendors/css/vendor.bundle.base.css">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="/assets/vendors/jvectormap/jquery-jvectormap.css">
+    <link rel="stylesheet" href="/assets/vendors/flag-icon-css/css/flag-icon.min.css">
+    <link rel="stylesheet" href="/assets/vendors/owl-carousel-2/owl.carousel.min.css">
+    <link rel="stylesheet" href="/assets/vendors/owl-carousel-2/owl.theme.default.min.css">
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <!-- End layout styles -->
+    <link rel="shortcut icon" href="/assets/images/favicon.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            padding-top: 60px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .container-fluid {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .dashboard-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            border-radius: 20px;
+            padding: 8px 20px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #007bff, #00bcd4);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+
+        .stat-card p {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* Theme Styles */
+        .gold-blue {
+            background: linear-gradient(135deg, #FFD700, #00008B);
+            color: #FFFFFF;
+        }
+
+        .black-gold {
+            background: linear-gradient(135deg, #000000, #FFD700);
+            color: #FFFFFF;
+        }
+
+        .purple-silver {
+            background: linear-gradient(135deg, #800080, #C0C0C0);
+            color: #FFFFFF;
+        }
+
+        .blue-green {
+            background: linear-gradient(135deg, #00008B, #2E8B57);
+            color: #FFFFFF;
+        }
+
+        .teal-rose {
+            background: linear-gradient(135deg, #008080, #FFD1DC);
+            color: #000000;
+        }
+
+        .dark-mode {
+            background: linear-gradient(135deg, #1A1A1A, #4A4A4A);
+            color: #FFFFFF;
+        }
+
+        .white-mode {
+            background: linear-gradient(135deg, #FFFFFF, #F5F5F5);
+            color: #000000;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: #0D1B2A;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background-color: #FFD700;
+            color: #0D1B2A;
+            font-weight: bold;
+            padding: 12px;
+            border-bottom: 3px solid #FFD700;
+            text-align: left;
+        }
+
+        .table td {
+            background-color: #112D4E;
+            color: #FFFFFF;
+            padding: 10px;
+            border-bottom: 1px solid #FFD700;
+        }
+
+        .table tr:hover {
+            background-color: #1B3A5A;
+        }
+
+        .table th:first-child,
+        .table td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .table th:last-child,
+        .table td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        /* Premium Dropdown for Themes */
+        .theme-dropdown {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .theme-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: linear-gradient(45deg, #333, #444);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 30px 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            width: 200px; /* Fixed width for consistency */
+        }
+
+        .theme-select:focus {
+            outline: none;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.5);
+        }
+
+        .theme-select::after {
+            content: '\25BC';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            pointer-events: none;
+        }
+
+        .theme-select option {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 0;
+        }
+
+        .theme-select:hover {
+            background: linear-gradient(45deg, #444, #555);
+        }
+    </style>
+</head>
+
+<body class="gold-blue">
+    <%-include("../../views/partials/admin/header")%>
 
     <div class="container-fluid py-4">
+        <!-- Theme Dropdown (Inside Main Content) -->
+        <div class="theme-dropdown">
+            <select class="theme-select" onchange="changeTheme(this.value)">
+                <option value="gold-blue" selected>Gold & Blue</option>
+                <option value="black-gold">Black & Gold</option>
+                <option value="purple-silver">Purple & Silver</option>
+                <option value="blue-green">Midnight Blue & Green</option>
+                <option value="teal-rose">Dark Teal & Rose Gold</option>
+                <option value="dark-mode">Dark Mode</option>
+                <option value="white-mode">White Mode</option>
+            </select>
+        </div>
+
         <!-- Filter Buttons -->
         <div class="text-center mb-4">
             <button class="btn filter-btn active" data-filter="daily">Daily</button>
@@ -101,28 +261,35 @@
             <div class="col-md-3">
                 <div class="stat-card">
                     <i class="fas fa-shopping-cart"></i>
-                    <h3><%= totalOrders %></h3>
+                    <h3>
+                        <%= totalOrders %>
+                    </h3>
                     <p>Total Orders</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card" style="background: linear-gradient(45deg, #28a745, #20c997);">
                     <i class="fas fa-dollar-sign"></i>
-                    <h3>₹<%= totalSales.toFixed(2) %></h3>
+                    <h3>₹<%= totalSales.toFixed(2) %>
+                    </h3>
                     <p>Total Sales</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card" style="background: linear-gradient(45deg, #ffc107, #ff9800);">
                     <i class="fas fa-users"></i>
-                    <h3><%= totalCustomers %></h3>
+                    <h3>
+                        <%= totalCustomers %>
+                    </h3>
                     <p>Total Customers</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card" style="background: linear-gradient(45deg, #dc3545, #f44336);">
                     <i class="fas fa-box"></i>
-                    <h3><%= totalProducts %></h3>
+                    <h3>
+                        <%= totalProducts %>
+                    </h3>
                     <p>Total Products</p>
                 </div>
             </div>
@@ -168,13 +335,18 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% topProducts.forEach(product => { %>
-                                    <tr>
-                                        <td><%= product.name %></td>
-                                        <td><%= product.quantity %></td>
-                                        <td>₹<%= product.revenue.toFixed(2) %></td>
-                                    </tr>
-                                    <% }); %>
+                                    <% topProducts.forEach(product=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= product.name %>
+                                            </td>
+                                            <td>
+                                                <%= product.quantity %>
+                                            </td>
+                                            <td>₹<%= product.revenue.toFixed(2) %>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
                                 </tbody>
                             </table>
                         </div>
@@ -195,46 +367,18 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% topCategories.forEach(category => { %>
-                                    <tr>
-                                        <td><%= category.name %></td>
-                                        <td><%= category.quantity %></td>
-                                        <td>₹<%= category.revenue.toFixed(2) %></td>
-                                    </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Brands -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Top 10 Brands</h5>
-                        <div class="table-container">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Brand</th>
-                                        <th>Products</th>
-                                        <th>Sales</th>
-                                        <th>Revenue</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% topBrands.forEach(brand => { %>
-                                    <tr>
-                                        <td><%= brand.name %></td>
-                                        <td><%= brand.productCount %></td>
-                                        <td><%= brand.salesCount %></td>
-                                        <td>₹<%= brand.revenue.toFixed(2) %></td>
-                                    </tr>
-                                    <% }); %>
+                                    <% topCategories.forEach(category=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= category.name %>
+                                            </td>
+                                            <td>
+                                                <%= category.quantity %>
+                                            </td>
+                                            <td>₹<%= category.revenue.toFixed(2) %>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
                                 </tbody>
                             </table>
                         </div>
@@ -273,25 +417,38 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% orders.forEach(order => { %>
-                                    <tr>
-                                        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                                        <td><%= order.orderId %></td>
-                                        <td><%= order.userId ? order.userId.name : 'N/A' %></td>
-                                        <td>
-                                            <% order.orderItems.forEach(item => { %>
-                                                <span class="badge bg-info me-1"><%= item.productId ? item.productId.productName : 'N/A' %> (<%= item.quantity %>)</span>
-                                            <% }); %>
-                                        </td>
-                                        <td>₹<%= order.finalAmount.toFixed(2) %></td>
-                                        <td><span class="badge bg-secondary"><%= order.paymentMethod %></span></td>
-                                        <td>
-                                            <span class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-info' %>">
-                                                <%= order.status %>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <% }); %>
+                                    <% orders.forEach(order=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= new Date(order.createdAt).toLocaleDateString() %>
+                                            </td>
+                                            <td>
+                                                <%= order.orderId %>
+                                            </td>
+                                            <td>
+                                                <%= order.userId ? order.userId.name : 'N/A' %>
+                                            </td>
+                                            <td>
+                                                <% order.orderItems.forEach(item=> { %>
+                                                    <span class="badge bg-info me-1">
+                                                        <%= item.productId ? item.productId.productName : 'N/A' %> (
+                                                            <%= item.quantity %>)
+                                                    </span>
+                                                    <% }); %>
+                                            </td>
+                                            <td>₹<%= order.finalAmount.toFixed(2) %>
+                                            </td>
+                                            <td><span class="badge bg-secondary">
+                                                    <%= order.paymentMethod %>
+                                                </span></td>
+                                            <td>
+                                                <span
+                                                    class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-info' %>">
+                                                    <%= order.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
                                 </tbody>
                             </table>
                         </div>
@@ -306,6 +463,11 @@
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script>
+        // Theme Switching
+        function changeTheme(theme) {
+            document.body.className = theme;
+        }
+
         // Sales Chart
         const salesCtx = document.getElementById('salesChart').getContext('2d');
         let salesChart = new Chart(salesCtx, {
@@ -356,7 +518,6 @@
                     backgroundColor: [
                         '#007bff',
                         '#28a745',
-                        '#ffc107',
                         '#dc3545',
                         '#17a2b8'
                     ]
@@ -375,15 +536,15 @@
 
         // Filter Buttons
         document.querySelectorAll('.filter-btn').forEach(button => {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', async function () {
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
-                
+
                 const filter = this.dataset.filter;
                 try {
                     const response = await fetch(`/admin/dashboard/filter?filter=${filter}`);
                     const data = await response.json();
-                    
+
                     // Update sales chart
                     salesChart.data.labels = data.labels;
                     salesChart.data.datasets[0].data = data.sales;
@@ -395,7 +556,7 @@
         });
 
         // Initialize DataTable for Ledger
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#ledgerTable').DataTable({
                 order: [[0, 'desc']],
                 pageLength: 10,
@@ -405,14 +566,15 @@
             });
 
             // Export buttons
-            $('#exportExcel').click(function() {
+            $('#exportExcel').click(function () {
                 window.location.href = '/admin/download-report/excel?reportType=ledger';
             });
 
-            $('#exportPdf').click(function() {
+            $('#exportPdf').click(function () {
                 window.location.href = '/admin/download-report/pdf?reportType=ledger';
             });
         });
     </script>
-  </body>
+</body>
+
 </html>

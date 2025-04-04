@@ -272,7 +272,8 @@
                                 </thead>
                                 <tbody>
                                     <% reportData.orders.forEach(order => { %>
-                                        <tr>
+                                        <% if(order.status === 'Delivered'){ %>
+                                            <tr>
                                             <td><strong><%= order.orderId %></strong></td>
                                             <td><%= order.userId ? order.userId.name : 'N/A' %></td>
                                             <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
@@ -285,12 +286,14 @@
                                             <td>₹<%= (order.discount || 0).toFixed(2) %></td>
                                             <td><strong>₹<%= order.finalAmount.toFixed(2) %></strong></td>
                                             <td><span class="badge bg-secondary"><%= order.paymentMethod %></span></td>
+                                            
                                             <td>
                                                 <span class="status-badge badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-info' %>">
                                                     <%= order.status %>
                                                 </span>
                                             </td>
                                         </tr>
+                                        <% } %>
                                     <% }) %>
                                 </tbody>
                             </table>

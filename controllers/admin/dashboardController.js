@@ -72,19 +72,6 @@ const getDashboard = async (req, res) => {
             }}
         ]);
 
-        // Mock brands data since we don't have a brand field
-        const topBrands = [
-            { name: 'Brand 1', productCount: 15, salesCount: 120, revenue: 25000 },
-            { name: 'Brand 2', productCount: 12, salesCount: 100, revenue: 22000 },
-            { name: 'Brand 3', productCount: 10, salesCount: 90, revenue: 20000 },
-            { name: 'Brand 4', productCount: 8, salesCount: 80, revenue: 18000 },
-            { name: 'Brand 5', productCount: 7, salesCount: 70, revenue: 16000 },
-            { name: 'Brand 6', productCount: 6, salesCount: 60, revenue: 14000 },
-            { name: 'Brand 7', productCount: 5, salesCount: 50, revenue: 12000 },
-            { name: 'Brand 8', productCount: 4, salesCount: 40, revenue: 10000 },
-            { name: 'Brand 9', productCount: 3, salesCount: 30, revenue: 8000 },
-            { name: 'Brand 10', productCount: 2, salesCount: 20, revenue: 6000 }
-        ];
 
         // Get sales data for charts (last 30 days)
         const thirtyDaysAgo = new Date();
@@ -106,8 +93,8 @@ const getDashboard = async (req, res) => {
         const chartData = {
             labels: salesChartData.map(item => item._id),
             sales: salesChartData.map(item => item.total),
-            distributionLabels: ['Products', 'Categories', 'Brands', 'Other'],
-            distributionData: [40, 30, 20, 10]
+            distributionLabels: ['Products', 'Categories', 'Other'],
+            distributionData: [40, 30, 10]
         };
 
         // Get recent orders for ledger
@@ -124,7 +111,6 @@ const getDashboard = async (req, res) => {
             totalProducts,
             topProducts,
             topCategories,
-            topBrands,
             chartData,
             orders: recentOrders
         });
