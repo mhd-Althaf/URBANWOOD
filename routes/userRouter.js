@@ -9,6 +9,8 @@ const cartController = require("../controllers/user/cartController")
 const orderController = require("../controllers/user/orderController")
 const walletController = require("../controllers/user/walletController");
 const wishlistController = require("../controllers/user/wishlistController");
+const PDFDocument = require('pdfkit');
+const Order = require('../models/orderSchema');
 
 router.get("/", userController.loadHomepage);
 router.get("/pageNotFound", userController.pageNotFound);
@@ -150,5 +152,9 @@ router.post("/add-funds", userAuth, walletController.addFunds);
 router.post("/add-address", userAuth, profileController.addAddress);
 router.post("/edit-address/:addressId", userAuth, profileController.editAddress);
 router.post("/delete-address/:addressId", userAuth, profileController.deleteAddress);
+
+// Add invoice download route
+router.get('/downloadInvoice/:orderId', userAuth, orderController.downloadInvoice);
+
 
 module.exports = router;

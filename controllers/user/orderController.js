@@ -14,6 +14,7 @@ const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Coupon = require("../../models/couponSchema");
 const { log } = require("console");
+const PDFDocument = require("pdfkit");
 
 
 const razorpayInstance = new Razorpay({
@@ -1071,6 +1072,198 @@ const returnProduct = async (req, res) => {
     }
 };
 
+const downloadInvoice = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate('userId')
+            .populate('orderItems.productId');
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        // Create PDF document with premium settings
+        const doc = new PDFDocument({
+            size: 'A4',
+            margin: 50,
+            bufferPages: true
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+        doc.pipe(res);
+
+        // Add company logo and details
+        try {
+            await doc.image('public/assets/images/logo.png', 50, 50, { width: 100 });
+        } catch (err) {
+            console.log('Error loading logo:', err);
+            // Continue without logo if there's an error
+        }
+        
+        // Company Header with premium styling
+        doc.fontSize(24)
+           .font('Helvetica-Bold')
+           .fillColor('#2c3e50')
+           .text('URBANWOOD', 200, 50);
+        
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#34495e')
+           .text('123 Furniture Street', 200, 80)
+           .text('City, State - 123456', 200, 95)
+           .text('Phone: +91 1234567890', 200, 110)
+           .text('Email: info@urbanwood.com', 200, 125);
+
+        // Draw a decorative line
+        doc.moveTo(50, 150)
+           .lineTo(550, 150)
+           .strokeColor('#2c3e50')
+           .stroke();
+
+        // Invoice Title
+        doc.fontSize(20)
+           .font('Helvetica-Bold')
+           .fillColor('#2c3e50')
+           .text('INVOICE', { align: 'center' })
+           .moveDown();
+
+        // Invoice Details Box
+        doc.rect(50, 180, 500, 60)
+           .strokeColor('#2c3e50')
+           .stroke();
+        
+        doc.fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Invoice Number:', 60, 190)
+           .text('Date:', 60, 210);
+        
+        doc.fontSize(12)
+           .font('Helvetica')
+           .text(order.orderId, 200, 190)
+           .text(new Date(order.createdAt).toLocaleDateString(), 200, 210);
+
+        // Customer Details Box
+        doc.rect(50, 260, 500, 100)
+           .strokeColor('#2c3e50')
+           .stroke();
+        
+        doc.fontSize(14)
+           .font('Helvetica-Bold')
+           .text('Customer Details:', 60, 270);
+        
+        doc.fontSize(12)
+           .font('Helvetica')
+           .text(`Name: ${order.userId.name}`, 60, 290)
+           .text(`Email: ${order.userId.email}`, 60, 310)
+           .text(`Phone: ${order.userId.phone || 'N/A'}`, 60, 330);
+
+        // Shipping Address
+        if (order.address) {
+            doc.text(`Address: ${order.address.addressType || ''}`, 60, 350)
+               .text(`${order.address.landMark || ''}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`, 60, 370);
+        }
+
+        // Draw a decorative line
+        doc.moveTo(50, 380)
+           .lineTo(550, 380)
+           .strokeColor('#2c3e50')
+           .stroke();
+
+        // Order Items Table
+        doc.fontSize(14)
+           .font('Helvetica-Bold')
+           .text('Order Items:', 50, 400);
+        
+        const tableTop = 420;
+        const tableLeft = 50;
+        const colWidth = 120;
+        const rowHeight = 30;
+
+        // Table Header
+        doc.rect(tableLeft, tableTop, 500, rowHeight)
+           .fillColor('#f8f9fa')
+           .fill()
+           .strokeColor('#2c3e50')
+           .stroke();
+        
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .text('Product', tableLeft + 10, tableTop + 10)
+           .text('Price', tableLeft + colWidth, tableTop + 10)
+           .text('Quantity', tableLeft + colWidth * 2, tableTop + 10)
+           .text('Total', tableLeft + colWidth * 3, tableTop + 10);
+
+        // Table Rows
+        let y = tableTop + rowHeight;
+        order.orderItems.forEach(item => {
+            if (y > 700) {
+                doc.addPage();
+                y = 50;
+            }
+
+            doc.rect(tableLeft, y, 500, rowHeight)
+               .strokeColor('#e9ecef')
+               .stroke();
+            
+            doc.fontSize(8)
+               .font('Helvetica')
+               .text(item.productId.productName, tableLeft + 10, y + 10)
+               .text(`₹${item.price.toFixed(2)}`, tableLeft + colWidth, y + 10)
+               .text(item.quantity.toString(), tableLeft + colWidth * 2, y + 10)
+               .text(`₹${(item.price * item.quantity).toFixed(2)}`, tableLeft + colWidth * 3, y + 10);
+
+            y += rowHeight;
+        });
+
+        // Order Summary Box
+        doc.rect(tableLeft, y + 20, 500, 120)
+           .strokeColor('#2c3e50')
+           .stroke();
+        
+        y += 40;
+        doc.fontSize(10)
+           .font('Helvetica')
+           .text('Subtotal:', tableLeft + colWidth * 2, y)
+           .text(`₹${(order.subTotal || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
+        
+        y += 20;
+        doc.text('Shipping:', tableLeft + colWidth * 2, y)
+           .text(`₹${(order.shippingCost || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
+        
+        y += 20;
+        doc.text('Discount:', tableLeft + colWidth * 2, y)
+           .text(`₹${(order.discount || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
+        
+        y += 20;
+        doc.fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Total:', tableLeft + colWidth * 2, y)
+           .text(`₹${(order.finalAmount || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
+
+        // Payment Details Box
+        doc.rect(tableLeft, y + 40, 500, 60)
+           .strokeColor('#2c3e50')
+           .stroke();
+        
+        y += 60;
+        doc.fontSize(10)
+           .font('Helvetica')
+           .text(`Payment Method: ${order.paymentMethod}`, tableLeft + 10, y)
+           .text(`Payment Status: ${order.paymentStatus}`, tableLeft + 10, y + 20)
+           .text(`Order Status: ${order.status}`, tableLeft + 10, y + 40);
+
+        // Footer
+        doc.fontSize(8)
+           .text('Thank you for shopping with URBANWOOD!', { align: 'center' })
+           .text('This is a computer-generated invoice and does not require a signature.', { align: 'center' });
+
+        doc.end();
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).send('Error generating invoice');
+    }
+};
+
 module.exports = {
     validateObjectId,
     checkStockStatus,
@@ -1087,5 +1280,6 @@ module.exports = {
     applyCoupon,
     userOrderDetails,
     processWalletPayment,
-    returnProduct
+    returnProduct,
+    downloadInvoice
 };
