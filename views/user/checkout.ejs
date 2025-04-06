@@ -355,22 +355,34 @@
                     <!-- Payment Section -->
                     <div class="sidebar-card payment-section">
                         <h2 class="section-title">Payment Method</h2>
-                        <div class="payment-option">
-                            <input class="form-check-input" type="radio" name="payment" id="Razorpay" value="Razorpay">
-                            <label class="form-check-label" for="Razorpay"><i class="fas fa-credit-card text-primary"></i> Online Payment (Razorpay)</label>
-                        </div>
-                        <div class="payment-option">
-                            <input class="form-check-input" type="radio" name="payment" id="wallet" value="wallet" <%= parseFloat(user?.wallet || 0) < grandTotal ? 'disabled' : '' %>>
-                            <label class="form-check-label <%= parseFloat(user?.wallet || 0) < grandTotal ? 'text-muted' : '' %>" for="wallet">
-                                <i class="fas fa-wallet text-warning"></i> Wallet (₹<%= parseFloat(user?.wallet || 0).toFixed(2) %>)
-                                <% if (parseFloat(user?.wallet || 0) < grandTotal) { %>
-                                    <span class="text-danger small">Insufficient balance</span>
-                                <% } %>
-                            </label>
-                        </div>
-                        <div class="payment-option">
-                            <input class="form-check-input" type="radio" name="payment" id="cod" value="cod">
-                            <label class="form-check-label" for="cod"><i class="fas fa-money-bill-wave"></i> Cash on Delivery</label>
+                        <div class="payment-methods">
+                            <h5 class="mb-3">Payment Method</h5>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay" checked>
+                                <label class="form-check-label" for="razorpay">
+                                    <i class="fas fa-credit-card me-2"></i>Online Payment
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="Wallet" 
+                                    <%= user.wallet >= grandTotal ? '' : 'disabled' %>>
+                                <label class="form-check-label <%= user.wallet >= grandTotal ? '' : 'text-muted' %>" for="wallet">
+                                    <i class="fas fa-wallet me-2"></i>Wallet Balance (₹<%= user.wallet.toFixed(2) %>)
+                                    <% if (user.wallet < grandTotal) { %>
+                                        <small class="text-danger d-block">Insufficient wallet balance</small>
+                                    <% } %>
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" 
+                                    <%= grandTotal <= 1000 ? '' : 'disabled' %>>
+                                <label class="form-check-label <%= grandTotal <= 1000 ? '' : 'text-muted' %>" for="cod">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                                    <% if (grandTotal > 1000) { %>
+                                        <small class="text-danger d-block">Cash on Delivery not allowed for orders above ₹1000</small>
+                                    <% } %>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -710,7 +722,7 @@
             // Address Selection
             const addressCards = document.querySelectorAll('.address-card');
             const addressRadios = document.querySelectorAll('input[name="selectedAddress"]');
-            const paymentRadios = document.querySelectorAll('input[name="payment"]');
+            const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
             const placeOrderBtn = document.getElementById('placeOrderBtn');
             const walletBalance = <%= parseFloat(user?.wallet || 0) %>;
             const grandTotal = <%= grandTotal %>;
@@ -722,7 +734,7 @@
 
             // Validate payment method selection
             function validatePaymentMethod() {
-                const selectedPayment = document.querySelector('input[name="payment"]:checked');
+                const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
                 if (!selectedPayment) {
                     Swal.fire('Error', 'Please select a payment method', 'error');
                     return false;
@@ -761,7 +773,7 @@
                     return;
                 }
 
-                const selectedPayment = document.querySelector('input[name="payment"]:checked');
+                const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
                 const addressId = selectedAddress.value;
                 const paymentMethod = selectedPayment.value;
                 
@@ -970,6 +982,52 @@
                     console.error('Coupon application error:', error);
                     Swal.fire('Error', 'An error occurred while applying the coupon. Please try again.', 'error');
                 });
+            }
+
+            // Update payment method selection
+            $('input[name="paymentMethod"]').change(function() {
+                const selectedMethod = $(this).val();
+                const grandTotal = <%= grandTotal %>;
+                
+                if (selectedMethod === 'COD' && grandTotal > 1000) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Method Not Available',
+                        text: 'Cash on Delivery is not allowed for orders above ₹1000',
+                        confirmButtonColor: '#2c3e50'
+                    });
+                    $(this).prop('checked', false);
+                    $('#razorpay').prop('checked', true);
+                    return;
+                }
+                
+                if (selectedMethod === 'Wallet' && <%= user.wallet %> < grandTotal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Insufficient Balance',
+                        text: 'Your wallet balance is not sufficient for this order',
+                        confirmButtonColor: '#2c3e50'
+                    });
+                    $(this).prop('checked', false);
+                    $('#razorpay').prop('checked', true);
+                    return;
+                }
+                
+                updatePaymentUI(selectedMethod);
+            });
+
+            function updatePaymentUI(method) {
+                // Reset all payment sections
+                $('.payment-section').addClass('d-none');
+                
+                // Show selected payment section
+                $(`#${method.toLowerCase()}-section`).removeClass('d-none');
+                
+                // Update place order button text
+                const buttonText = method === 'COD' ? 'Place Order (Cash on Delivery)' : 
+                                  method === 'Wallet' ? 'Place Order (Wallet Payment)' : 
+                                  'Proceed to Payment';
+                $('#placeOrderBtn').text(buttonText);
             }
         });
     </script>
