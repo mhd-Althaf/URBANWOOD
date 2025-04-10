@@ -156,5 +156,7 @@ router.post("/delete-address/:addressId", userAuth, profileController.deleteAddr
 // Add invoice download route
 router.get('/downloadInvoice/:orderId', userAuth, orderController.downloadInvoice);
 
+// Payment failed route
+router.get('/payment-failed/:orderId', userAuth, orderController.paymentFailed);
 
 module.exports = router;

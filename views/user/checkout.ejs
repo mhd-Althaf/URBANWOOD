@@ -286,14 +286,22 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% cartItems.forEach(item => { %>
-                            <tr>
-                                <td><img class="product-img" src="/uploads/product-images/<%= item.product.productImages[0] %>" alt="<%= item.product.productName %>"></td>
-                                <td><%= item.product.productName %></td>
-                                <td><%= item.quantity %></td>
-                                <td>₹<%= item.total.toLocaleString() %></td>
-                            </tr>
-                            <% }) %>
+                            <% if (cartItems && cartItems.length > 0) { %>
+                                <% cartItems.forEach(item => { %>
+                                    <% if (item) { %>
+                                    <tr>
+                                        <td><img class="product-img" src="/uploads/product-images/<%= item.product ? item.product.productImages[0] : 'default.jpg' %>" alt="<%= item.product ? item.product.productName : 'Product' %>"></td>
+                                        <td><%= item.product ? item.product.productName : 'Product Unavailable' %></td>
+                                        <td><%= item.quantity %></td>
+                                        <td>₹<%= item.total.toLocaleString() %></td>
+                                    </tr>
+                                    <% } %>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="4" class="text-center">No items in cart</td>
+                                </tr>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
@@ -333,7 +341,7 @@
                                     </label>
                                 </div>
                                 <div class="address-actions">
-                                    <button class="edit-btn" onclick='openEditAddressModal("<%= address._id %>", <%= JSON.stringify(address) %>)'>
+                                    <button class="edit-btn" data-address-id="<%= address._id %>" data-address="<%= JSON.stringify(address) %>">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
                                     <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">
@@ -521,13 +529,33 @@
         </div>
     </div>
 
+    <div id="serverData" 
+        data-subtotal="<%- subtotal %>"
+        data-shipping-cost="<%- shippingCost %>"
+        data-user-wallet="<%- user?.wallet || 0 %>"
+        data-grand-total="<%- grandTotal %>"
+        style="display: none;">
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
-        // Define global variables
-        const originalSubtotal = <%= subtotal %>;
-        const originalShippingCost = <%= shippingCost %>;
+        // Get server-side variables from data attributes
+        const serverData = document.getElementById('serverData');
+        const serverVars = {
+            subtotal: Number(serverData.dataset.subtotal),
+            shippingCost: Number(serverData.dataset.shippingCost),
+            userWallet: Number(serverData.dataset.userWallet),
+            grandTotal: Number(serverData.dataset.grandTotal)
+        };
+
+        // Use the safely parsed variables
+        const originalSubtotal = serverVars.subtotal;
+        const originalShippingCost = serverVars.shippingCost;
+        const userWalletBalance = serverVars.userWallet;
+        const initialGrandTotal = serverVars.grandTotal;
         
         // Function declarations (moved outside of DOMContentLoaded)
         function selectCoupon(couponCode) {
@@ -724,42 +752,64 @@
             const addressRadios = document.querySelectorAll('input[name="selectedAddress"]');
             const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
             const placeOrderBtn = document.getElementById('placeOrderBtn');
-            const walletBalance = <%= parseFloat(user?.wallet || 0) %>;
-            const grandTotal = <%= grandTotal %>;
             
-            function updateSelectedState(selectedCard) {
-                addressCards.forEach(card => card.classList.remove('selected'));
-                selectedCard.classList.add('selected');
-            }
+            // Fix the edit address modal button
+            const editAddressButtons = document.querySelectorAll('.edit-btn');
+            editAddressButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const addressId = this.closest('.address-card').dataset.addressId;
+                    const addressData = JSON.parse(this.dataset.address || '{}');
+                    openEditAddressModal(addressId, addressData);
+                });
+            });
 
-            // Validate payment method selection
+            // Update payment method selection
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    const selectedMethod = this.value;
+                    const grandTotalValue = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', '').replace(/,/g, ''));
+                    const userWalletValue = parseFloat(document.getElementById('serverData').dataset.userWallet);
+                    
+                    if (selectedMethod === 'COD' && grandTotalValue > 1000) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Method Not Available',
+                            text: 'Cash on Delivery is not allowed for orders above ₹1000',
+                            confirmButtonColor: '#2c3e50'
+                        });
+                        this.checked = false;
+                        document.getElementById('razorpay').checked = true;
+                        return;
+                    }
+                    
+                    if (selectedMethod === 'Wallet' && userWalletValue < grandTotalValue) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Insufficient Balance',
+                            text: 'Your wallet balance is not sufficient for this order',
+                            confirmButtonColor: '#2c3e50'
+                        });
+                        this.checked = false;
+                        document.getElementById('razorpay').checked = true;
+                        return;
+                    }
+                    
+                    updatePaymentUI(selectedMethod);
+                });
+            });
+
+            // Function to validate payment method selection
             function validatePaymentMethod() {
-                const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
-                if (!selectedPayment) {
-                    Swal.fire('Error', 'Please select a payment method', 'error');
+                const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+                if (!selectedMethod) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Method Required',
+                        text: 'Please select a payment method to continue',
+                        confirmButtonColor: '#2c3e50'
+                    });
                     return false;
                 }
-
-                if (selectedPayment.value === 'wallet') {
-                    const currentGrandTotal = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', '').replace(/,/g, ''));
-                    
-                    if (walletBalance < currentGrandTotal) {
-                        Swal.fire({
-                            title: 'Insufficient Balance',
-                            text: `Your wallet balance (₹${walletBalance.toFixed(2)}) is less than the order total (₹${currentGrandTotal.toFixed(2)})`,
-                            icon: 'error',
-                            confirmButtonText: 'Add Funds',
-                            showCancelButton: true,
-                            cancelButtonText: 'Choose Another Method'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/wallet';
-                            }
-                        });
-                        return false;
-                    }
-                }
-
                 return true;
             }
 
@@ -811,7 +861,7 @@
                     }
 
                     // Handle payment based on method
-                    if (paymentMethod === 'wallet') {
+                    if (paymentMethod === 'Wallet') {
                         const walletResponse = await fetch('/wallet-payment', {
                             method: 'POST',
                             headers: {
@@ -838,96 +888,205 @@
                         });
                         return;
                     } else if (paymentMethod === 'Razorpay') {
-                        // Create Razorpay order
-                        const razorpayResponse = await fetch('/createRazorpayOrder', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                orderAmount: currentGrandTotal
-                            })
-                        });
+                        try {
+                            // Create Razorpay order
+                            const razorpayResponse = await fetch('/createRazorpayOrder', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    orderAmount: currentGrandTotal
+                                })
+                            });
 
-                        const razorpayData = await razorpayResponse.json();
-                        if (!razorpayData.success) {
-                            throw new Error(razorpayData.message);
-                        }
-
-                        // Initialize Razorpay
-                        const options = {
-                            key: razorpayData.key,
-                            amount: razorpayData.amount,
-                            currency: razorpayData.currency,
-                            name: "URBANWOOD",
-                            description: "Purchase Payment",
-                            order_id: razorpayData.razorpayOrderId,
-                            handler: async function(response) {
-                                try {
-                                    console.log("Razorpay payment successful, verifying with server:", response);
-                                    
-                                    const verifyResponse = await fetch('/payment', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            razorpay_order_id: response.razorpay_order_id,
-                                            razorpay_payment_id: response.razorpay_payment_id,
-                                            razorpay_signature: response.razorpay_signature,
-                                            orderId: orderResult.order._id,
-                                            amount: currentGrandTotal
-                                        })
-                                    });
-
-                                    const verifyData = await verifyResponse.json();
-                                    console.log("Payment verification response:", verifyData);
-                                    
-                                    if (verifyData.success) {
-                                        Swal.fire({
-                                            title: 'Payment Successful!',
-                                            text: 'Your order has been placed successfully and payment has been received.',
-                                            icon: 'success',
-                                            confirmButtonText: 'View My Orders'
-                                        }).then(() => {
-                                            window.location.href = '/orders';
-                                        });
-                                    } else {
-                                        throw new Error(verifyData.message || "Payment verification failed");
-                                    }
-                                } catch (error) {
-                                    console.error("Payment verification error:", error);
-                                    Swal.fire({
-                                        title: 'Payment Error',
-                                        text: error.message || 'An error occurred during payment verification. Please contact support with your order ID.',
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    });
-                                }
-                            },
-                            prefill: {
-                                name: razorpayData.userName,
-                                email: razorpayData.userEmail,
-                                contact: razorpayData.userContact
-                            },
-                            theme: {
-                                color: "#088178"
+                            const razorpayData = await razorpayResponse.json();
+                            if (!razorpayData.success) {
+                                throw new Error(razorpayData.message || 'Failed to create Razorpay order');
                             }
-                        };
 
-                        const rzp = new Razorpay(options);
-                        rzp.open();
+                            // Initialize Razorpay with improved options
+                            const options = {
+                                key: razorpayData.key,
+                                amount: razorpayData.amount,
+                                currency: razorpayData.currency,
+                                name: "URBANWOOD",
+                                description: "Purchase Payment",
+                                image: "https://firebasestorage.googleapis.com/v0/b/ecommerce-397a7.appspot.com/o/logo.jpg?alt=media&token=07b6be19-1ce8-4797-a3a0-f0eaeaafedad",
+                                order_id: razorpayData.razorpayOrderId,
+                                handler: async function(response) {
+                                    try {
+                                        console.log("Razorpay payment successful, verifying with server:", response);
+                                        
+                                        const verifyResponse = await fetch('/payment', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify({
+                                                razorpay_order_id: response.razorpay_order_id,
+                                                razorpay_payment_id: response.razorpay_payment_id,
+                                                razorpay_signature: response.razorpay_signature,
+                                                orderId: orderResult.order._id,
+                                                amount: currentGrandTotal
+                                            })
+                                        });
+
+                                        const verifyData = await verifyResponse.json();
+                                        console.log("Payment verification response:", verifyData);
+                                        
+                                        if (verifyData.success) {
+                                            // Get the redirect URL and redirect immediately
+                                            const redirectUrl = verifyData.redirect || `/orders?payment=success`;
+                                            window.location.replace(redirectUrl);
+                                        } else {
+                                            throw new Error(verifyData.message || 'Payment verification failed');
+                                        }
+                                    } catch (error) {
+                                        console.error("Payment verification error:", error);
+                                        Swal.fire({
+                                            title: 'Payment Verification Failed',
+                                            text: error.message || 'Failed to verify payment. Please contact support.',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            window.location.href = `/payment-failed/${orderResult.order._id}`;
+                                        });
+                                    }
+                                },
+                                prefill: {
+                                    name: razorpayData.userName,
+                                    email: razorpayData.userEmail,
+                                    contact: razorpayData.userContact
+                                },
+                                theme: {
+                                    color: "#088178"
+                                },
+                                modal: {
+                                    ondismiss: function() {
+                                        console.log('Payment modal closed');
+                                        // Optionally handle modal dismissal
+                                    },
+                                    escape: false,
+                                    backdropclose: false,
+                                    popup: true
+                                },
+                                config: {
+                                    display: {
+                                        blocks: {
+                                            banks: {
+                                                name: 'Pay using Net Banking',
+                                                instruments: [
+                                                    {
+                                                        method: 'netbanking'
+                                                    }
+                                                ]
+                                            },
+                                            upi: {
+                                                name: 'Pay using UPI',
+                                                instruments: [
+                                                    {
+                                                        method: 'upi'
+                                                    }
+                                                ]
+                                            },
+                                            card: {
+                                                name: 'Pay using Card',
+                                                instruments: [
+                                                    {
+                                                        method: 'card'
+                                                    }
+                                                ]
+                                            },
+                                            wallet: {
+                                                name: 'Pay using Wallet',
+                                                instruments: [
+                                                    {
+                                                        method: 'wallet'
+                                                    }
+                                                ]
+                                            },
+                                            emi: {
+                                                name: 'Pay using EMI',
+                                                instruments: [
+                                                    {
+                                                        method: 'emi'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        sequence: ['block.banks', 'block.upi', 'block.card', 'block.wallet', 'block.emi'],
+                                        preferences: {
+                                            show_default_blocks: true
+                                        }
+                                    }
+                                }
+                            };
+
+                            // Check if Razorpay is loaded
+                            if (typeof Razorpay === 'undefined') {
+                                throw new Error('Razorpay is not loaded. Please disable your ad blocker and try again.');
+                            }
+
+                            const rzp = new Razorpay(options);
+                            
+                            // Add error handlers
+                            rzp.on('payment.failed', function(response) {
+                                console.error('Payment failed:', response.error);
+                                Swal.fire({
+                                    title: 'Payment Failed',
+                                    text: response.error.description || 'Payment failed. Please try again.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    window.location.href = `/payment-failed/${orderResult.order._id}`;
+                                });
+                            });
+
+                            // Handle initialization errors
+                            rzp.on('error', function(error) {
+                                console.error('Razorpay error:', error);
+                                Swal.fire({
+                                    title: 'Payment Error',
+                                    text: 'There was an error initializing the payment. Please try again or choose a different payment method.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+
+                            // Open Razorpay modal
+                            try {
+                                rzp.open();
+                            } catch (error) {
+                                console.error('Error opening Razorpay modal:', error);
+                                throw new Error('Failed to open payment window. Please disable your ad blocker and try again.');
+                            }
+                        } catch (error) {
+                            console.error('Razorpay initialization error:', error);
+                            Swal.fire({
+                                title: 'Payment Error',
+                                text: error.message || 'Failed to initialize payment. Please try again.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                        return;
+                    } else if (paymentMethod === 'COD') {
+                        // For COD orders, just show success message
+                        Swal.fire({
+                            title: 'Order Placed Successfully!',
+                            text: 'Your order has been placed. You will pay when the order is delivered.',
+                            icon: 'success',
+                            confirmButtonText: 'View My Orders'
+                        }).then(() => {
+                            window.location.href = '/orders';
+                        });
                         return;
                     }
 
-                    // For wallet payments or other methods
-                    Swal.fire('Success', 'Order placed successfully!', 'success')
-                        .then(() => {
-                            window.location.href = '/orders';
-                        });
-
                 } catch (error) {
-                    Swal.fire('Error', error.message, 'error');
+                    console.error('Error placing order:', error);
+                    Swal.fire('Error', error.message || 'Failed to place order. Please try again.', 'error');
                 }
             });
 
@@ -1018,16 +1177,21 @@
 
             function updatePaymentUI(method) {
                 // Reset all payment sections
-                $('.payment-section').addClass('d-none');
+                document.querySelectorAll('.payment-section').forEach(section => {
+                    section.classList.add('d-none');
+                });
                 
                 // Show selected payment section
-                $(`#${method.toLowerCase()}-section`).removeClass('d-none');
+                const selectedSection = document.getElementById(`${method.toLowerCase()}-section`);
+                if (selectedSection) {
+                    selectedSection.classList.remove('d-none');
+                }
                 
                 // Update place order button text
                 const buttonText = method === 'COD' ? 'Place Order (Cash on Delivery)' : 
-                                  method === 'Wallet' ? 'Place Order (Wallet Payment)' : 
-                                  'Proceed to Payment';
-                $('#placeOrderBtn').text(buttonText);
+                                 method === 'Wallet' ? 'Place Order (Wallet Payment)' : 
+                                 'Proceed to Payment';
+                document.getElementById('placeOrderBtn').textContent = buttonText;
             }
         });
     </script>

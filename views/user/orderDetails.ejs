@@ -276,6 +276,11 @@
                                                 <span class="badge <%= (order.paymentStatus === 'Paid' || order.paymentStatus === 'paid') ? 'bg-success' : 'bg-warning' %>">
                                                     <%= order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus %>
                                                 </span>
+                                                <% if (order.paymentStatus === 'Pending' &&  order.paymentMethod === 'Razorpay' && order.status !== "Delivered" && order.status !== "Cancelled" ) { %>
+                                                    <button id="retryPaymentBtn" class="btn btn-sm btn-primary ms-2" data-order-id="<%= order._id %>" data-order-amount="<%= order.finalAmount %>">
+                                                        <i class="fas fa-redo"></i> Retry Payment
+                                                    </button>
+                                                <% } %>
                                             </p>
                                         </div>
                                     </div>
@@ -328,8 +333,7 @@
                                                                         <h6 class="product-name">
                                                                             <%= item.name %>
                                                                         </h6>
-                                                                        <p class="mb-1 text-muted">SKU: <%= item.productId._id
-                                                                                %>
+                                                                        <p class="mb-1 text-muted">SKU: <%= item.productId ? item.productId._id : 'N/A' %>
                                                                         </p>
                                                                     </div>
                                                                     <div class="text-end">
@@ -441,8 +445,26 @@
             <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
             <script>
+                // Check if payment was successful and show success message
+                document.addEventListener('DOMContentLoaded', function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('payment') === 'success') {
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: 'Your order has been placed successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                        
+                        // Remove the payment parameter from the URL without refreshing the page
+                        const newUrl = window.location.pathname;
+                        window.history.replaceState({}, document.title, newUrl);
+                    }
+                });
+
                 // Helper function to get the appropriate status badge
                 function getStatusBadge(status) {
                     let badgeClass = '';
@@ -469,17 +491,13 @@
                             badgeClass = 'bg-danger';
                             statusText = 'Cancelled';
                             break;
-                        case 'Return_Requested':
+                        case 'Return Requested':
                             badgeClass = 'bg-warning';
-                            statusText = 'Return Requested - Waiting for Approval';
+                            statusText = 'Return Requested';
                             break;
                         case 'Returned':
-                            badgeClass = 'bg-success';
-                            statusText = 'Return Approved - Refund Processed';
-                            break;
-                        case 'Return_Rejected':
-                            badgeClass = 'bg-danger';
-                            statusText = 'Return Rejected';
+                            badgeClass = 'bg-info';
+                            statusText = 'Returned';
                             break;
                         default:
                             badgeClass = 'bg-secondary';
@@ -660,6 +678,192 @@
                         color: '#333'
                     });
                 }
+
+                // Retry Payment Function
+                document.addEventListener('DOMContentLoaded', function() {
+                    const retryPaymentBtn = document.getElementById('retryPaymentBtn');
+                    
+                    if (retryPaymentBtn) {
+                        retryPaymentBtn.addEventListener('click', async function() {
+                            const orderId = this.getAttribute('data-order-id');
+                            const orderAmount = parseFloat(this.getAttribute('data-order-amount'));
+                            
+                            if (!orderAmount || isNaN(orderAmount)) {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'Invalid order amount. Please try again later.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+                            
+                            try {
+                                // Show loading state
+                                Swal.fire({
+                                    title: 'Processing Payment',
+                                    text: 'Please wait while we set up your payment...',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+                                
+                                // Create Razorpay order
+                                const response = await fetch('/createRazorpayOrder', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        orderAmount: orderAmount
+                                    })
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (!data.success) {
+                                    throw new Error(data.message || 'Failed to create payment order');
+                                }
+                                
+                                // Close loading dialog
+                                Swal.close();
+                                
+                                // Initialize Razorpay with improved options including netbanking
+                                const options = {
+                                    key: data.key,
+                                    amount: data.amount,
+                                    currency: data.currency,
+                                    name: "URBANWOOD",
+                                    description: "Order Payment",
+                                    image: "https://firebasestorage.googleapis.com/v0/b/ecommerce-397a7.appspot.com/o/logo.jpg?alt=media&token=07b6be19-1ce8-4797-a3a0-f0eaeaafedad",
+                                    order_id: data.razorpayOrderId,
+                                    handler: async function(response) {
+                                        try {
+                                            // Show processing payment dialog
+                                            Swal.fire({
+                                                title: 'Verifying Payment',
+                                                text: 'Please wait while we verify your payment...',
+                                                allowOutsideClick: false,
+                                                didOpen: () => {
+                                                    Swal.showLoading();
+                                                }
+                                            });
+                                            
+                                            // Verify payment with server
+                                            const verifyResponse = await fetch('/payment', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json'
+                                                },
+                                                body: JSON.stringify({
+                                                    razorpay_order_id: response.razorpay_order_id,
+                                                    razorpay_payment_id: response.razorpay_payment_id,
+                                                    razorpay_signature: response.razorpay_signature,
+                                                    orderId: orderId,
+                                                    amount: orderAmount
+                                                })
+                                            });
+                                            
+                                            const verifyData = await verifyResponse.json();
+                                            
+                                            if (verifyData.success) {
+                                                Swal.fire({
+                                                    title: 'Payment Successful!',
+                                                    text: 'Your payment has been processed successfully.',
+                                                    icon: 'success',
+                                                    confirmButtonText: 'OK'
+                                                }).then(() => {
+                                                    // Reload the page to show updated status
+                                                    window.location.reload();
+                                                });
+                                            } else {
+                                                // Payment verification failed
+                                                window.location.href = `/payment-failed/${orderId}`;
+                                            }
+                                        } catch (error) {
+                                            console.error('Payment verification error:', error);
+                                            // Redirect to payment failed page
+                                            window.location.href = `/payment-failed/${orderId}`;
+                                        }
+                                    },
+                                    prefill: {
+                                        name: data.userName,
+                                        email: data.userEmail,
+                                        contact: data.userContact
+                                    },
+                                    theme: {
+                                        color: "#088178"
+                                    },
+                                    // Enable netbanking and other payment methods
+                                    config: {
+                                        display: {
+                                            blocks: {
+                                                banks: {
+                                                    name: 'Pay using Net Banking',
+                                                    instruments: [
+                                                        {
+                                                            method: 'netbanking'
+                                                        }
+                                                    ]
+                                                },
+                                                upi: {
+                                                    name: 'Pay using UPI',
+                                                    instruments: [
+                                                        {
+                                                            method: 'upi'
+                                                        }
+                                                    ]
+                                                },
+                                                card: {
+                                                    name: 'Pay using Card',
+                                                    instruments: [
+                                                        {
+                                                            method: 'card'
+                                                        }
+                                                    ]
+                                                },
+                                                wallet: {
+                                                    name: 'Pay using Wallet',
+                                                    instruments: [
+                                                        {
+                                                            method: 'wallet'
+                                                        }
+                                                    ]
+                                                },
+                                                emi: {
+                                                    name: 'Pay using EMI',
+                                                    instruments: [
+                                                        {
+                                                            method: 'emi'
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            sequence: ['block.banks', 'block.upi', 'block.card', 'block.wallet', 'block.emi'],
+                                            preferences: {
+                                                show_default_blocks: true
+                                            }
+                                        }
+                                    }
+                                };
+                                
+                                // Open Razorpay checkout
+                                const rzp = new Razorpay(options);
+                                rzp.open();
+                                
+                            } catch (error) {
+                                console.error('Error processing payment:', error);
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: error.message || 'An error occurred while processing your payment. Please try again.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        });
+                    }
+                });
             </script>
 </body>
 

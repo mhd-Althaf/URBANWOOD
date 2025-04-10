@@ -18,8 +18,14 @@ const getCartPage = async (req, res) => {
                 .populate('category')
                 .lean();
             
+            // Skip if product doesn't exist
+            if (!product) {
+                console.log(`Product with ID ${item.productId} not found`);
+                return null;
+            }
+            
             // Calculate the highest applicable offer
-            const categoryOffer = product.category?.categoryOffer || 0;
+            const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
             const productOffer = product.productOffer || 0;
             const totalOffer = Math.max(categoryOffer, productOffer);
             
@@ -41,13 +47,21 @@ const getCartPage = async (req, res) => {
             };
         }));
 
+        // Filter out null items (products that don't exist)
+        const validCartItems = cartItems.filter(item => item !== null);
+        
+        // If all items are invalid, return empty cart
+        if (validCartItems.length === 0) {
+            return res.render('user/cart', { cartItems: [], subtotal: 0, shippingCost: 0, grandTotal: 0 });
+        }
+
         // Calculate totals
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+        const subtotal = validCartItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
         const shippingCost = subtotal > 1000 ? 0 : 100;
         const grandTotal = subtotal + shippingCost;
 
         res.render('user/cart', {
-            cartItems,
+            cartItems: validCartItems,
             subtotal,
             shippingCost,
             grandTotal,

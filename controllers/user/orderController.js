@@ -123,7 +123,7 @@ const updateCartQuantity = async (req, res) => {
         const subtotal = populatedCart.items.reduce((total, item) => {
             const product = item.productId;
             // Calculate the highest applicable offer
-            const categoryOffer = product.category?.categoryOffer || 0;
+            const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
             const productOffer = product.productOffer || 0;
             const totalOffer = Math.max(categoryOffer, productOffer);
             
@@ -182,6 +182,11 @@ const removeFromCart = async (req, res) => {
             .populate('items.productId');
 
         const subtotal = populatedCart.items.reduce((total, item) => {
+            // Skip if product doesn't exist
+            if (!item.productId) {
+                console.log(`Product with ID ${item.productId} not found`);
+                return total;
+            }
             return total + (item.productId.salePrice * item.quantity);
         }, 0);
 
@@ -220,7 +225,14 @@ const getCheckoutPage = async (req, res) => {
 
         const cartItems = cart.items.map(item => {
             const product = item.productId;
-            const categoryOffer = product.category?.categoryOffer || 0;
+            
+            // Skip if product doesn't exist
+            if (!product) {
+                console.log(`Product with ID ${item.productId} not found`);
+                return null;
+            }
+            
+            const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
             const productOffer = product.productOffer || 0;
             const totalOffer = Math.max(categoryOffer, productOffer);
             const finalPrice = product.regularPrice - totalOffer;
@@ -233,7 +245,15 @@ const getCheckoutPage = async (req, res) => {
             };
         });
 
-        const subtotal = cartItems.reduce((sum, item) => sum + item.total, 0);
+        // Filter out null items (products that don't exist)
+        const validCartItems = cartItems.filter(item => item !== null);
+        
+        // If all items are invalid, return empty cart
+        if (validCartItems.length === 0) {
+            return res.redirect('/cart');
+        }
+
+        const subtotal = validCartItems.reduce((sum, item) => sum + item.total, 0);
         const shippingCost = subtotal > 1000 ? 0 : 100;
         const grandTotal = subtotal + shippingCost;
 
@@ -339,8 +359,21 @@ const verifyPayment = async (req, res) => {
             amount
         } = req.body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        if (!razorpay_order_id || !razorpay_payment_id ) {
             console.error("Missing required Razorpay parameters");
+            if (orderId) {
+                const order = await Order.findById(orderId);
+                if (order) {
+                    order.paymentStatus = "failed";
+                    await order.save();
+                    return res.redirect('/payment-failed');
+                }
+                return res.json({
+                    success: false,
+                    redirect: `/payment-failed/${orderId}`,
+                    message: "Payment verification failed"
+                });
+            }
             return res.status(400).json({
                 success: false,
                 message: "Missing required payment parameters"
@@ -393,10 +426,23 @@ const verifyPayment = async (req, res) => {
             return res.json({
                 success: true,
                 payment_id: razorpay_payment_id,
-                message: "Payment verified successfully"
+                message: "Payment verified successfully",
+                redirect: `/orders?payment=success`
             });
         } else {
             console.error("Payment signature verification failed");
+            if (orderId) {
+                const order = await Order.findById(orderId);
+                if (order) {
+                    order.paymentStatus = "failed";
+                    await order.save();
+                }
+                return res.json({
+                    success: false,
+                    redirect: `/payment-failed/${orderId}`,
+                    message: "Payment signature verification failed"
+                });
+            }
             return res.json({
                 success: false,
                 message: "Invalid payment signature"
@@ -405,6 +451,18 @@ const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error('Error verifying payment:', error);
+        if (req.body.orderId) {
+            const order = await Order.findById(req.body.orderId);
+            if (order) {
+                order.paymentStatus = "failed";
+                await order.save();
+            }
+            return res.json({
+                success: false,
+                redirect: `/payment-failed/${req.body.orderId}`,
+                message: "Payment verification failed"
+            });
+        }
         return res.status(500).json({ 
             success: false,
             error: 'Failed to verify payment',
@@ -414,10 +472,14 @@ const verifyPayment = async (req, res) => {
 };
 
 
-const placeOrder = async (req, res) => {
+const  placeOrder = async (req, res) => {
     try {
       const { addressId, paymentMethod, amount, coupon } = req.body;
-      const userId = req.session.user;
+      const userId = typeof req.session.user === 'object' ? req.session.user._id : req.session.user;
+  
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'User not authenticated.' });
+      }
   
       if (!addressId || !paymentMethod || typeof amount !== 'number') {
         return res.status(400).json({ success: false, message: 'Missing or invalid order details.' });
@@ -432,6 +494,25 @@ const placeOrder = async (req, res) => {
       if (!cart || cart.items.length === 0) {
         return res.status(400).json({ success: false, message: 'No items in the cart.' });
       }
+
+      // Clean up invalid items from cart
+      const validCartItems = cart.items.filter(item => item.productId && item.productId._id);
+      if (validCartItems.length === 0) {
+        // Clear the cart if all items are invalid
+        await Cart.findOneAndUpdate({ userid: userId }, { $set: { items: [] } });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Your cart contains invalid items. Cart has been cleared.' 
+        });
+      }
+
+      // Update cart with only valid items if there were invalid items
+      if (validCartItems.length !== cart.items.length) {
+        await Cart.findOneAndUpdate(
+          { userid: userId },
+          { $set: { items: validCartItems } }
+        );
+      }
   
       const userAddress = await Address.findOne(
         { userId: userId, "address._id": addressId },
@@ -444,7 +525,11 @@ const placeOrder = async (req, res) => {
   
       const totalPrice = cart.items.reduce((total, item) => {
         const product = item.productId;
-        const categoryOffer = product.category?.categoryOffer || 0;
+        if (!product) {
+          console.log(`Product not found for item: ${item._id}`);
+          return total;
+        }
+        const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
         const productOffer = product.productOffer || 0;
         const totalOffer = Math.max(categoryOffer, productOffer);
         return total + ((product.regularPrice - totalOffer) * item.quantity);
@@ -470,7 +555,16 @@ const placeOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Order amount mismatch.' });
       }
   
+      // Check stock and update quantities
       for (let item of cart.items) {
+        if (!item.productId || !item.productId._id) {
+          console.log(`Invalid product in cart: ${JSON.stringify(item)}`);
+          return res.status(400).json({
+            success: false,
+            message: 'Some items in your cart are no longer available'
+          });
+        }
+
         const updatedProduct = await Product.findOneAndUpdate(
           { _id: item.productId._id, quantity: { $gte: item.quantity } },
           { $inc: { quantity: -item.quantity } },
@@ -479,20 +573,34 @@ const placeOrder = async (req, res) => {
         if (!updatedProduct) {
           return res.status(400).json({
             success: false,
-            message: `Insufficient stock for ${item.productId.productName}`
+            message: `Insufficient stock for ${item.productId.productName || 'a product'}`
           });
         }
       }
+
       console.log("totalPrice", totalPrice);
       console.log("finalAmount", finalAmount);
+
+      // Filter out invalid items before creating order
+      const validOrderItems = validCartItems.filter(item => item.productId && item.productId._id);
+      if (validOrderItems.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No valid items in cart'
+        });
+      }
+
       const order = new Order({
         orderId: Math.floor(100000 + Math.random() * 900000).toString(),
         userId,
-        orderItems: cart.items.map(item => ({
+        orderItems: validOrderItems.map(item => ({
           productId: item.productId._id,
-          name: item.productId.productName,
+          name: item.productId.productName || 'Product Unavailable',
           quantity: item.quantity,
-          price: item.productId.regularPrice - Math.max(item.productId.category?.categoryOffer || 0, item.productId.productOffer || 0)
+          price: item.productId.regularPrice - Math.max(
+            item.productId.category ? item.productId.category.categoryOffer || 0 : 0,
+            item.productId.productOffer || 0
+          )
         })),
         shippingCost,
         totalPrice,
@@ -1082,14 +1190,19 @@ const downloadInvoice = async (req, res) => {
             return res.status(404).send('Order not found');
         }
 
-        // Create PDF document with premium settings
+        // Create PDF document with proper initialization
         const doc = new PDFDocument({
             size: 'A4',
             margin: 50,
-            bufferPages: true
+            bufferPages: true,
+            autoFirstPage: true
         });
+
+        // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+        
+        // Pipe the PDF to the response
         doc.pipe(res);
 
         // Add company logo and details
@@ -1099,168 +1212,209 @@ const downloadInvoice = async (req, res) => {
             console.log('Error loading logo:', err);
             // Continue without logo if there's an error
         }
-        
-        // Company Header with premium styling
-        doc.fontSize(24)
-           .font('Helvetica-Bold')
-           .fillColor('#2c3e50')
-           .text('URBANWOOD', 200, 50);
-        
-        doc.fontSize(10)
-           .font('Helvetica')
-           .fillColor('#34495e')
-           .text('123 Furniture Street', 200, 80)
-           .text('City, State - 123456', 200, 95)
-           .text('Phone: +91 1234567890', 200, 110)
-           .text('Email: info@urbanwood.com', 200, 125);
 
-        // Draw a decorative line
-        doc.moveTo(50, 150)
-           .lineTo(550, 150)
-           .strokeColor('#2c3e50')
-           .stroke();
+        // Ensure we're on the first page
+        if (doc.page) {
+            // Company Header with premium styling
+            doc.fontSize(24)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('URBANWOOD', 200, 50);
+            
+            doc.fontSize(10)
+               .font('Helvetica')
+               .fillColor('#34495e')
+               .text('123 Furniture Street', 200, 80)
+               .text('City, State - 123456', 200, 95)
+               .text('Phone: +91 1234567890', 200, 110)
+               .text('Email: info@urbanwood.com', 200, 125);
 
-        // Invoice Title
-        doc.fontSize(20)
-           .font('Helvetica-Bold')
-           .fillColor('#2c3e50')
-           .text('INVOICE', { align: 'center' })
-           .moveDown();
+            // Draw a decorative line
+            doc.moveTo(50, 150)
+               .lineTo(550, 150)
+               .strokeColor('#2c3e50')
+               .stroke();
 
-        // Invoice Details Box
-        doc.rect(50, 180, 500, 60)
-           .strokeColor('#2c3e50')
-           .stroke();
-        
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .text('Invoice Number:', 60, 190)
-           .text('Date:', 60, 210);
-        
-        doc.fontSize(12)
-           .font('Helvetica')
-           .text(order.orderId, 200, 190)
-           .text(new Date(order.createdAt).toLocaleDateString(), 200, 210);
+            // Invoice Title
+            doc.fontSize(20)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('INVOICE', { align: 'center' })
+               .moveDown();
 
-        // Customer Details Box
-        doc.rect(50, 260, 500, 100)
-           .strokeColor('#2c3e50')
-           .stroke();
-        
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .text('Customer Details:', 60, 270);
-        
-        doc.fontSize(12)
-           .font('Helvetica')
-           .text(`Name: ${order.userId.name}`, 60, 290)
-           .text(`Email: ${order.userId.email}`, 60, 310)
-           .text(`Phone: ${order.userId.phone || 'N/A'}`, 60, 330);
-
-        // Shipping Address
-        if (order.address) {
-            doc.text(`Address: ${order.address.addressType || ''}`, 60, 350)
-               .text(`${order.address.landMark || ''}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`, 60, 370);
-        }
-
-        // Draw a decorative line
-        doc.moveTo(50, 380)
-           .lineTo(550, 380)
-           .strokeColor('#2c3e50')
-           .stroke();
-
-        // Order Items Table
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .text('Order Items:', 50, 400);
-        
-        const tableTop = 420;
-        const tableLeft = 50;
-        const colWidth = 120;
-        const rowHeight = 30;
-
-        // Table Header
-        doc.rect(tableLeft, tableTop, 500, rowHeight)
-           .fillColor('#f8f9fa')
-           .fill()
-           .strokeColor('#2c3e50')
-           .stroke();
-        
-        doc.fontSize(10)
-           .font('Helvetica-Bold')
-           .text('Product', tableLeft + 10, tableTop + 10)
-           .text('Price', tableLeft + colWidth, tableTop + 10)
-           .text('Quantity', tableLeft + colWidth * 2, tableTop + 10)
-           .text('Total', tableLeft + colWidth * 3, tableTop + 10);
-
-        // Table Rows
-        let y = tableTop + rowHeight;
-        order.orderItems.forEach(item => {
-            if (y > 700) {
-                doc.addPage();
-                y = 50;
-            }
-
-            doc.rect(tableLeft, y, 500, rowHeight)
-               .strokeColor('#e9ecef')
+            // Invoice Details Box
+            doc.rect(50, 180, 500, 60)
+               .fillColor('#f8f9fa')
+               .fill()
+               .strokeColor('#2c3e50')
                .stroke();
             
-            doc.fontSize(8)
+            doc.fontSize(12)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Invoice Number:', 60, 190)
+               .text('Date:', 60, 210);
+            
+            doc.fontSize(12)
                .font('Helvetica')
-               .text(item.productId.productName, tableLeft + 10, y + 10)
-               .text(`₹${item.price.toFixed(2)}`, tableLeft + colWidth, y + 10)
-               .text(item.quantity.toString(), tableLeft + colWidth * 2, y + 10)
-               .text(`₹${(item.price * item.quantity).toFixed(2)}`, tableLeft + colWidth * 3, y + 10);
+               .fillColor('#34495e')
+               .text(order.orderId, 200, 190)
+               .text(new Date(order.createdAt).toLocaleDateString(), 200, 210);
 
-            y += rowHeight;
-        });
+            // Customer Details Box
+            doc.rect(50, 260, 500, 100)
+               .fillColor('#f8f9fa')
+               .fill()
+               .strokeColor('#2c3e50')
+               .stroke();
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Customer Details:', 60, 270);
+            
+            doc.fontSize(12)
+               .font('Helvetica')
+               .fillColor('#34495e')
+               .text(`Name: ${order.userId.name}`, 60, 290)
+               .text(`Email: ${order.userId.email}`, 60, 310)
+               .text(`Phone: ${order.userId.phone || 'N/A'}`, 60, 330);
 
-        // Order Summary Box
-        doc.rect(tableLeft, y + 20, 500, 120)
-           .strokeColor('#2c3e50')
-           .stroke();
-        
-        y += 40;
-        doc.fontSize(10)
-           .font('Helvetica')
-           .text('Subtotal:', tableLeft + colWidth * 2, y)
-           .text(`₹${(order.subTotal || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
-        
-        y += 20;
-        doc.text('Shipping:', tableLeft + colWidth * 2, y)
-           .text(`₹${(order.shippingCost || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
-        
-        y += 20;
-        doc.text('Discount:', tableLeft + colWidth * 2, y)
-           .text(`₹${(order.discount || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
-        
-        y += 20;
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .text('Total:', tableLeft + colWidth * 2, y)
-           .text(`₹${(order.finalAmount || 0).toFixed(2)}`, tableLeft + colWidth * 3, y);
+            // Shipping Address
+            if (order.address) {
+                doc.text(`Address: ${order.address.addressType || ''}`, 60, 350)
+                   .text(`${order.address.landMark || ''}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`, 60, 370);
+            }
 
-        // Payment Details Box
-        doc.rect(tableLeft, y + 40, 500, 60)
-           .strokeColor('#2c3e50')
-           .stroke();
-        
-        y += 60;
-        doc.fontSize(10)
-           .font('Helvetica')
-           .text(`Payment Method: ${order.paymentMethod}`, tableLeft + 10, y)
-           .text(`Payment Status: ${order.paymentStatus}`, tableLeft + 10, y + 20)
-           .text(`Order Status: ${order.status}`, tableLeft + 10, y + 40);
+            // Draw a decorative line
+            doc.moveTo(50, 380)
+               .lineTo(550, 380)
+               .strokeColor('#2c3e50')
+               .stroke();
 
-        // Footer
-        doc.fontSize(8)
-           .text('Thank you for shopping with URBANWOOD!', { align: 'center' })
-           .text('This is a computer-generated invoice and does not require a signature.', { align: 'center' });
+            // Order Items Table
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Order Items:', 50, 400);
+            
+            const tableTop = 420;
+            const tableLeft = 50;
+            const colWidth = 120;
+            const rowHeight = 30;
 
+            // Table Header
+            doc.rect(tableLeft, tableTop, 500, rowHeight)
+               .fillColor('#2c3e50')
+               .fill()
+               .strokeColor('#2c3e50')
+               .stroke();
+            
+            doc.fontSize(10)
+               .font('Helvetica-Bold')
+               .fillColor('#ffffff')
+               .text('Product', tableLeft + 10, tableTop + 10)
+               .text('Price', tableLeft + colWidth + 20, tableTop + 10)
+               .text('Quantity', tableLeft + colWidth * 2 + 20, tableTop + 10)
+               .text('Total', tableLeft + colWidth * 3 + 20, tableTop + 10);
+
+            // Table Rows
+            let y = tableTop + rowHeight;
+            order.orderItems.forEach(item => {
+                // Check if we need a new page
+                if (y > 700) {
+                    doc.addPage();
+                    y = 50;
+                }
+
+                doc.rect(tableLeft, y, 500, rowHeight)
+                   .fillColor(y % 2 === 0 ? '#f8f9fa' : '#ffffff')
+                   .fill()
+                   .strokeColor('#e9ecef')
+                   .stroke();
+                
+                doc.fontSize(8)
+                   .font('Helvetica')
+                   .fillColor('#2c3e50')
+                   .text(item.productId.productName, tableLeft + 10, y + 10)
+                   .text(`₹${item.price.toFixed(2)}`, tableLeft + colWidth + 20, y + 10)
+                   .text(item.quantity.toString(), tableLeft + colWidth * 2 + 20, y + 10)
+                   .text(`₹${(item.price * item.quantity).toFixed(2)}`, tableLeft + colWidth * 3 + 20, y + 10);
+
+                y += rowHeight;
+            });
+
+            // Order Summary Box
+            doc.rect(tableLeft, y + 20, 500, 120)
+               .fillColor('#2c3e50')
+               .fill()
+               .strokeColor('#2c3e50')
+               .stroke();
+            
+            y += 40;
+            doc.fontSize(10)
+               .font('Helvetica')
+               .fillColor('#ffffff')
+               .text('Subtotal:', tableLeft + colWidth * 2, y)
+               .text(`₹${(order.subTotal || 0).toFixed(2)}`, tableLeft + colWidth * 3 + 20, y);
+            
+            y += 20;
+            doc.text('Shipping:', tableLeft + colWidth * 2, y)
+               .text(`₹${(order.shippingCost || 0).toFixed(2)}`, tableLeft + colWidth * 3 + 20, y);
+            
+            y += 20;
+            doc.text('Discount:', tableLeft + colWidth * 2, y)
+               .text(`₹${(order.discount || 0).toFixed(2)}`, tableLeft + colWidth * 3 + 20, y);
+            
+            y += 20;
+            doc.fontSize(12)
+               .font('Helvetica-Bold')
+               .text('Total:', tableLeft + colWidth * 2, y)
+               .text(`₹${(order.finalAmount || 0).toFixed(2)}`, tableLeft + colWidth * 3 + 20, y);
+
+            // Payment Details Box
+            doc.rect(tableLeft, y + 40, 500, 60)
+               .fillColor('#f8f9fa')
+               .fill()
+               .strokeColor('#2c3e50')
+               .stroke();
+            
+            y += 60;
+            doc.fontSize(10)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`Payment Method: ${order.paymentMethod}`, tableLeft + 10, y)
+               .text(`Payment Status: ${order.paymentStatus}`, tableLeft + 10, y + 20)
+               .text(`Order Status: ${order.status}`, tableLeft + 10, y + 40);
+
+            // Footer
+            doc.fontSize(8)
+               .fillColor('#34495e')
+               .text('Thank you for shopping with URBANWOOD!', { align: 'center' })
+               .text('This is a computer-generated invoice and does not require a signature.', { align: 'center' });
+        }
+
+        // Finalize the PDF
         doc.end();
     } catch (error) {
         console.error('Error generating invoice:', error);
         res.status(500).send('Error generating invoice');
+    }
+};
+
+const paymentFailed = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        res.render('user/paymentFailed', { order });
+    } catch (error) {
+        console.error('Error in paymentFailed:', error);
+        res.status(500).send('Internal Server Error');
     }
 };
 
@@ -1281,5 +1435,6 @@ module.exports = {
     userOrderDetails,
     processWalletPayment,
     returnProduct,
-    downloadInvoice
+    downloadInvoice,
+    paymentFailed
 };

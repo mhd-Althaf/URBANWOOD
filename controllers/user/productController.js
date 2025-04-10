@@ -118,7 +118,7 @@ const getshop = async (req, res) => {
 
     // Calculate total offer for each product and sort if needed
     let productsWithOffers = products.map(product => {
-      const categoryOffer = product.category?.categoryOffer || 0;
+      const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
       const productOffer = product.productOffer || 0;
       const totalOffer = Math.max(categoryOffer, productOffer);
       const finalPrice = product.regularPrice - totalOffer;
