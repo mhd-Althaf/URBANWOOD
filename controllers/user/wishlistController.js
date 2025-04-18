@@ -19,10 +19,13 @@ const loadWishlistPage = async (req, res) => {
                 select: 'productName description salePrice productImages status quantity'
             });
 
-        const products = wishlist ? wishlist.products.map(item => ({
-            ...item.productId.toObject(),
-            addedOn: item.addedOn
-        })) : [];
+        // Filter out any null or undefined product references
+        const products = wishlist ? wishlist.products
+            .filter(item => item.productId) // Remove null/undefined products
+            .map(item => ({
+                ...item.productId?.toObject(),
+                addedOn: item.addedOn
+            })) : [];
 
         res.render("user/wishlist", {
             user: req.session.user,
@@ -216,11 +219,15 @@ const shareWishlist = async (req, res) => {
 
         // Generate shareable data
         const shareableData = {
-            products: wishlist.products.map(item => ({
-                name: item.productId.productName,
-                price: item.productId.salePrice,
-                image: item.productId.productImages[0]
-            })),
+            products: wishlist.products
+                .filter(item => item.productId) // Filter out null/undefined products
+                .map(item => ({
+                    name: item.productId.productName,
+                    price: item.productId.salePrice,
+                    image: item.productId.productImages && item.productId.productImages.length > 0 
+                           ? item.productId.productImages[0] 
+                           : null
+                })),
             sharedAt: new Date(),
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         };

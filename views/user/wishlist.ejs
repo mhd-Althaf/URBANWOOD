@@ -39,7 +39,7 @@
                                    <% wishlist.forEach(product => { %>
                                        <tr id="wishlist-item-<%= product._id %>">
                                            <td class="image product-thumbnail">
-                                               <img src="<%= product.productImages[0] %>" alt="<%= product.productName %>" />
+                                               <img src="<%= product?.productImages && product.productImages.length > 0 ? product.productImages[0] : '/images/default-product.jpg' %>" alt="<%= product?.productName || 'Product Image' %>" />
                                            </td>
                                            <td class="product-des product-name">
                                                <h5 class="product-name">
