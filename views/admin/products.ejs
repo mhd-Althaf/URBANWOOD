@@ -49,7 +49,7 @@
                                     <br>
                                     <small class="text-muted"><%= product.description.substring(0, 50) %>...</small>
                                 </td>
-                                <td><%= product.category %></td>
+                                <td><%= product.category ? product.category : 'Uncategorized' %></td>
                                 <td>₹<%= product.regularPrice %></td>
                                 <td>₹<%= product.salePrice %></td>
                                 <td><%= product.quantity %></td>

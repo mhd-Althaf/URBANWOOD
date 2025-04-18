@@ -1,0 +1,375 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+    .sales-report {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #2c3e50, #3498db);
+        color: white;
+        padding: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    .card {
+        border-radius: 0.25rem;
+        margin-top: 120px;
+    }
+    .summary-card {
+        transition: transform 0.3s ease;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .summary-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .summary-card .card-title {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-card .card-text {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    .table-responsive {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+    }
+    
+    .table {
+        margin-bottom: 0;
+        color: #ffffff;
+    }
+    
+    .table thead th {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+        color: #ffffff;
+        padding: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge.bg-info {
+        background-color: rgba(23, 162, 184, 0.8) !important;
+        color: white;
+    }
+    
+    .badge.bg-secondary {
+        background-color: rgba(108, 117, 125, 0.8) !important;
+        color: white;
+    }
+    
+    .badge.bg-success {
+        background-color: rgba(40, 167, 69, 0.8) !important;
+        color: white;
+    }
+    
+    .badge.bg-warning {
+        background-color: rgba(255, 193, 7, 0.8) !important;
+        color: #2c3e50;
+    }
+    
+    .table tbody tr td strong {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    
+    .table tbody tr td {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .pagination .page-link {
+        color: #3498db;
+        border: none;
+        padding: 0.5rem 1rem;
+        margin: 0 0.25rem;
+        border-radius: 5px;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #3498db;
+        color: white;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .download-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .custom-date {
+        display: none;
+    }
+</style>
+
+<div class="container-fluid sales-report">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sales Report</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Form -->
+                    <form action="/admin/generate-sales-report" method="POST" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Report Type</label>
+                                    <select name="reportType" class="form-control" id="reportType">
+                                        <option value="daily" <%= dateRange && dateRange.reportType === 'daily' ? 'selected' : '' %>>Daily</option>
+                                        <option value="weekly" <%= dateRange && dateRange.reportType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                                        <option value="monthly" <%= dateRange && dateRange.reportType === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                                        <option value="custom" <%= dateRange && dateRange.reportType === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 custom-date" id="startDateField">
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Start Date</label>
+                                    <input type="date" name="startDate" class="form-control" value="<%= dateRange && dateRange.startDate ? dateRange.startDate : '' %>">
+                                </div>
+                            </div>
+                            <div class="col-md-3 custom-date" id="endDateField">
+                                <div class="form-group">
+                                    <label class="font-weight-bold">End Date</label>
+                                    <input type="date" name="endDate" class="form-control" value="<%= dateRange && dateRange.endDate ? dateRange.endDate : '' %>">
+                                </div>
+                            </div>
+                            <div class="col-md-3 align-self-end">
+                                <button type="submit" class="btn btn-primary download-btn">
+                                    <i class="fas fa-chart-line me-2"></i>Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <% if (reportData) { %>
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card summary-card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Orders</h5>
+                                        <p class="card-text"><%= reportData.totalOrders %></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card summary-card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Sales</h5>
+                                        <p class="card-text">₹<%= reportData.totalSales.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card summary-card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Discount</h5>
+                                        <p class="card-text">₹<%= reportData.totalDiscount.toFixed(2) %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Download Buttons -->
+                        <div class="mb-4">
+                            <a href="/admin/download-report/excel?startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>&reportType=<%= dateRange.reportType %>" 
+                               class="btn btn-success download-btn me-2">
+                                <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </a>
+                            <a href="/admin/download-report/pdf?startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>&reportType=<%= dateRange.reportType %>" 
+                               class="btn btn-danger download-btn">
+                                <i class="fas fa-file-pdf me-2"></i>Download PDF
+                            </a>
+                        </div>
+
+                        <!-- Orders Table -->
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Products</th>
+                                        <th>Total Amount</th>
+                                        <th>Discount</th>
+                                        <th>Final Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% reportData.orders.forEach(order => { %>
+                                        <% if(order.status === 'Delivered'){ %>
+                                            <tr>
+                                            <td><strong><%= order.orderId %></strong></td>
+                                            <td><%= order.userId ? order.userId.name : 'N/A' %></td>
+                                            <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                                            <td>
+                                                <% order.orderItems.forEach(item => { %>
+                                                    <span class="badge bg-info me-1"><%= item.name %> (<%= item.quantity %>)</span>
+                                                <% }) %>
+                                            </td>
+                                            <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                                            <td>₹<%= (order.discount || 0).toFixed(2) %></td>
+                                            <td><strong>₹<%= order.finalAmount.toFixed(2) %></strong></td>
+                                            <td><span class="badge bg-secondary"><%= order.paymentMethod %></span></td>
+                                            
+                                            <td>
+                                                <span class="status-badge badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-info' %>">
+                                                    <%= order.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <% if (currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/admin/generate-sales-report?page=<%= currentPage - 1 %>&reportType=<%= dateRange.reportType %>&startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>">
+                                            <i class="fas fa-chevron-left"></i> Previous
+                                        </a>
+                                    </li>
+                                <% } %>
+                                
+                                <% for(let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="/admin/generate-sales-report?page=<%= i %>&reportType=<%= dateRange.reportType %>&startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>">
+                                            <%= i %>
+                                        </a>
+                                    </li>
+                                <% } %>
+                                
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/admin/generate-sales-report?page=<%= currentPage + 1 %>&reportType=<%= dateRange.reportType %>&startDate=<%= dateRange.startDate %>&endDate=<%= dateRange.endDate %>">
+                                            Next <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('reportType').addEventListener('change', function() {
+    const startDateField = document.getElementById('startDateField');
+    const endDateField = document.getElementById('endDateField');
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const endDateInput = document.querySelector('input[name="endDate"]');
+    
+    if (this.value === 'custom') {
+        startDateField.style.display = 'block';
+        endDateField.style.display = 'block';
+        
+        // Set default dates if not already set
+        if (!startDateInput.value) {
+            const today = new Date();
+            startDateInput.value = today.toISOString().split('T')[0];
+        }
+        if (!endDateInput.value) {
+            const today = new Date();
+            endDateInput.value = today.toISOString().split('T')[0];
+        }
+    } else {
+        startDateField.style.display = 'none';
+        endDateField.style.display = 'none';
+    }
+});
+
+// Initialize custom date fields on page load if custom is selected
+window.addEventListener('load', function() {
+    const reportType = document.getElementById('reportType').value;
+    const startDateField = document.getElementById('startDateField');
+    const endDateField = document.getElementById('endDateField');
+    
+    if (reportType === 'custom') {
+        startDateField.style.display = 'block';
+        endDateField.style.display = 'block';
+    }
+});
+</script>
+

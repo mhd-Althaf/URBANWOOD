@@ -107,7 +107,7 @@
 			<nav class="navbar navbar-expand-lg navbar-light main_box">
 				<div class="container">
 					<!-- Brand and toggle get grouped for better mobile display -->
-					<a class="navbar-brand logo_h" href="/"><img src="img/Urbenwood_new.png" alt=""></a>
+					<a class="navbar-brand logo_h" href="/"><img src="/img/Urbenwood_new.png" alt=""></a>
 					<button class="navbar-toggler" type="button" data-toggle="collapse"
 						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
 						aria-expanded="false" aria-label="Toggle navigation">
@@ -122,7 +122,7 @@
 							<li class="nav-item submenu dropdown">
 								<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
 									aria-haspopup="true" aria-expanded="false">
-									<%= locals.user ? locals.user.name : "sign in" %>
+									<%= locals.user ? locals.user.name : "SIGN IN" %>
 								</a>
 
 								<ul class="dropdown-menu">
@@ -139,8 +139,6 @@
 							<li class="nav-item submenu dropdown">
 								<a href="/shop" class="nav-link">Shop</a>
 							</li>
-
-
 							<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
 							<li class="nav-item submenu dropdown">
 								<!-- <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
@@ -155,12 +153,15 @@
 						<ul class="nav navbar-nav navbar-right">
 							<li class="nav-item"><a href="/cart" class="btn border mx-2">
 								<i class="fas fa-cart-shopping text-primary"></i>
-								<span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span>
+								<!-- <span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span> -->
 							</a></li>
-							<li class="nav-item">
+							<li class="nav-item"><a href="/wishlist" class="btn border mx-2">
+								<i class="fas fa-heart text-primary"></i>
+							</a></li>
+							<!-- <li class="nav-item">
 								<button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
-							</li>
-						</ul>
+							</li> -->
+						</ul>	
 					</div>
 				</div>
 			</nav>

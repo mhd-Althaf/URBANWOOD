@@ -1,0 +1,174 @@
+<%- include('../partials/userHeader') %>
+
+<div class="payment-failed-container">
+    <div class="payment-failed-card">
+        <div class="payment-failed-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <h1 class="payment-failed-title">Payment Failed</h1>
+        <p class="payment-failed-message">Oops! It seems there was an issue processing your payment. Don't worry, your order is still safe with us.</p>
+        
+        <div class="payment-failed-details">
+            <p><strong>Order ID:</strong> <span class="neon-text"><%= order.orderId %></span></p>
+            <p><strong>Amount:</strong> <span class="neon-text">₹<%= order.finalAmount %></span></p>
+            <p><strong>Date:</strong> <span class="neon-text"><%= new Date(order.createdAt).toLocaleString() %></span></p>
+        </div>
+
+        <div class="payment-failed-actions">
+            <a href="/user/order-details/<%= order._id %>" class="btn btn-order-details">
+                <i class="fas fa-file-invoice"></i> View Order Details
+            </a>
+            <a href="/" class="btn btn-continue-shopping">
+                <i class="fas fa-shopping-bag"></i> Continue Shopping
+            </a>
+        </div>
+
+        <div class="payment-failed-help">
+            <p>Need help? Contact our support team at <span class="neon-text">support@urbanwood.com</span></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-failed-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 2rem;
+    }
+
+    .payment-failed-card {
+        background: rgba(26, 26, 46, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+        from {
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3),
+                       0 0 20px rgba(255, 0, 0, 0.2),
+                       0 0 30px rgba(255, 0, 0, 0.1);
+        }
+        to {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4),
+                       0 0 30px rgba(255, 0, 0, 0.3),
+                       0 0 40px rgba(255, 0, 0, 0.2);
+        }
+    }
+
+    .payment-failed-icon {
+        font-size: 5rem;
+        color: #ff4444;
+        margin-bottom: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .payment-failed-title {
+        color: #ff4444;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .payment-failed-message {
+        color: #ffffff;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .payment-failed-details {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .payment-failed-details p {
+        color: #ffffff;
+        margin: 0.5rem 0;
+        font-size: 1rem;
+    }
+
+    .neon-text {
+        color: #00ff9d;
+        text-shadow: 0 0 5px #00ff9d,
+                    0 0 10px #00ff9d,
+                    0 0 20px #00ff9d;
+    }
+
+    .payment-failed-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-order-details {
+        background: linear-gradient(45deg, #ff4444, #ff6b6b);
+        color: white;
+        border: none;
+    }
+
+    .btn-continue-shopping {
+        background: linear-gradient(45deg, #00ff9d, #00ccff);
+        color: #1a1a2e;
+        border: none;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .payment-failed-help {
+        color: #ffffff;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+        .payment-failed-card {
+            padding: 2rem;
+        }
+
+        .payment-failed-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<%- include('../partials/userFooter') %>

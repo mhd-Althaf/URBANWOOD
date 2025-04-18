@@ -1,27 +1,36 @@
-const mongoose = require("moongose");
-const product = require("./productSchema");
-const {Schema} = mongoose;
+const mongoose = require('mongoose'); 
+const { Schema } = mongoose;
 
 const wishlistSchema = new Schema({
-    userId : {
-        type:Schema.Types.ObjectId,
-        ref:'Product',
-        required:true
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    product:[
-        {
-            productId:{
-                type:Schema.Types.ObjectId,
-                ref:"Product",
-                required:true
-            },
-            addedOn:{
-                type:Date,
-                default:Date.now
-            }
+    products: [{
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            required: true
+        },
+        addedOn: {
+            type: Date,
+            default: Date.now
         }
-    ]
-})
+    }],
+    lastModified: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    timestamps: true
+});
 
-const wishlist = mongoose.model("wishlist",wishlistSchema);
-module.exports = wishlist;
+// Update lastModified on save
+wishlistSchema.pre('save', function(next) {
+    this.lastModified = new Date();
+    next();
+});
+
+const Wishlist = mongoose.model("Wishlist", wishlistSchema);
+module.exports = Wishlist;

@@ -9,8 +9,11 @@ const passport = require("./config/passport");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const cartController = require("./controllers/user/cartController");
+const logger = require("./middlewares/logger");
 
 db();
+
+app.use(logger);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

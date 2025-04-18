@@ -7775,7 +7775,8 @@ button.bg-dark:hover {
 
 .ml-2,
 .mx-2 {
-    margin-left: .5rem !important
+    margin-left: .5rem !important;
+    margin-top: 20px;
 }
 
 .m-3 {

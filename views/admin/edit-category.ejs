@@ -38,6 +38,20 @@
                             required
                         ><%= category.description %></textarea>
                     </div>
+                    
+                    <!-- Category Offer -->
+                    <div class="mb-3">
+                        <label for="category_offer" class="form-label">Category Offer (₹)</label>
+                        <input 
+                            type="number" 
+                            id="category_offer" 
+                            name="categoryOffer" 
+                            class="form-control border" 
+                            value="<%= category.categoryOffer || 0 %>" 
+                            min="0"
+                        />
+                        <small class="form-text text-muted">Enter the discount amount to be applied to all products in this category.</small>
+                    </div>
 
                     <!-- Submit Button -->
                     <div class="text-end">
@@ -57,6 +71,17 @@
 <script>
 function handleFormSubmit(event) {
     event.preventDefault();
+
+    // Validate the form data
+    const categoryOffer = document.getElementById('category_offer').value;
+    if (categoryOffer && (isNaN(categoryOffer) || parseInt(categoryOffer) < 0)) {
+        Swal.fire({
+            icon: "error",
+            title: "Invalid Input",
+            text: "Category offer must be a non-negative number."
+        });
+        return false;
+    }
 
     const form = event.target;
     const formData = new URLSearchParams(new FormData(form)).toString(); 

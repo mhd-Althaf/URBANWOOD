@@ -2,7 +2,7 @@
 <main class="main">
 
 
-   <div class="page-header breadcrumb-wrap">
+   <!-- <div class="page-header breadcrumb-wrap">
        <div class="container">
            <div class="breadcrumb">
                <a href="/" rel="nofollow">Home</a>
@@ -10,13 +10,19 @@
                <span></span> My Wishlist
            </div>
        </div>
-   </div>
+   </div> -->
 
 
-   <section class="mt-50 mb-50">
+   <section class="mt-10 mb-10">
        <div class="container">
            <div class="row">
-               <div class="col-12">
+               <div class="col-12 allpage">
+                   <div class="wishlist-header d-flex justify-content-between align-items-center mb-4">
+                       <h2>My Wishlist</h2>
+                       <button class="btn btn-primary" onclick="shareWishlist()">
+                           <i class="fas fa-share-alt"></i> Share Wishlist
+                       </button>
+                   </div>
                    <div class="table-responsive">
                        <table class="table shopping-summery text-center clean">
                            <thead>
@@ -24,44 +30,56 @@
                                    <th scope="col">Image</th>
                                    <th scope="col">Name</th>
                                    <th scope="col">Price</th>
-                                   <th scope="col">Add to Cart</th>
-                                   <th scope="col">Remove</th>
+                                   <th scope="col">Stock Status</th>
+                                   <th scope="col">Action</th>
                                </tr>
                            </thead>
                            <tbody>
-                             
-                                       <tr>
+                               <% if (wishlist && wishlist.length > 0) { %>
+                                   <% wishlist.forEach(product => { %>
+                                       <tr id="wishlist-item-<%= product._id %>">
                                            <td class="image product-thumbnail">
-                                               <img src="" />
+                                               <img src="<%= product.productImages[0] %>" alt="<%= product.productName %>" />
                                            </td>
                                            <td class="product-des product-name">
                                                <h5 class="product-name">
-                                                   <a href="">
-                                                      
-                                                   </a>
+                                                   <a href="/product/<%= product._id %>"><%= product.productName %></a>
                                                </h5>
-                                               <p class="font-xs">
-                                                   <br />
-                                                  
-                                               </p>
+                                               <p class="font-xs"><%= product.description %></p>
                                            </td>
-                                           <td class="price" data-title="Price">₹<span>
-                                          
-                                           </span></td>
-                                           <td class="text-center" data-title="Add to Cart">
-                                               <a href="#" onclick="" class="btn btn-sm">Add to Cart</a>
+                                           <td class="price" data-title="Price">
+                                               ₹<span><%= product.salePrice.toLocaleString() %></span>
                                            </td>
-                                           <td class="action" data-title="Remove">
-                                               <a class="btn btn-sm" href="#" onclick="">
-                                                   <i class="fi-rs-trash"></i>
-                                               </a>
+                                           <td class="stock" data-title="Stock">
+                                               <span class="badge <%= product.status === 'Available' ? 'bg-success' : 'bg-danger' %>">
+                                                   <%= product.status %>
+                                               </span>
+                                           </td>
+                                           <td class="action" data-title="Action">
+                                               <% if (product.status === 'Available' && product.quantity > 0) { %>
+                                                   <button class="btn btn-sm btn-success mb-2" 
+                                                           onclick="moveToCart('<%= product._id %>')">
+                                                       <i class="fas fa-shopping-cart"></i> Move to Cart
+                                                   </button>
+                                               <% } %>
+                                               <button class="btn btn-sm btn-danger" 
+                                                       onclick="removeFromWishlist('<%= product._id %>')">
+                                                   <i class="fas fa-trash"></i> Remove
+                                               </button>
                                            </td>
                                        </tr>
+                                   <% }); %>
+                               <% } else { %>
                                    <tr>
                                        <td colspan="5" class="text-center">
-                                           <p class="lead mb-4">No items found in Wishlist</p>
+                                           <div class="empty-wishlist">
+                                               <i class="fas fa-heart-broken fa-3x mb-3"></i>
+                                               <p class="lead">Your wishlist is empty</p>
+                                               <a href="/shop" class="btn btn-primary">Continue Shopping</a>
+                                           </div>
                                        </td>
                                    </tr>
+                               <% } %>
                            </tbody>
                        </table>
                    </div>
@@ -72,6 +90,219 @@
 </main>
 <%-include("../../views/partials/user/footer")%>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+.allpage {
+    margin-top: 200px;
+}
+
+.wishlist-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.empty-wishlist {
+    padding: 40px;
+    text-align: center;
+}
+
+.empty-wishlist i {
+    color: #dc3545;
+}
+
+.badge {
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.product-thumbnail img {
+    max-width: 100px;
+    height: auto;
+    border-radius: 4px;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.875rem;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.product-name a {
+    color: #333;
+    text-decoration: none;
+}
+
+.product-name a:hover {
+    color: #007bff;
+}
+
+.font-xs {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+</style>
+
+<script>
+// Function to handle moving item to cart
+async function moveToCart(productId) {
+    try {
+        const response = await fetch('/wishlist/move-to-cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ productId })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Remove item from wishlist UI
+            document.getElementById(`wishlist-item-${productId}`).remove();
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+            // Update empty state if needed
+            if (document.querySelectorAll('tr[id^="wishlist-item"]').length === 0) {
+                location.reload();
+            }
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error.message || 'Failed to move item to cart'
+        });
+    }
+}
+
+// Function to remove item from wishlist
+async function removeFromWishlist(productId) {
+    try {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!'
+        });
+
+        if (result.isConfirmed) {
+            const response = await fetch('/wishlist/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById(`wishlist-item-${productId}`).remove();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Removed!',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+                if (document.querySelectorAll('tr[id^="wishlist-item"]').length === 0) {
+                    location.reload();
+                }
+            } else {
+                throw new Error(data.message);
+            }
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error.message || 'Failed to remove item from wishlist'
+        });
+    }
+}
+
+// Function to share wishlist
+async function shareWishlist() {
+    try {
+        const response = await fetch('/wishlist/share', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Create shareable content
+            const shareText = data.data.products
+                .map(p => `${p.name} - ₹${p.price}`)
+                .join('\n');
+            
+            // Try to use Web Share API if available
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'My Wishlist',
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback to copying to clipboard
+                await navigator.clipboard.writeText(
+                    `Check out my wishlist!\n\n${shareText}\n\n${window.location.href}`
+                );
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Wishlist has been copied to clipboard',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error.message || 'Failed to share wishlist'
+        });
+    }
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 
 

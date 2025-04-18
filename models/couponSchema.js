@@ -23,6 +23,16 @@ const couponSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    maximumPrice: {
+        type: Number,
+        required: true,
+        validate: {
+            validator: function(v) {
+                return !isNaN(v) && v > 0;
+            },
+            message: 'Maximum price must be a valid positive number'
+        }
+    },
     isListed: {
         type: Boolean,
         default: true

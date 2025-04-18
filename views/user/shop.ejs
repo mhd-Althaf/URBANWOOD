@@ -14,13 +14,34 @@
 				})
 			});
 
-			const data = await response.json();
+			// First try to get the response as text
+			const responseText = await response.text();
+			
+			// Try to parse it as JSON
+			let data;
+			try {
+				data = JSON.parse(responseText);
+			} catch (e) {
+				// If parsing fails, it means we got HTML instead of JSON (likely a login page)
+				Swal.fire({
+					icon: 'warning',
+					title: 'Login Required',
+					text: 'Please login first to add products to your cart.',
+					showCancelButton: true,
+					confirmButtonText: 'Login Now',
+					cancelButtonText: 'Cancel',
+					confirmButtonColor: '#2A9D8F',
+					cancelButtonColor: '#d33'
+				}).then((result) => {
+					if (result.isConfirmed) {
+						window.location.href = '/login';
+					}
+				});
+				return;
+			}
 
+			// If we got valid JSON, check if the operation was successful
 			if (data.success) {
-				if (!response.ok) {
-					throw new Error('You must be logged in to add items to cart');
-				}
-
 				Swal.fire({
 					icon: 'success',
 					title: 'Success!',
@@ -30,15 +51,19 @@
 					// Refresh cart count after successful add
 					fetch('/getCartCount')
 						.then(res => res.json())
-						.then(data => {
-							if (data.count) {
-								document.querySelector('.cart-count').textContent = data.count;
+						.then(cartData => {
+							if (cartData.count) {
+								document.querySelector('.cart-count').textContent = cartData.count;
 							}
+						})
+						.catch(err => {
+							console.error('Error fetching cart count:', err);
 						});
 				});
 			} else {
 				throw new Error(data.message || 'Failed to add product to cart');
 			}
+
 		} catch (error) {
 			Swal.fire({
 				icon: 'error',
@@ -48,6 +73,67 @@
 			});
 		}
 	}
+	async function addToWishlist(productId, event) {
+		try {
+			const response = await fetch('/wishlist/add', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ productId })
+			});
+
+			// First try to get the response as text
+			const responseText = await response.text();
+			
+			// Try to parse it as JSON
+			let data;
+			try {
+				data = JSON.parse(responseText);
+			} catch (e) {
+				// If parsing fails, it means we got HTML instead of JSON (likely a login page)
+				Swal.fire({
+					icon: 'warning',
+					title: 'Login Required',
+					text: 'Please login first to add products to your wishlist.',
+					showCancelButton: true,
+					confirmButtonText: 'Login Now',
+					cancelButtonText: 'Cancel',
+					confirmButtonColor: '#2A9D8F',
+					cancelButtonColor: '#d33'
+				}).then((result) => {
+					if (result.isConfirmed) {
+						window.location.href = '/login';
+					}
+				});
+				return;
+			}
+
+			if (data.success) {
+				// Change heart icon to filled
+				event.target.classList.remove('far');
+				event.target.classList.add('fas');
+				
+				Swal.fire({
+					icon: 'success',
+					title: 'Success!',
+					text: 'Product added to wishlist successfully',
+					showConfirmButton: false,
+					timer: 1500
+				});
+			} else {
+				throw new Error(data.message || 'Failed to add to wishlist');
+			}
+		} catch (error) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Oops...',
+				text: error.message || 'Something went wrong!',
+				confirmButtonColor: '#2A9D8F'
+			});
+		}
+	}
+
 </script>
 <html lang="zxx" class="no-js">
 
@@ -85,9 +171,109 @@
 		href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<style>
+		.premium-filter-form {
+			background: #fff;
+			padding: 2rem;
+			border-radius: 15px;
+			box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+		}
 
+		.search-container {
+			margin-bottom: 1.5rem;
+		}
+
+		.search-input {
+			height: 55px;
+			border: 2px solid #eee;
+			border-radius: 10px;
+			padding-left: 1.5rem;
+			font-size: 1rem;
+			transition: all 0.3s ease;
+		}
+
+		.search-input:focus {
+			border-color: #6366f1;
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+		}
+
+		.search-btn {
+			background: #6366f1;
+			color: white;
+			border: none;
+			padding: 0 2rem;
+			border-radius: 10px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			transition: all 0.3s ease;
+		}
+
+		.search-btn:hover {
+			background: #4f46e5;
+			transform: translateY(-1px);
+		}
+
+		.filter-controls {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.select-wrapper {
+			position: relative;
+			flex: 1;
+		}
+
+		.select-wrapper i {
+			position: absolute;
+			left: 1rem;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #6b7280;
+			pointer-events: none;
+		}
+
+		.premium-select {
+			width: 100%;
+			height: 45px;
+			padding: 0 1rem 0 2.5rem;
+			border: 2px solid #eee;
+			border-radius: 10px;
+			appearance: none;
+			background: white;
+			cursor: pointer;
+			font-size: 0.95rem;
+			transition: all 0.3s ease;
+		}
+
+		.premium-select:hover {
+			border-color: #6366f1;
+		}
+
+		.apply-filters-btn {
+			background: #6366f1;
+			color: white;
+			border: none;
+			padding: 0 2rem;
+			height: 45px;
+			border-radius: 10px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			transition: all 0.3s ease;
+		}
+
+		.apply-filters-btn:hover {
+			background: #4f46e5;
+			transform: translateY(-1px);
+		}
+	</style>
 	<style>
 		* {
 			margin: 0;
@@ -147,7 +333,6 @@
 			width: 100%;
 			height: 100%;
 			display: flex;
-			transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
 		.product-image {
@@ -158,10 +343,6 @@
 			height: 100%;
 			object-fit: cover;
 			transition: opacity 0.3s ease;
-		}
-
-		.product-card:hover .product-image-slider {
-			transform: translateX(-100%);
 		}
 
 		.product-badge {
@@ -184,7 +365,18 @@
 		}
 
 		.badge-danger {
-			background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+			background: linear-gradient(45deg, #e74c3c, #c0392b);
+			color: white;
+			padding: 0.5rem 1rem;
+			border-radius: 25px;
+			font-weight: 600;
+			text-transform: uppercase;
+			font-size: 0.75rem;
+			letter-spacing: 0.5px;
+			position: absolute;
+			top: 1rem;
+			right: 1rem;
+			z-index: 2;
 		}
 
 		.badge-primary {
@@ -223,18 +415,20 @@
 			align-items: center;
 			gap: 1rem;
 			margin: 1rem 0;
-		}
-
-		.price-sale {
-			font-size: 1.5rem;
-			font-weight: 800;
-			color: #FF6F00;
+			flex-wrap: wrap;
 		}
 
 		.price-original {
 			font-size: 1rem;
 			color: #718096;
 			text-decoration: line-through;
+			margin-right: 8px;
+		}
+
+		.price-sale {
+			font-size: 1.5rem;
+			font-weight: 800;
+			color: #2ecc71;
 		}
 
 		.product-actions {
@@ -655,91 +849,129 @@
 					<!-- Main Content -->
 					<div class="col-xl-9 col-lg-8 col-md-7 mx-auto">
 
-						<div class="top-bar">
-							<form id="filterForm" method="GET" action="/shop">
-								<div class="input-group">
-									<input type="text" name="query" class="form-control" placeholder="Search products"
-									value="<%= filters?.query || '' %>" id="searchInput"  />
-									<div class="input-group-append">
-										<button type="submit" class="btn btn-primary">Search</button>
-										<span class="input-group-text bg-transparent text-primary">
-											<i class="fa fa-search"></i>
-										</span>
+						<div class="top-bar w-100">
+							<form id="filterForm" method="GET" action="/shop" class="premium-filter-form w-100">
+								<div class="search-container">
+									<div class="input-group">
+										<input type="text" 
+											   name="query" 
+											   class="form-control search-input" 
+											   placeholder="Search for amazing products..."
+											   value="<%= filters?.query || '' %>" 
+											   id="searchInput" />
+										<div class="input-group-append">
+											<button type="submit" class="search-btn">
+												<i class="fa fa-search"></i>
+												<span>Search</span>
+											</button>
+										</div>
 									</div>
 								</div>
-						
-								<select id="sort" name="sort" class="form-select" onchange="this.form.submit()">
-									<option value="" <%= !filters?.sort ? 'selected' : '' %>>Sort By</option>
-									<option value="priceAsc" <%= filters?.sort === 'priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
-									<option value="priceDesc" <%= filters?.sort === 'priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
-									<option value="nameAsc" <%= filters?.sort === 'nameAsc' ? 'selected' : '' %>>Name: A-Z</option>
-									<option value="nameDesc" <%= filters?.sort === 'nameDesc' ? 'selected' : '' %>>Name: Z-A</option>
-								  </select>								  
-														
-								<select class="sort-select" id="categorySelect" name="category">
-									<option value="">All Categories</option>
-									<% categories.forEach(category => { %>
-										<option value="<%= category.name %>" <%= filters?.category===category.name ? 'selected' : '' %>>
-											<%= category.name %>
-										</option>
-									<% }) %>
-								</select>
-						
-								<input type="hidden" name="page" value="<%= currentPage || 1 %>">
-						
-								<button type="submit" class="btn btn-primary">Apply Filters</button>
+
+								<div class="filter-controls">
+									<div class="select-wrapper">
+										<select id="sort" name="sort" class="premium-select" onchange="this.form.submit()">
+											<option value="" <%= !filters?.sort ? 'selected' : '' %>>Sort Products</option>
+											<option value="priceAsc" <%= filters?.sort === 'priceAsc' ? 'selected' : '' %>>
+												<i class="fa fa-arrow-up"></i> Price: Low to High
+											</option>
+											<option value="priceDesc" <%= filters?.sort === 'priceDesc' ? 'selected' : '' %>>
+												<i class="fa fa-arrow-down"></i> Price: High to Low
+											</option>
+											<option value="nameAsc" <%= filters?.sort === 'nameAsc' ? 'selected' : '' %>>
+												Name: A to Z
+											</option>
+											<option value="nameDesc" <%= filters?.sort === 'nameDesc' ? 'selected' : '' %>>
+												Name: Z to A
+											</option>
+										</select>
+									</div>
+
+									<div class="select-wrapper">									
+										<select class="premium-select" id="categorySelect" name="category">
+											<option value="">All Categories</option>
+											<% categories.forEach(category => { %>
+												<option value="<%= category.name %>" 
+														<%= filters?.category===category.name ? 'selected' : '' %>>
+													<%= category.name %>
+												</option>
+											<% }) %>
+										</select>
+									</div>
+
+									<input type="hidden" name="page" value="<%= currentPage || 1 %>">
+
+									<button type="submit" class="apply-filters-btn">
+										<i class="fa fa-filter"></i>
+										Apply Filters
+									</button>
+								</div>
 							</form>
+
+							
 						</div>
 						
 
 						<!-- Product Grid -->
 						<div class="container">
 							<div class="product-grid">
-								<% products.forEach(product=> { %>
+								<% products.forEach(product => { %>
 									<div class="product-card">
 										<div class="product-badge">
-											<% if (product.productOffer> 0) { %>
-												<span class="badge badge-danger">SAVE <%= product.productOffer %>
-														%</span>
-												<% } %>
-													<% if (product.isNew) { %>
-														<span class="badge badge-primary">NEW ARRIVAL</span>
-														<% } %>
-															<% if (product.isBestSeller) { %>
-																<span class="badge badge-success">BESTSELLER</span>
-																<% } %>
+											<% 
+											// Calculate actual price difference and discount
+											const actualPriceDiff = product.regularPrice - product.salePrice;
+											const actualDiscountPercentage = Math.round((actualPriceDiff / product.regularPrice) * 100);
+											
+											// Get other applicable offers
+											const productOffer = product.productOffer || 0;
+											const categoryOffer = product.category ? product.category.offer || 0 : 0;
+											
+											// Calculate highest applicable discount
+											const highestOffer = Math.max(actualDiscountPercentage, productOffer, categoryOffer);
+											
+											// Calculate final price after applying highest discount
+											const finalPrice = product.regularPrice - product.totalOffer
+											
+											if (highestOffer > 0) { 
+											%>
+												<span class="badge badge-danger"><%= highestOffer %>% OFF</span>
+											<% } %>
+											<% if (product.isNew) { %>
+												<span class="badge badge-primary">NEW ARRIVAL</span>
+											<% } %>
+											<% if (product.isBestSeller) { %>
+												<span class="badge badge-success">BESTSELLER</span>
+											<% } %>
 										</div>
 
 										<div class="product-image-wrap">
-											<% if (product.productImages && product.productImages.length> 0) { %>
+											<% if (product.productImages && product.productImages.length > 0) { %>
 												<div class="product-image-slider">
-													<% product.productImages.forEach(image=> { %>
-														<img src="/uploads/product-images/<%= image %>"
-															alt="<%= product.productName %>" class="product-image">
-														<% }) %>
+													<img src="/uploads/re-image/<%= product.productImages[0] %>" 
+														 alt="<%= product.productName %>" 
+														 class="product-image">
 												</div>
-												<% } else { %>
-													<img src="/default-product.jpg" alt="<%= product.productName %>"
-														class="product-image">
-													<% } %>
+											<% } else { %>
+												<img src="/default-product.jpg" 
+													 alt="<%= product.productName %>" 
+													 class="product-image">
+											<% } %>
 
-														<div class="product-hover-overlay">
-															<a href="/product-details/<%= product._id %>"
-																class="quick-view-btn">
-																View Product</a>
-														</div>
+											<div class="product-hover-overlay">
+												<a href="/product-details/<%= product._id %>" 
+												   class="quick-view-btn">View Product</a>
+											</div>
 										</div>
 
 										<div class="product-info">
 											<div class="product-rating">
 												<div class="stars">
-													<% for(let i=1; i <=5; i++) { %>
-														<i
-															class="fa fa-star<%= i <= product.ratings ? '' : '-o' %>"></i>
-														<% } %>
+													<% for(let i=1; i <= 5; i++) { %>
+														<i class="fa fa-star<%= i <= product.ratings ? '' : '-o' %>"></i>
+													<% } %>
 												</div>
-												<span class="rating-count">(<%= product.reviewCount || 0 %>
-														reviews)</span>
+												<span class="rating-count">(<%= product.reviewCount || 0 %> reviews)</span>
 											</div>
 
 											<h3 class="product-title">
@@ -749,16 +981,12 @@
 											</h3>
 
 											<div class="product-price">
-												<% if (product.salePrice < product.regularPrice) { %>
-													<% if (product.productOffer) { %>
-														<span class="price-sale">₹<%= ((product.salePrice) -
-																(product.salePrice * product.productOffer /
-																100)).toFixed(2) %></span>
-														<% } else { %>
-															<span class="price-sale">₹<%= product.salePrice.toFixed(2)
-																	%></span>
-															<% } %>
-																<% } %>
+												<span class="price-original" style="text-decoration: line-through; color: #999; margin-right: 10px;">
+													₹<%= product.regularPrice.toFixed(2) %>
+												</span>
+												<span class="price-sale" style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">
+													₹<%= finalPrice.toFixed(2) %>
+												</span>
 											</div>
 
 											<button class="add-to-cart" onclick="addToCart('<%= product._id %>')">
@@ -767,36 +995,33 @@
 										</div>
 
 										<div class="product-actions">
-											<button class="action-btn wishlist"
-												onclick="addToWhishList('<%= product._id %>')">
-												<i class="fa fa-heart-o"></i>
-											</button>
-											<button class="action-btn compare" title="Compare">
-												<i class="fa fa-refresh"></i>
+											<button class="action-btn wishlist" 
+													onclick="addToWishlist('<%= product._id %>', event)" 
+													title="Add to Wishlist">
+												<i class="far fa-heart"></i>
 											</button>
 										</div>
 									</div>
-									<% }); %>
+								<% }); %>
 							</div>
 							<!-- pagianation links -->
 							<div class="pagination" style="margin-top: 57px; margin-left: 44%;">
-								<% if (currentPage> 1) { %>
-									<a href="?page=<%= currentPage - 1 %>"
+								<% if (currentPage > 1) { %>
+									<a href="?page=<%= currentPage - 1 %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
 										style="text-decoration: none; padding: 5px 10px;width: 85px; border: 1px solid #ccc; margin-right: 5px;">Previous</a>
-									<% } %>
+								<% } %>
 
-										<% for (let i=1; i <=totalPages; i++) { %>
-											<a href="?page=<%= i %>"
-												style="text-decoration: none; padding: 5px 10px; border: 1px solid #ccc; background-color: '<%= currentPage === i ? '#ddd' : '#fff' %>';">
-												<%= i %>
-											</a>
+									<% for (let i=1; i <=totalPages; i++) { %>
+										<a href="?page=<%= i %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
+											style="text-decoration: none; padding: 5px 10px; border: 1px solid #ccc; background-color: <%= currentPage === i ? '#ddd' : '#fff' %>;">
+											<%= i %>
+										</a>
+										<% } %>
+
+											<% if (currentPage < totalPages) { %>
+												<a href="?page=<%= currentPage + 1 %><%= filters?.query ? '&query=' + filters.query : '' %><%= filters?.category ? '&category=' + filters.category : '' %><%= filters?.sort ? '&sort=' + filters.sort : '' %>"
+													style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
 											<% } %>
-
-												<% if (currentPage < totalPages) { %>
-													<a href="?page=<%= currentPage + 1 %>"
-														style="text-decoration: none; padding: 5px 10px; width: 80px; border: 1px solid #ccc; margin-left: 5px;">Next</a>
-													<% } %>
-														 
 							</div>
 						</div>
 					</div>
@@ -834,15 +1059,7 @@
 			</section>
 			<!-- End related-product Area -->
 
-			<!-- Start footer Area -->
-			<footer class="footer-area section_gap">
-				<div class="container">
-					<div class="row">
-						<!-- Footer content -->
-					</div>
-				</div>
-			</footer>
-			<!-- End footer Area -->
+			<%-include("../../views/partials/user/footer")%>
 
 			<!-- Modal Quick Product View -->
 			<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -989,38 +1206,33 @@
 				// Function to update URL with filter parameters
 				function updateFilters() {
 					const searchValue = document.getElementById('searchInput').value;
-					const sortValue = document.getElementById('sortSelect').value;
+					const sortValue = document.getElementById('sort').value;
 					const categoryValue = document.getElementById('categorySelect').value;
-					const minPrice = document.getElementById('minPrice')?.value;
-					const maxPrice = document.getElementById('maxPrice')?.value;
 
 					const params = new URLSearchParams();
-					if (searchValue) params.set('search', searchValue);
+					if (searchValue) params.set('query', searchValue);
 					if (sortValue) params.set('sort', sortValue);
 					if (categoryValue) params.set('category', categoryValue);
-					if (minPrice) params.set('minPrice', minPrice);
-					if (maxPrice) params.set('maxPrice', maxPrice);
+					params.set('page', '1'); // Reset to first page when filters change
 
-					window.location.href = /user/shop ? ${ params.toString() };
+					window.location.href = `/shop?${params.toString()}`;
 				}
 
 				// Add event listeners
-				document.getElementById('searchInput').addEventListener('keyup', function (e) {
-					if (e.key === 'Enter') updateFilters();
+				document.getElementById('searchInput').addEventListener('keyup', function(e) {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						updateFilters();
+					}
 				});
 
-				document.getElementById('sortSelect').addEventListener('change', updateFilters);
+				document.getElementById('sort').addEventListener('change', updateFilters);
 				document.getElementById('categorySelect').addEventListener('change', updateFilters);
 
-				// Update price filter modal
-				document.querySelector('.apply-btn').addEventListener('click', function () {
+				// Handle form submission
+				document.getElementById('filterForm').addEventListener('submit', function(e) {
+					e.preventDefault();
 					updateFilters();
-					document.getElementById('filterModal').classList.remove('active');
-				});
-
-				// Reset filters
-				document.querySelector('.reset-btn').addEventListener('click', function () {
-					window.location.href = '/user/shop';
 				});
 			</script>
 
@@ -1155,4 +1367,3 @@
 </body>
 
 </html>
-implement paginationrs

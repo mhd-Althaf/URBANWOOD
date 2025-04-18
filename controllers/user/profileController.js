@@ -377,18 +377,17 @@ const postAddAddress = async (req, res) => {
         const userId = req.session.user; 
         if (!userId) {
             console.log("User ID not found in session");
-            return res.redirect("/pageNotFound");
+            return res.status(401).json({ success: false, message: "User not authenticated" });
         }
 
         const userData = await User.findById(userId); 
         if (!userData) {
             console.log("User not found in database with ID:", userId);
-            return res.redirect("/pageNotFound");
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
 
-        
         console.log("Received address data:", req.body);
 
         const userAddress = await Address.findOne({ userId: userData._id });
@@ -405,37 +404,42 @@ const postAddAddress = async (req, res) => {
             console.log("Address added to existing address list for user:", userData._id);
         }
 
-        res.redirect("/userProfile");
+        res.json({ success: true, message: "Address added successfully" });
     } catch (error) {
         console.error("Error adding address:", error);
-        res.redirect("/pageNotFound");
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 
 const editAddress = async (req, res) => {
     try {
-        const addressId = req.query.id;
-        const user = req.session.user;
-        const currAddress = await Address.findOne({
-            "address._id": addressId,
-        });
+        const userId = req.session.user;
+        const { addressId } = req.params;
+        const { name, phone, addressType, landMark, city, state, pincode } = req.body;
 
-        if (!currAddress) {
-            return res.redirect("/pageNotFound");
+        const result = await Address.updateOne(
+            { userId, "address._id": addressId },
+            {
+                $set: {
+                    "address.$.name": name,
+                    "address.$.phone": phone,
+                    "address.$.addressType": addressType,
+                    "address.$.landMark": landMark,
+                    "address.$.city": city,
+                    "address.$.state": state,
+                    "address.$.pincode": pincode
+                }
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ success: false, message: "Address not found" });
         }
 
-        const addressData = currAddress.address.find((item) => {
-            return item._id.toString() === addressId.toString();
-        });
-
-        if (!addressData) {
-            return res.redirect("/pageNotFound");
-        }
-
-        res.render("user/edit-address", { address: addressData, user: user });
+        res.json({ success: true, message: "Address updated successfully" });
     } catch (error) {
-        console.error("Error in edit address", error);
-        res.redirect("/pageNotFound");
+        console.error("Error updating address:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 
@@ -482,34 +486,52 @@ const postEditAddress = async (req, res) => {
 };
 const deleteAddress = async (req, res) => {
     try {
-        const { addressId } = req.query;
+        const userId = req.session.user;
+        const { addressId } = req.params;
 
-        console.log("Address ID being passed:", addressId);
-
-        if (!addressId) {
-            return res.status(400).json({ error: "Address ID is required" });
-        }
-
-        const address = await Address.findOneAndUpdate(
-            { "address._id": addressId },
-            { $pull: { address: { _id: addressId } } }, 
-            { new: true } 
+        const result = await Address.updateOne(
+            { userId },
+            { $pull: { address: { _id: addressId } } }
         );
 
-        console.log("Updated Address Document:", address);
-
-        if (!address) {
-            return res.status(404).json({ error: "Address not found" });
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ success: false, message: "Address not found" });
         }
 
-        res.redirect("/userProfile");
+        res.json({ success: true, message: "Address deleted successfully" });
     } catch (error) {
-        console.error("Error in delete address", error);
-        res.redirect("/pageNotFound"); 
+        console.error("Error deleting address:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 
+const addAddress = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "User not authenticated" });
+        }
 
+        const { name, phone, addressType, landMark, city, state, pincode } = req.body;
+
+        const userAddress = await Address.findOne({ userId });
+        if (!userAddress) {
+            const newAddress = new Address({
+                userId,
+                address: [{ name, phone, addressType, landMark, city, state, pincode }]
+            });
+            await newAddress.save();
+        } else {
+            userAddress.address.push({ name, phone, addressType, landMark, city, state, pincode });
+            await userAddress.save();
+        }
+
+        res.json({ success: true, message: "Address added successfully" });
+    } catch (error) {
+        console.error("Error adding address:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
 
 module.exports = {
     getForgotPassPage,
@@ -530,5 +552,6 @@ module.exports = {
     postAddAddress,
     editAddress,
     postEditAddress,
-    deleteAddress
+    deleteAddress,
+    addAddress
 };

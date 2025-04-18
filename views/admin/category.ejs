@@ -29,7 +29,11 @@
                   <%= categories.description %>
                 </td>
                 <td>
-                  <%= categories.categoryOffer %>
+                  <% if (categories.categoryOffer > 0) { %>
+                    <span class="badge badge-success">₹<%= categories.categoryOffer.toLocaleString() %></span>
+                  <% } else { %>
+                    <span class="text-muted">No offer</span>
+                  <% } %>
                 </td>
                 <td>
                   <%= categories.isListed ? 'Yes' : 'No' %>

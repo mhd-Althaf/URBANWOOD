@@ -10,8 +10,8 @@
     <style>
         /* General Styles */
         :root {
-            --primary-color: #b46e59;
-            --secondary-color: #ff7f50;
+            --primary-color: #06734d;
+            --secondary-color: #06734d;
             --light-bg: #f8f9fa;
             --text-dark: #333;
             --text-muted: #555;
@@ -36,16 +36,20 @@
             background-color: var(--primary-color);
             color: white;
             padding: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            text-align: center;
         }
 
         .navbar {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 20px;
         }
 
         .navbar-brand h1 {
-            font-size: 1.8rem;
-            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #06734d;
             margin: 0;
         }
 
@@ -57,32 +61,37 @@
         }
 
         .card {
-            border: none;
+            border: 1px solid #ddd;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
-            border-radius: 0.5rem;
+            border-radius: 10px;
         }
 
         .card-header {
-            background-color: var(--primary-color);
+            background-color: #06734d;
             color: white;
-            border-radius: 0.5rem 0.5rem 0 0 !important;
-            padding: 1rem;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px;
+            text-align: center;
         }
 
         .card-body {
-            padding: 1.5rem;
+            padding: 20px;
         }
 
         /* Buttons */
         .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+            background-color: #25537d;
+            border-color: #25537d;
+            color: #fff;
+            font-size: 1rem;
+            padding: 10px 15px;
+            border-radius: 5px;
         }
 
         .btn-primary:hover {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
+            background-color: #074b62;
+            border-color: #074b62;
         }
 
         /* Sidebar and Responsive Layout */
@@ -100,8 +109,30 @@
         }
 
         .dashboard-menu .nav-link.active {
-            color: #b46e59;
+            color: #06734d;
             font-weight: bold;
+        }
+
+        /* Navbar Links */
+        .navbar-nav .nav-item .nav-link {
+            color: #555;
+            font-size: 1.1rem;
+            padding: 10px 20px;
+        }
+
+        .navbar-nav .nav-item .nav-link.active {
+            color: #06734d;
+        }
+
+        .navbar-nav .btn {
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            color: #555;
+        }
+
+        .navbar-nav .btn:hover {
+            background-color: #f1f1f1;
+            color: #88aca0;
         }
 
         /* Adjustments for Mobile View */
@@ -144,7 +175,6 @@
                 padding: 1rem 0;
             }
 
-            /* Make the table scrollable */
             .transaction-table {
                 overflow-x: auto;
                 display: block;
@@ -178,15 +208,17 @@
         /* Modal Improvements */
         .modal-content {
             border-radius: 0.5rem;
+            padding: 20px;
         }
 
         .modal-header {
-            background-color: var(--primary-color);
+            background-color: #06734d;
             color: white;
             border-radius: 0.5rem 0.5rem 0 0;
         }
 
         .modal-header .btn-close {
+            background-color: #006532;
             filter: brightness(0) invert(1);
         }
 
@@ -198,15 +230,16 @@
         }
 
         .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(180, 110, 89, 0.25);
+            border-color: #06734d;
+            box-shadow: 0 0 0 0.2rem rgba(6, 115, 77, 0.25);
         }
 
         /* Footer */
         footer {
-            background-color: var(--light-bg);
-            padding: 1rem 0;
-            margin-top: 3rem;
+            background-color: #f1f1f1;
+            padding: 20px;
+            text-align: center;
+            margin-top: 50px;
         }
 
         footer p {
@@ -237,7 +270,7 @@
                             <a href="/userProfile" class="nav-link">My Profile</a>
                         </li>
                         <li class="nav-item">
-                            <a href="/myOrders" class="nav-link">My Orders</a>
+                            <a href="/Orders" class="nav-link">My Orders</a>
                         </li>
                         <li class="nav-item">
                             <a href="/wallet" class="nav-link">My Wallet</a>
@@ -281,7 +314,7 @@
                                         <a class="nav-link" data-bs-toggle="pill" href="#address" role="tab">My Address</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="/myOrders" role="tab">Orders</a>
+                                        <a class="nav-link" href="/Orders" role="tab">Orders</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="/wallet" role="tab">Wallet</a>
@@ -297,48 +330,86 @@
                         </div>
 
                         <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header">Wallet Overview</div>
+                            <div class="card mb-4">
+                                <div class="card-header bg-dark text-white">
+                                    <h5 class="mb-0">Wallet Overview</h5>
+                                </div>
                                 <div class="card-body">
-                                    <h5>Wallet Balance: ₹<%= typeof walletBalance !== 'undefined' ? walletBalance : 0 %></h5>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6 text-center">
+                                            <div class="display-4 fw-bold text-success mb-2">₹<%= typeof walletBalance !== 'undefined' ? walletBalance.toLocaleString('en-IN') : 0 %></div>
+                                            <p class="text-muted mb-0">Available Balance</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                                                    <i class="fas fa-plus-circle me-2"></i> Add Money
+                                                </button>
+                                                <!-- <button class="btn btn-outline-secondary">
+                                                    <i class="fas fa-file-invoice me-2"></i> Statement
+                                                </button> -->
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="card mt-4">
-                                <div class="card-header">Transaction History</div>
-                                <div class="card-body">
-                                    <table class="table transaction-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Description</th>
-                                                <th>Type</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% if (typeof transactions !== 'undefined' && transactions.length > 0) { %>
-                                                <% transactions.forEach(transaction => { %>
-                                                    <tr>
-                                                        <td><%= transaction.createdAt.toLocaleDateString() %></td>
-                                                        <td><%= transaction.description %></td>
-                                                        <td><%= transaction.type %></td>
-                                                        <td>
-                                                            <% if (transaction.type === 'Credit') { %>
-                                                                ₹<%= transaction.amount %>
-                                                            <% } else { %>
-                                                                -₹<%= transaction.amount %>
-                                                            <% } %>
-                                                        </td>
-                                                        <td><%= transaction.status %></td>
-                                                    </tr>
-                                                <% }); %>
-                                            <% } else { %>
-                                                <tr><td colspan="5">No transactions found.</td></tr>
-                                            <% } %>
-                                        </tbody>
-                                    </table>
+                            <div class="card">
+                                <div class="card-header bg-dark text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Transaction History</h5>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-light active" id="all-transactions">All</button>
+                                            <button type="button" class="btn btn-outline-light" id="credit-transactions">Credits</button>
+                                            <button type="button" class="btn btn-outline-light" id="debit-transactions">Debits</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0 transaction-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Date & Time</th>
+                                                    <th>Description</th>
+                                                    <th>Type</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (typeof transactions !== 'undefined' && transactions.length > 0) { %>
+                                                    <% transactions.forEach(transaction => { %>
+                                                        <tr class="transaction-row <%= transaction.type.toLowerCase() %>-row">
+                                                            <td>
+                                                                <div><%= new Date(transaction.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></div>
+                                                                <small class="text-muted"><%= new Date(transaction.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %></small>
+                                                            </td>
+                                                            <td>
+                                                                <div><%= transaction.description %></div>
+                                                                <% if (transaction.orderId) { %>
+                                                                    <small class="text-muted">Order ID: <%= transaction.orderId %></small>
+                                                                <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge <%= transaction.type === 'Credit' ? 'bg-success' : 'bg-danger' %>">
+                                                                    <%= transaction.type %>
+                                                                </span>
+                                                            </td>
+                                                            <td class="fw-bold <%= transaction.type === 'Credit' ? 'text-success' : 'text-danger' %>">
+                                                                <%= transaction.type === 'Credit' ? '+' : '-' %>₹<%= transaction.amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-success">Completed</span>
+                                                            </td>
+                                                        </tr>
+                                                    <% }); %>
+                                                <% } else { %>
+                                                    <tr><td colspan="5" class="text-center py-4">No transactions found.</td></tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -348,11 +419,156 @@
         </div>
     </section>
 
+    <!-- Add Money Modal -->
+    <div class="modal fade" id="addMoneyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Add Money to Wallet</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMoneyForm">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quick Add</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-primary quick-amount" data-amount="100">₹100</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount" data-amount="500">₹500</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount" data-amount="1000">₹1000</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount" data-amount="2000">₹2000</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay" checked>
+                                    <label class="form-check-label" for="razorpay">
+                                        Razorpay
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="creditCard">
+                                    <label class="form-check-label" for="creditCard">
+                                        Credit Card
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="addMoneyBtn">Add Money</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; URBANWOOD. All Rights Reserved.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        // Transaction filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const allTransactionsBtn = document.getElementById('all-transactions');
+            const creditTransactionsBtn = document.getElementById('credit-transactions');
+            const debitTransactionsBtn = document.getElementById('debit-transactions');
+            const transactionRows = document.querySelectorAll('.transaction-row');
+            
+            allTransactionsBtn.addEventListener('click', function() {
+                setActiveBtn(this);
+                transactionRows.forEach(row => {
+                    row.style.display = 'table-row';
+                });
+            });
+            
+            creditTransactionsBtn.addEventListener('click', function() {
+                setActiveBtn(this);
+                transactionRows.forEach(row => {
+                    if (row.classList.contains('credit-row')) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+            
+            debitTransactionsBtn.addEventListener('click', function() {
+                setActiveBtn(this);
+                transactionRows.forEach(row => {
+                    if (row.classList.contains('debit-row')) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+            
+            function setActiveBtn(btn) {
+                allTransactionsBtn.classList.remove('active');
+                creditTransactionsBtn.classList.remove('active');
+                debitTransactionsBtn.classList.remove('active');
+                btn.classList.add('active');
+            }
+            
+            // Quick amount buttons
+            const quickAmountBtns = document.querySelectorAll('.quick-amount');
+            const amountInput = document.getElementById('amount');
+            
+            quickAmountBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    amountInput.value = this.dataset.amount;
+                });
+            });
+            
+            // Add money button
+            const addMoneyBtn = document.getElementById('addMoneyBtn');
+            const addMoneyForm = document.getElementById('addMoneyForm');
+            
+            addMoneyBtn.addEventListener('click', function() {
+                if (addMoneyForm.checkValidity()) {
+                    const amount = amountInput.value;
+                    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                    
+                    // Here you would typically handle the payment process
+                    // For now, we'll just simulate it with an alert
+                    alert(`Processing payment of ₹${amount} via ${paymentMethod}. This would typically open the payment gateway.`);
+                    
+                    // You would replace this with actual API call to /add-funds
+                    fetch('/add-funds', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ amount: parseFloat(amount) })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Funds added successfully!');
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while adding funds.');
+                    });
+                } else {
+                    addMoneyForm.reportValidity();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
