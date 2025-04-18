@@ -181,6 +181,19 @@
              </div>
 
              <div class="form-group">
+              <label for="maximum-price" class="form-label">Maximum Price</label>
+              <input
+                type="number"
+                name="maximumPrice"
+                id="maximum-price"
+                placeholder="Enter Maximum price"
+                class="form-control"
+                value="<%=findCoupon.maximumPrice%>"
+              />
+              <div id="error-maximum-price" class="error-message"></div>
+            </div>
+
+             <div class="form-group">
                <button type="submit" class="btn btn-primary">Update Coupon</button>
              </div>
              <div id="err-msg" class="error-message"></div>
@@ -266,10 +279,12 @@
 
    const offerPriceInput = document.getElementsByName("offerPrice")[0];
    const minimumPriceInput = document.getElementsByName("minimumPrice")[0];
+   const maximumPriceInput = document.getElementsByName("maximumPrice")[0];
 
 
    const offerPrice =offerPriceInput.value.trim() !== ""? parseInt(offerPriceInput.value): NaN;
    const minimumPrice =minimumPriceInput.value.trim() !== ""? parseInt(minimumPriceInput.value): NaN;
+   const maximumPrice =maximumPriceInput.value.trim() !== ""? parseInt(maximumPriceInput.value): NaN;
 
 
    if (isNaN(offerPrice)) {
@@ -284,6 +299,10 @@
      return false;
    }
 
+   if (isNaN(maximumPrice)) {
+     document.getElementById("error-minimum-price").innerHTML ="Please enter a valid numeric value for Maximum Price";
+     return false;
+   }
 
    if (offerPrice < 0) {
      document.getElementById("error-offer-price").innerHTML ="Offer Price must be a positive number";
@@ -296,12 +315,15 @@
      return false;
    }
 
-
    if (offerPrice >= minimumPrice) {
      document.getElementById("error-offer-price").innerHTML ="Offer Price must be less than Minimum Price";
      return false;
    }
 
+   if (maximumPrice < 0 && minimumPrice > maximumPrice) {
+     document.getElementById("error-maximum-price").innerHTML ="Maximum Price must be a positive number and greater than Minimum Price";
+     return false;
+   }
 
    return true;
  }
@@ -309,7 +331,7 @@
 
  function updateCoupon() {
    $.ajax({
-     url: "/admin/updatecoupon",
+    url: "/admin/updatecoupon/" + document.getElementById("coupon-id").value,
      method: "post",
      data: {
        couponId: document.getElementById("coupon-id").value,
@@ -318,6 +340,7 @@
        endDate: document.getElementById("expiringDate").value,
        offerPrice: document.getElementById("offer-price").value,
        minimumPrice: document.getElementById("minimum-price").value,
+       maximumPrice: document.getElementById("maximum-price").value
      },
      success: function(response) {
        if (response.success) {

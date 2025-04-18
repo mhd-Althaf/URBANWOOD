@@ -23,7 +23,9 @@ const productDetails = async (req, res) => {
     const findCategory = product?.category;
     const categoryOffer = findCategory?.categoryOffer || 0;
     const productOffer = product.productOffer || 0;
-    const totalOffer = categoryOffer + productOffer;
+    const totalOffer = Math.max(categoryOffer, productOffer);
+
+    console.log(categoryOffer);
 
     res.render("user/single-product", {
       user: userData,
@@ -54,7 +56,7 @@ const getshop = async (req, res) => {
     // Search query
     if (query.trim()) {
       filter.$or = [
-        { name: { $regex: query, $options: "i" } },
+        { productName: { $regex: query, $options: "i" } },
         { description: { $regex: query, $options: "i" } }
       ];
     }
@@ -82,9 +84,9 @@ const getshop = async (req, res) => {
 
     if (sort) {
       if (sort === "priceAsc") {
-        sortOption = { salePrice: 1 };
+        sortOption = { regularPrice: 1 };
       } else if (sort === "priceDesc") {
-        sortOption = { salePrice: -1 };
+        sortOption = { regularPrice: -1 };
       } else if (sort === "nameAsc") {
         sortOption = { productName: 1 };
         useCollation = true;
@@ -114,9 +116,51 @@ const getshop = async (req, res) => {
     // Execute query
     const products = await productQuery.exec();
 
+    // Calculate total offer for each product and sort if needed
+    let productsWithOffers = products.map(product => {
+      const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
+      const productOffer = product.productOffer || 0;
+      const totalOffer = Math.max(categoryOffer, productOffer);
+      const finalPrice = product.regularPrice - totalOffer;
+      
+      return {
+        ...product._doc,
+        totalOffer: totalOffer,
+        finalPrice: finalPrice
+      };
+    });
+
+    // Sort by final price if price sorting is selected
+    if (sort === "priceAsc" || sort === "priceDesc") {
+      productsWithOffers.sort((a, b) => {
+        return sort === "priceAsc" 
+          ? a.finalPrice - b.finalPrice 
+          : b.finalPrice - a.finalPrice;
+      });
+    }
+
+    // If there's a search query, prioritize products where the search term appears at the beginning
+    if (query.trim()) {
+      const searchTerm = query.toLowerCase().trim();
+      productsWithOffers.sort((a, b) => {
+        const aName = a.productName.toLowerCase();
+        const bName = b.productName.toLowerCase();
+        
+        // Check if search term appears at the beginning of the product name
+        const aStartsWith = aName.startsWith(searchTerm);
+        const bStartsWith = bName.startsWith(searchTerm);
+        
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // If both or neither start with the search term, maintain current sort order
+        return 0;
+      });
+    }
+    
     res.render("user/shop", {
       user: userData,
-      products,
+      products: productsWithOffers,
       currentPage: parseInt(page),
       totalPages,
       categories: await Category.find({ isListed: true }),
@@ -128,14 +172,9 @@ const getshop = async (req, res) => {
   }
 };
 
-
-
 const getFilteredProducts = async (req, res) => {
 
 };
-
-
-
 
 module.exports = {
   getshop,

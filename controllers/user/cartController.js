@@ -13,28 +13,55 @@ const getCartPage = async (req, res) => {
             return res.render('user/cart', { cartItems: [], subtotal: 0, shippingCost: 0, grandTotal: 0 });
         }
 
-        
         const cartItems = await Promise.all(cart.items.map(async (item) => {
-            const product = await Product.findById(item.productId).lean();
+            const product = await Product.findById(item.productId)
+                .populate('category')
+                .lean();
+            
+            // Skip if product doesn't exist
+            if (!product) {
+                console.log(`Product with ID ${item.productId} not found`);
+                return null;
+            }
+            
+            // Calculate the highest applicable offer
+            const categoryOffer = product.category ? product.category.categoryOffer || 0 : 0;
+            const productOffer = product.productOffer || 0;
+            const totalOffer = Math.max(categoryOffer, productOffer);
+            
+            // Calculate final price after applying highest offer
+            const finalPrice = product.regularPrice - totalOffer;
+
+            console.log("finalPrice",finalPrice);
+            
             return {
                 ...item,
                 productId: item.productId,
                 productName: product.productName,
                 description: product.description,
                 regularPrice: product.regularPrice,
-                salePrice: product.salePrice,
+                salePrice: finalPrice,
                 productImages: product.productImages,
-                quantity: item.quantity 
+                quantity: item.quantity,
+                totalOffer: totalOffer
             };
         }));
 
+        // Filter out null items (products that don't exist)
+        const validCartItems = cartItems.filter(item => item !== null);
+        
+        // If all items are invalid, return empty cart
+        if (validCartItems.length === 0) {
+            return res.render('user/cart', { cartItems: [], subtotal: 0, shippingCost: 0, grandTotal: 0 });
+        }
+
         // Calculate totals
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+        const subtotal = validCartItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
         const shippingCost = subtotal > 1000 ? 0 : 100;
         const grandTotal = subtotal + shippingCost;
 
         res.render('user/cart', {
-            cartItems,
+            cartItems: validCartItems,
             subtotal,
             shippingCost,
             grandTotal,
@@ -235,18 +262,14 @@ const getCheckStock = async (req, res) => {
 
 const getCartCount = async (req, res, next) => {
     try {
-        if (req.session.user) {  // Check if user is logged in
-            const cart = await Cart.findOne({ userId: req.session.user._id });
-            const totalProductsInCart = cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
+        let totalProductsInCart = 0; 
 
-            // If it's an AJAX request, send JSON response
-            // if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            //     return res.json({ cartLength: totalProductsInCart });
-            // }
-            res.locals.cartCount = totalProductsInCart;
-        } else {
-            res.locals.cartCount = totalProductsInCart;
+        if (req.session.user) { 
+            const cart = await Cart.findOne({ userId: req.session.user._id });
+            totalProductsInCart = cart ? cart.items.reduce((total, item) => total + item.quantity, 0) : 0;
         }
+
+        res.locals.cartCount = totalProductsInCart;
         next();
     } catch (error) {
         console.error('Error fetching cart count:', error);
@@ -254,6 +277,7 @@ const getCartCount = async (req, res, next) => {
         next();
     }
 };
+
 
 const clearCart = async (req, res) => {
     try {

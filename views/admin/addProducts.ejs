@@ -2,303 +2,281 @@
 
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Add Product</title>
-
-        <!-- Essential CSS -->
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #00000056;
-            }
+    <style>
+        /* General Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            .content-main {
-                padding: 20px;
-            }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-            .content-header h2 {
-                font-size: 24px;
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 20px;
-            }
+        /* Content Main */
+        .content-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
 
-            .card {
-                border: none;
-                border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                background-color: #333;
-                margin-bottom: 20px;
-            }
+        .content-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            position: relative;
+        }
 
-            .card-header {
-                padding: 15px 20px;
-                border-bottom: 1px solid #333;
-            }
+        .content-header h2::after {
+            content: '';
+            width: 50px;
+            height: 3px;
+            background: #3498db;
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            border-radius: 3px;
+        }
 
-            .card-body {
-                padding: 20px;
-            }
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-            .form-label {
-                font-weight: bold;
-                color: #555;
-                display: block;
-                margin-bottom: 8px;
-            }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
 
-            .form-control {
-                width: 100%;
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 14px;
-                border: 1px solid #ccc;
-                transition: border-color 0.3s;
-                margin-bottom: 15px;
-            }
+        .card-header {
+            padding: 15px 25px;
+            background: #34495e;
+            color: #fff;
+            font-weight: 500;
+            border-bottom: none;
+        }
 
-            .form-control:focus {
-                border-color: #007bff;
-                box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
-                outline: none;
-            }
+        .card-body {
+            padding: 30px;
+        }
 
-            .form-select {
-                width: 150px;
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 14px;
-                border: 1px solid #ccc;
-                transition: border-color 0.3s;
-                cursor: pointer;
-            }
+        /* Form Elements */
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-            .btn {
-                font-size: 16px;
-                font-weight: bold;
-                border-radius: 8px;
-                padding: 10px 20px;
-                transition: background-color 0.3s;
-                cursor: pointer;
-                border: none;
-            }
+        .form-control, .form-select {
+            width: 100%;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 14px;
+            border: 2px solid #e0e6ed;
+            background: #f9fafc;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
 
-            .btn-primary {
-                background-color: #28a745;
-                color: white;
-            }
+        .form-control:focus, .form-select:focus {
+            border-color: #3498db;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+            outline: none;
+        }
 
-            .btn-primary:hover {
-                background-color: #218838;
-            }
+        .form-select {
+            width: 100%;
+            max-width: 300px;
+            cursor: pointer;
+        }
 
-            .btn-secondary {
-                background-color: #6c757d;
-                color: white;
-            }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
 
-            .btn-secondary:hover {
-                background-color: #5a6268;
-            }
+        /* Buttons */
+        .btn {
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 12px 25px;
+            transition: all 0.3s ease;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-            .error-message {
-                color: red;
-                font-size: 12px;
-                margin-top: 5px;
-                display: none;
-            }
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: #fff;
+        }
 
-            .thumbnails-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin-top: 10px;
-            }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #2980b9, #2471a3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
 
-            .thumbnail {
-                width: 80px;
-                height: 80px;
-                overflow: hidden;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: #f5f5f5;
-            }
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: #fff;
+        }
 
-            .thumbnail img {
-                max-width: 100%;
-                max-height: 100%;
-            }
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #7f8c8d, #6c7778);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.4);
+        }
 
-            .image-cropper {
-                border: hidden;
-                border-radius: 8px;
-                padding: 5px;
-                position: relative;
-                margin-top: 10px;
-                display: none;
-            }
+        /* Error Messages */
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 5px;
+            font-weight: 500;
+            display: none;
+            animation: shake 0.3s ease;
+        }
 
-            #addedImagesContainer img {
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                padding: 5px;
-                width: 100%;
-            }
+        /* Thumbnails */
+        .thumbnails-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
 
-            #imgView1,
-            #imgView2,
-            #imgView3,
-            #imgView4,
-            #croppedImg1,
-            #croppedImg2,
-            #croppedImg3,
-            #croppedImg4 {
-                width: 200px;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 8px;
-                margin: 10px 0;
-                display: none;
-            }
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            border: 2px dashed #e0e6ed;
+            overflow: hidden;
+            background: #f9fafc;
+            transition: all 0.3s ease;
+        }
 
-            .row {
-                display: flex;
-                flex-wrap: wrap;
-                margin: -10px;
-            }
+        .thumbnail:hover {
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
 
-            .col-lg-4 {
-                flex: 0 0 33.333333%;
-                max-width: 33.333333%;
-                padding: 10px;
-            }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-            .mb-4 {
-                margin-bottom: 1.5rem;
-            }
+        /* Image Preview */
+        #imgView1, #imgView2, #imgView3, #imgView4 {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin: 15px 0;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.3s ease;
+        }
 
-            /* Modal and cropper styles */
-            .cropper-modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.85);
-                z-index: 10000;
-                /* Ensure it's above everything */
-                align-items: center;
-                justify-content: center;
-            }
+        /* Layout */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: -15px;
+        }
 
-            .modal-content {
-                background: white;
-                padding: 20px;
-                border-radius: 8px;
-                width: 90%;
-                max-width: 800px;
-                z-index: 10001;
-                /* Ensure modal content is on top */
-                position: relative;
-            }
+        .col-lg-4 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+            padding: 15px;
+        }
 
-            .cropper-wrapper {
-                height: 60vh;
-                max-height: 600px;
-                overflow: hidden;
-            }
+        .mb-4 {
+            margin-bottom: 2rem;
+        }
 
-            /* Lower z-index for form elements to prevent overlay */
-            .form-control,
-            .form-select,
-            input[type="file"] {
-                z-index: 9;
-                position: relative;
-            }
+        /* Cropper Modal */
+        .cropper-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
 
-            /* Ensure modal content stays on top */
-            #cropperModal .modal-content {
-                position: relative;
-                z-index: 10002;
-            }
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.4s ease;
+        }
 
-            #cropperModal .cropper-container {
-                z-index: 10003;
-            }
+        .cropper-wrapper {
+            height: 60vh;
+            max-height: 650px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-            /* Additional styles to prevent overlay issues */
-            .variant-item {
-                position: relative;
-                z-index: 1;
-            }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
 
-            .upload-label {
-                position: relative;
-                z-index: 1;
-            }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
-            .preview-image {
-                position: relative;
-                z-index: 1;
-            }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
-            /* Cropper specific styles */
-            .cropper-view-box {
-                outline: 1px solid #fff;
-                outline-color: rgba(255, 255, 255, 0.75);
-            }
-
-            .cropper-face {
-                background-color: transparent !important;
-                opacity: 0.1 !important;
-            }
-
-            .cropper-line,
-            .cropper-point {
-                background-color: #fff !important;
-                opacity: 0.7 !important;
-            }
-
-            .cropper-view-box {
-                box-shadow: 0 0 0 1px #39f;
-                border-radius: 2px;
-                outline: 0;
-            }
-
-            .cropper-dashed {
-                border-color: #fff;
-                opacity: 0.5;
-            }
-
-            /* Make sure form elements stay below modal */
-            .form-control,
-            .form-select,
-            input[type="file"] {
-                z-index: 1;
-                position: relative;
-            }
-
-            /* Ensure modal content is above everything */
-            #cropperModal .modal-content {
-                position: relative;
-                z-index: 1;
-            }
-
-            #cropperModal .cropper-container {
-                z-index: 1;
-            }
-        </style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
     </head>
 
     <body>
@@ -334,18 +312,25 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="mb-4">
+                                    <label class="form-label">Product Offer (₹)</label>
+                                    <input placeholder="₹" name="productOffer" type="number" min="0" class="form-control">
+                                    <small class="form-text text-muted">Enter the discount amount to be applied to this product.</small>
+                                    <div id="productOffer-error" class="error-message"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="mb-4">
                                     <label class="form-label">Sale price</label>
                                     <input placeholder="₹" name="salePrice" type="text" class="form-control">
                                     <div id="salePrice-error" class="error-message"></div>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
-                                <div class="mb-4">
-                                    <label class="form-label">Quantity</label>
-                                    <input placeholder="" name="quantity" type="text" class="form-control">
-                                    <div id="quantity-error" class="error-message"></div>
-                                </div>
-                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Quantity</label>
+                            <input placeholder="" name="quantity" type="text" class="form-control">
+                            <div id="quantity-error" class="error-message"></div>
                         </div>
 
                         <div class="mb-4">
@@ -615,6 +600,26 @@
                     if (!regularPrice.value.trim() || isNaN(regularPrice.value) || parseFloat(regularPrice.value) <= 0) {
                         const error = document.getElementById('regularPrice-error') || createErrorElement(regularPrice, 'regularPrice-error');
                         error.textContent = 'Please enter a valid price';
+                        error.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    // Validate product offer - it's optional but should be valid if provided
+                    const productOffer = document.querySelector('input[name="productOffer"]');
+                    if (productOffer && productOffer.value.trim() !== '') {
+                        if (isNaN(productOffer.value) || parseFloat(productOffer.value) < 0) {
+                            const error = document.getElementById('productOffer-error') || createErrorElement(productOffer, 'productOffer-error');
+                            error.textContent = 'Product offer must be a non-negative number';
+                            error.style.display = 'block';
+                            isValid = false;
+                        }
+                    }
+                    
+                    // Validate sale price
+                    const salePrice = document.querySelector('input[name="salePrice"]');
+                    if (salePrice && (!salePrice.value.trim() || isNaN(salePrice.value) || parseFloat(salePrice.value) <= 0)) {
+                        const error = document.getElementById('salePrice-error') || createErrorElement(salePrice, 'salePrice-error');
+                        error.textContent = 'Please enter a valid sale price';
                         error.style.display = 'block';
                         isValid = false;
                     }

@@ -43,10 +43,14 @@ const userSchema = new Schema({
         ref: "Cart",
         default: []
     }],
-    wallet: [{
-        type: Schema.Types.ObjectId,
-        ref: "Wishlist",
-        default: []
+    wallet: {
+        type: Number,
+        default: 0
+    },
+    walletHistory: [{
+        amount: Number,
+        transactionType: { type: String, enum: ["credit", "debit", "refund"] },
+        timestamp: { type: Date, default: () => Date.now() }
     }],
     orderHistory: [{
         type: Schema.Types.ObjectId,
@@ -86,8 +90,6 @@ const userSchema = new Schema({
         }
     }]
 });
-
-
 
 userSchema.index({ phone: 1, sparse: true });
 
