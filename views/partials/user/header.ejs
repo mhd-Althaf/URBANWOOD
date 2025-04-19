@@ -45,34 +45,19 @@
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/drift-basic.min.css">
 
 	<style>
-		/* Base styles */
-		.header_area {
-			position: fixed;
-			width: 100%;
-			top: 0;
-			left: 0;
-			z-index: 999;
-			transition: all 0.3s ease;
+		.header__nav__option .sign-in-link {
+			font-size: 16px;
+			color: #333;
+			margin-right: 15px;
+			text-decoration: none;
+			font-weight: 600;
 		}
 
-		/* Logo Styles */
-		.navbar-brand img {
-			max-height: 60px;
-			width: auto;
-			transition: all 0.3s ease;
+		.header__nav__option .sign-in-link:hover {
+			color: #ff7f50;
 		}
 
-		/* Nav Menu Styles */
-		.navbar-nav {
-			align-items: center;
-		}
 
-		.nav-link {
-			padding: 0.5rem 1rem;
-			transition: color 0.3s ease;
-		}
-
-		/* User dropdown styles */
 		.dropdown {
 			position: relative;
 			display: inline-block;
@@ -80,14 +65,14 @@
 
 		.dropdown-content {
 			display: none;
-			position: absolute;
+			position: relative;
 			background-color: white;
 			min-width: 160px;
 			box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 			z-index: 1000;
 			right: 0;
-			border-radius: 4px;
 		}
+
 
 		.dropdown-content a {
 			color: black;
@@ -95,91 +80,21 @@
 			text-decoration: none;
 			display: block;
 			width: 100%;
+
+
 		}
 
 		.dropdown-content a:hover {
 			background-color: #f1f1f1;
-			border-radius: 4px;
 		}
 
 		.dropdown:hover .dropdown-content {
 			display: block;
 		}
 
-		/* Cart & Wishlist Icons */
-		.nav-item .btn {
-			padding: 0.375rem 0.75rem;
-			transition: all 0.3s ease;
-		}
-
-		.nav-item .btn:hover {
-			background-color: #f8f9fa;
-		}
-
-		/* Responsive Styles */
-		@media (max-width: 1199px) {
-			.navbar-brand img {
-				max-height: 50px;
-			}
-		}
-
-		@media (max-width: 991px) {
-			.navbar-brand img {
-				max-height: 45px;
-			}
-			
-			.navbar-collapse {
-				background-color: white;
-				padding: 15px;
-				box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-				border-radius: 0 0 4px 4px;
-			}
-
-			.navbar-nav {
-				padding-top: 10px;
-			}
-
-			.nav-item {
-				width: 100%;
-				text-align: left;
-				padding: 8px 0;
-			}
-
-			.dropdown-menu {
-				border: none;
-				background-color: #f8f9fa;
-				padding: 0;
-			}
-
-			.dropdown-menu .nav-item {
-				padding-left: 20px;
-			}
-		}
-
-		@media (max-width: 767px) {
-			.navbar-brand img {
-				max-height: 40px;
-			}
-			
-			.navbar-toggler {
-				padding: 0.25rem 0.5rem;
-				font-size: 1rem;
-			}
-
-			.nav-item .btn {
-				padding: 0.25rem 0.5rem;
-				margin: 5px 2px !important;
-			}
-		}
-
-		@media (max-width: 575px) {
-			.navbar-brand img {
-				max-height: 35px;
-			}
-			
-			.header_area .main_menu .navbar {
-				padding: 10px 15px;
-			}
+		.header {
+			position: relative;
+			z-index: 500;
 		}
 	</style>
 </head>
@@ -192,7 +107,7 @@
 			<nav class="navbar navbar-expand-lg navbar-light main_box">
 				<div class="container">
 					<!-- Brand and toggle get grouped for better mobile display -->
-					<a class="navbar-brand logo_h" href="/"><img src="/img/Urbenwood_new.png" alt="Urbenwood Logo"></a>
+					<a class="navbar-brand logo_h" href="/"><img src="/img/Urbenwood_new.png" alt=""></a>
 					<button class="navbar-toggler" type="button" data-toggle="collapse"
 						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
 						aria-expanded="false" aria-label="Toggle navigation">
@@ -202,36 +117,50 @@
 					</button>
 					<!-- Collect the nav links, forms, and other content for toggling -->
 					<div class="collapse navbar-collapse offset" id="navbarSupportedContent">
+
 						<ul class="nav navbar-nav menu_nav ml-auto">
-							<li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
-							<li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
-							<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
 							<li class="nav-item submenu dropdown">
 								<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
 									aria-haspopup="true" aria-expanded="false">
 									<%= locals.user ? locals.user.name : "SIGN IN" %>
 								</a>
+
 								<ul class="dropdown-menu">
 									<% if (locals.user) { %>
 										<li class="nav-item"><a class="nav-link" href="/userProfile">Profile</a></li>
 										<li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-									<% } else { %>
-										<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-									<% } %>
-								</ul>
+										<% } else { %>
+											<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+											<% } %>
+								</ul> 
+
 							</li>
+							<li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
+							<li class="nav-item submenu dropdown">
+								<a href="/shop" class="nav-link">Shop</a>
+							</li>
+							<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+							<li class="nav-item submenu dropdown">
+								<!-- <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+								 aria-expanded="false">user</a> -->
+								<!-- <ul class="dropdown-menu">
+									<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+									
+								</ul> -->
+							</li>
+
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
-							<li class="nav-item">
-								<a href="/cart" class="btn border mx-2">
-									<i class="fas fa-cart-shopping text-primary"></i>
-								</a>
-							</li>
-							<li class="nav-item">
-								<a href="/wishlist" class="btn border mx-2">
-									<i class="fas fa-heart text-primary"></i>
-								</a>
-							</li>
+							<li class="nav-item"><a href="/cart" class="btn border mx-2">
+								<i class="fas fa-cart-shopping text-primary"></i>
+								<!-- <span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span> -->
+							</a></li>
+							<li class="nav-item"><a href="/wishlist" class="btn border mx-2">
+								<i class="fas fa-heart text-primary"></i>
+							</a></li>
+							<!-- <li class="nav-item">
+								<button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
+							</li> -->
 						</ul>	
 					</div>
 				</div>

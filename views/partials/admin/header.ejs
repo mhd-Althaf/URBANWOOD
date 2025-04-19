@@ -22,82 +22,13 @@
 <!-- End layout styles -->
 <link rel="shortcut icon" href="/assets/images/favicon.png">
 
-    <!-- Additional responsive styles -->
-    <style>
-      /* Responsive Logo Styles */
-      .sidebar-brand-wrapper {
-        padding: 0 12px;
-        transition: all 0.3s ease;
-      }
-      
-      .sidebar-brand-wrapper img {
-        max-height: 50px;
-        width: auto;
-        transition: all 0.3s ease;
-      }
-      
-      /* Mobile adjustments */
-      @media (max-width: 991px) {
-        .sidebar-brand-wrapper img {
-          max-height: 40px;
-        }
-        
-        .navbar-brand-wrapper img {
-          max-height: 35px;
-        }
-        
-        .navbar-profile-name {
-          max-width: 100px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      }
-      
-      @media (max-width: 767px) {
-        .sidebar-brand-wrapper img {
-          max-height: 30px;
-        }
-        
-        .navbar-brand-wrapper img {
-          max-height: 30px;
-        }
-        
-        .navbar-profile {
-          padding: 0.5rem 0.5rem !important;
-        }
-        
-        .navbar-profile img {
-          width: 30px !important;
-          height: 30px !important;
-        }
-      }
-      
-      /* Fix sidebar overflow */
-      .sidebar {
-        overflow-y: auto;
-      }
-      
-      /* Fix menu items */
-      .nav-item .menu-title {
-        white-space: normal;
-        line-height: 1.2;
-      }
-      
-      /* Ensure dropdown remains visible */
-      .navbar-dropdown {
-        position: fixed;
-        right: 10px;
-      }
-    </style>
   </head>
   <body>
     <div class="container-scroller">
       <!-- partial:partials/_sidebar.html -------------------------------------------------------------------------------->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
-        <div class="sidebar-brand-wrapper d-flex align-items-center justify-content-center fixed-top">
-          <a class="sidebar-brand brand-logo" href="/admin/dashboard"><img src="/assets/images/logo-mini.svg" alt="logo" /></a>
-          <a class="sidebar-brand brand-logo-mini" href="/admin/dashboard"><img src="/assets/images/logo-mini.svg" alt="logo" /></a>
+        <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+          <a class="sidebar-brand brand-logo-mini" href="/"><img src="/assets/images/logo-mini.svg" alt="logo" /></a>
         </div>
 
         <!-- ----------------------------------------------------------------------------------------------------------------------------- -->
@@ -117,7 +48,7 @@
           <li class="nav-item menu-items">
             <a class="nav-link" href="/admin/customers">
               <span class="menu-icon">
-                <i class="mdi mdi-account-multiple"></i>
+                <i class="mdi mdi-speedometer"></i>
               </span>
               <span class="menu-title">User management</span>
             </a>
@@ -125,7 +56,7 @@
           <li class="nav-item menu-items">
             <a class="nav-link" href="/admin/category">
               <span class="menu-icon">
-                <i class="mdi mdi-tag-multiple"></i>
+                <i class="mdi mdi-speedometer"></i>
               </span>
               <span class="menu-title">Category management</span>
             </a>
@@ -141,25 +72,25 @@
           <li class="nav-item menu-items">
             <a class="nav-link" href="/admin/coupon">
               <span class="menu-icon">
-                <i class="mdi mdi-ticket-percent"></i>
+                <i class="mdi mdi-speedometer"></i>
               </span>
-              <span class="menu-title">Coupon management</span>
+              <span class="menu-title">coupon management</span>
             </a>
           </li>
           <li class="nav-item menu-items">
             <a class="nav-link" href="/admin/order">
               <span class="menu-icon">
-                <i class="mdi mdi-cart"></i>
+                <i class="mdi mdi-speedometer"></i>
               </span>
-              <span class="menu-title">Order management</span>
+              <span class="menu-title">order management</span>
             </a>
           </li>
           <li class="nav-item menu-items">
             <a class="nav-link" href="/admin/sales-report">
               <span class="menu-icon">
-                <i class="mdi mdi-chart-bar"></i>
+                <i class="mdi mdi-speedometer"></i>
               </span>
-              <span class="menu-title">Sales Report</span>
+              <span class="menu-title">Saled Report</span>
             </a>
           </li>
         </ul>
