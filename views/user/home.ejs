@@ -84,17 +84,26 @@
 								<div class="product-image position-relative">
 									<a href="/product-details/<%= product._id %>">
 										<img src="<%= product.productImages && product.productImages.length > 0 ? 
-										'/uploads/re-image/' + product.productImages[0] : 
-										'/uploads/product-images/default.jpg' %>" class="img-fluid product-img" alt="<%= product.productName %>">
+										'/Uploads/re-image/' + product.productImages[0] : 
+										'/Uploads/product-images/default.jpg' %>" class="img-fluid product-img" alt="<%= product.productName %>">
 									</a>
-									<!-- Favorite Button - Top Right Corner -->
-									<!-- <div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
-										<button class="btn btn-sm btn-light rounded-circle shadow-sm"
-											onclick="addToWishlist('<%= product._id %>', event)"
-											style="width: 36px; height: 36px; padding: 0;">
-											<i class="far fa-heart align-middle" style="font-size: 1.1rem;"></i>
-										</button>
-									</div> -->
+									<% 
+									// Calculate actual price difference and discount
+									const actualPriceDiff = product.price - (product.salePrice || product.price);
+									const actualDiscountPercentage = Math.round((actualPriceDiff / product.price) * 100);
+									
+									// Get other applicable offers
+									const productOffer = product.productOffer || 0;
+									const categoryOffer = product.category ? product.category.offer || 0 : 0;
+									
+									// Calculate highest applicable discount
+									const totalOffer = Math.max(actualDiscountPercentage, productOffer, categoryOffer);
+									
+									// Display discount badge if there's a discount
+									if(totalOffer > 0) { 
+									%>
+										<span class="badge badge-danger"><%= totalOffer %>% OFF</span>
+									<% } %>
 								</div>
 								<div class="product-details p-3">
 									<h6 class="product-title mb-1">
@@ -107,14 +116,19 @@
 										<%= product.brand || 'Premium Brand' %>
 									</p>
 									<div class="d-flex justify-content-between align-items-center">
-										<div class="price">
-											<% if(product.salePrice) { %>
-												<span class="text-primary fw-bold">₹<%= product.salePrice %></span>
-												<del class="text-muted small ms-2">₹<%= product.price %></del>
-												<% } else { %>
-													<span class="text-primary fw-bold">₹<%= product.price %></span>
-													<% } %>
-										</div>
+										<!-- <div class="price">
+											<% 
+											// Define originalPrice and regularPrice for compatibility
+											const originalPrice = product.price;
+											const regularPrice = product.salePrice || product.price;
+											%>
+											<% if (totalOffer > 0 && totalOffer < originalPrice) { %>
+												<span class="original-price text-muted small ms-2">$<%= originalPrice %></span>
+												<span class="regular-price text-primary fw-bold">$<%= regularPrice %></span>
+											<% } else { %>
+												<span class="original-price text-primary fw-bold">$<%= regularPrice %></span>
+											<% } %>
+										</div> -->
 									</div>
 								</div>
 							</div>
@@ -129,151 +143,167 @@
 		</div>
 	</section>
 
+	<style>
+		.hero-section {
+			background: linear-gradient(45deg, #f8f9fa 50%, #ffffff 50%);
+		}
 
+		.product-card {
+			transition: transform 0.3s ease, box-shadow 0.3s ease;
+			position: relative;
+		}
 
-	<%-include("../../views/partials/user/footer")%>
+		.product-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+		}
 
-		<style>
-			.hero-section {
-				background: linear-gradient(45deg, #f8f9fa 50%, #ffffff 50%);
+		.product-img {
+			height: 250px;
+			object-fit: cover;
+			transition: transform 0.3s ease;
+		}
+
+		.product-img:hover {
+			transform: scale(1.05);
+		}
+
+		.countdown-timer span {
+			padding: 10px 20px;
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 5px;
+			margin: 0 5px;
+		}
+
+		.feature-card {
+			transition: transform 0.3s ease;
+		}
+
+		.feature-card:hover {
+			transform: translateY(-5px);
+		}
+
+		.far.fa-heart {
+			transition: color 0.3s ease;
+		}
+
+		.far.fa-heart:hover {
+			color: #dc3545 !important;
+			/* Red color on hover */
+		}
+
+		.btn-light:hover {
+			background-color: rgba(255, 255, 255, 0.9) !important;
+		}
+
+		/* Add styles for the wishlist button */
+		.wishlist-btn {
+			transition: all 0.3s ease;
+		}
+
+		.wishlist-btn:hover {
+			transform: scale(1.1);
+		}
+
+		.wishlist-btn i {
+			transition: color 0.3s ease;
+		}
+
+		.wishlist-btn:hover i {
+			color: #dc3545;
+		}
+
+		/* Badge styling */
+		.badge-danger {
+			background: linear-gradient(45deg, #e74c3c, #c0392b);
+			color: white;
+			padding: 0.5rem 1rem;
+			border-radius: 25px;
+			font-weight: 600;
+			text-transform: uppercase;
+			font-size: 0.75rem;
+			letter-spacing: 0.5px;
+			position: absolute;
+			top: 1rem;
+			right: 1rem;
+			z-index: 2;
+		}
+	</style>
+
+	<script>
+		// Simple Countdown Timer
+		function updateTimer() {
+			const countdown = document.getElementById('countdown');
+			const days = countdown.querySelector('.days');
+			const hours = countdown.querySelector('.hours');
+			const minutes = countdown.querySelector('.minutes');
+			const seconds = countdown.querySelector('.seconds');
+
+			const targetDate = new Date();
+			targetDate.setDate(targetDate.getDate() + 7);
+
+			function update() {
+				const now = new Date().getTime();
+				const difference = targetDate - now;
+
+				days.textContent = Math.floor(difference / (1000 * 60 * 60 * 24));
+				hours.textContent = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+				minutes.textContent = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+				seconds.textContent = Math.floor((difference % (1000 * 60)) / 1000);
 			}
 
-			.product-card {
-				transition: transform 0.3s ease, box-shadow 0.3s ease;
-			}
+			update();
+			setInterval(update, 1000);
+		}
 
-			.product-card:hover {
-				transform: translateY(-5px);
-				box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-			}
+		document.addEventListener('DOMContentLoaded', updateTimer);
 
-			.product-img {
-				height: 250px;
-				object-fit: cover;
-				transition: transform 0.3s ease;
-			}
+		async function addToWishlist(productId, event) {
+			try {
+				// Prevent default button behavior
+				event.preventDefault();
+				
+				const response = await fetch('/wishlist/add', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ productId })
+				});
 
-			.product-img:hover {
-				transform: scale(1.05);
-			}
+				const data = await response.json();
 
-			.countdown-timer span {
-				padding: 10px 20px;
-				background: rgba(255, 255, 255, 0.1);
-				border-radius: 5px;
-				margin: 0 5px;
-			}
-
-			.feature-card {
-				transition: transform 0.3s ease;
-			}
-
-			.feature-card:hover {
-				transform: translateY(-5px);
-			}
-
-			.far.fa-heart {
-				transition: color 0.3s ease;
-			}
-
-			.far.fa-heart:hover {
-				color: #dc3545 !important;
-				/* Red color on hover */
-			}
-
-			.btn-light:hover {
-				background-color: rgba(255, 255, 255, 0.9) !important;
-			}
-
-			/* Add styles for the wishlist button */
-			.wishlist-btn {
-				transition: all 0.3s ease;
-			}
-
-			.wishlist-btn:hover {
-				transform: scale(1.1);
-			}
-
-			.wishlist-btn i {
-				transition: color 0.3s ease;
-			}
-
-			.wishlist-btn:hover i {
-				color: #dc3545;
-			}
-		</style>
-
-		<script>
-			// Simple Countdown Timer
-			function updateTimer() {
-				const countdown = document.getElementById('countdown');
-				const days = countdown.querySelector('.days');
-				const hours = countdown.querySelector('.hours');
-				const minutes = countdown.querySelector('.minutes');
-				const seconds = countdown.querySelector('.seconds');
-
-				const targetDate = new Date();
-				targetDate.setDate(targetDate.getDate() + 7);
-
-				function update() {
-					const now = new Date().getTime();
-					const difference = targetDate - now;
-
-					days.textContent = Math.floor(difference / (1000 * 60 * 60 * 24));
-					hours.textContent = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-					minutes.textContent = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-					seconds.textContent = Math.floor((difference % (1000 * 60)) / 1000);
-				}
-
-				update();
-				setInterval(update, 1000);
-			}
-
-			document.addEventListener('DOMContentLoaded', updateTimer);
-
-			async function addToWishlist(productId, event) {
-				try {
-					// Prevent default button behavior
-					event.preventDefault();
+				if (data.success) {
+					// Get the button element
+					const button = event.currentTarget;
+					// Find the heart icon within the button
+					const heartIcon = button.querySelector('i');
 					
-					const response = await fetch('/wishlist/add', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({ productId })
-					});
-
-					const data = await response.json();
-
-					if (data.success) {
-						// Get the button element
-						const button = event.currentTarget;
-						// Find the heart icon within the button
-						const heartIcon = button.querySelector('i');
-						
-						if (heartIcon) {
-							heartIcon.classList.remove('far');
-							heartIcon.classList.add('fas');
-							heartIcon.style.color = '#dc3545'; // Add red color
-						}
-						
-						Swal.fire({
-							icon: 'success',
-							title: 'Success!',
-							text: 'Product added to wishlist successfully',
-							showConfirmButton: false,
-							timer: 1500
-						});
-					} else {
-						throw new Error(data.message || 'Failed to add to wishlist');
+					if (heartIcon) {
+						heartIcon.classList.remove('far');
+						heartIcon.classList.add('fas');
+						heartIcon.style.color = '#dc3545'; // Add red color
 					}
-				} catch (error) {
+					
 					Swal.fire({
-						icon: 'error',
-						title: 'Oops...',
-						text: error.message || 'Something went wrong!',
+						icon: 'success',
+						title: 'Success!',
+						text: 'Product added to wishlist successfully',
+						showConfirmButton: false,
+						timer: 1500
 					});
+				} else {
+					throw new Error(data.message || 'Failed to add to wishlist');
 				}
+			} catch (error) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Oops...',
+					text: error.message || 'Something went wrong!',
+				});
 			}
-		</script>
+		}
+	</script>
+
+	<!-- Footer Section -->
+	<%-include("../../views/partials/user/footer.ejs")%>

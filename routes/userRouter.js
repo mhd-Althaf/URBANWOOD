@@ -81,7 +81,7 @@ router.post("/verify-changepassword-otp", userAuth, profileController.verifyChan
 router.get("/addaddress", userAuth, profileController.addaddress)
 router.post("/addaddress", userAuth, profileController.postAddAddress);
 router.get("/editAddress", userAuth, profileController.editAddress);
-router.post("/editAddress", userAuth, profileController.postEditAddress);
+router.post("/edit-address/:id", userAuth, profileController.postEditAddress);
 router.get("/deleteAddress", userAuth, profileController.deleteAddress)
 
 //order management 
@@ -150,7 +150,6 @@ router.post("/add-funds", userAuth, walletController.addFunds);
 
 // Address Management
 router.post("/add-address", userAuth, profileController.addAddress);
-router.post("/edit-address/:addressId", userAuth, profileController.editAddress);
 router.post("/delete-address/:addressId", userAuth, profileController.deleteAddress);
 
 // Add invoice download route

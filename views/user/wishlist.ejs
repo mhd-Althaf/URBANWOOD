@@ -39,16 +39,17 @@
                                    <% wishlist.forEach(product => { %>
                                        <tr id="wishlist-item-<%= product._id %>">
                                            <td class="image product-thumbnail">
-                                               <img src="<%= product?.productImages[0] %>" alt="<%= product?.productName %>" />
+                                               <img src="<%= product?.productImages && product.productImages.length > 0 ? product.productImages[0] : '/images/default-product.jpg' %>" 
+                                                    alt="<%= product?.productName || 'Product' %>" />
                                            </td>
                                            <td class="product-des product-name">
                                                <h5 class="product-name">
                                                    <a href="/product/<%= product._id %>"><%= product.productName %></a>
                                                </h5>
-                                               <p class="font-xs"><%= product.description %></p>
+                                               <p class="font-xs description-text"><%= product.description %></p>
                                            </td>
                                            <td class="price" data-title="Price">
-                                               ₹<span><%= product.salePrice.toLocaleString() %></span>
+                                               ₹<span><%= product.salePrice ? product.salePrice.toLocaleString() : '0' %></span>
                                            </td>
                                            <td class="stock" data-title="Stock">
                                                <span class="badge <%= product.status === 'Available' ? 'bg-success' : 'bg-danger' %>">
@@ -59,12 +60,12 @@
                                                <% if (product.status === 'Available' && product.quantity > 0) { %>
                                                    <button class="btn btn-sm btn-success mb-2" 
                                                            onclick="moveToCart('<%= product._id %>')">
-                                                       <i class="fas fa-shopping-cart"></i> Move to Cart
+                                                       <i class="fas fa-shopping-cart"></i> <span class="btn-text">Move to Cart</span>
                                                    </button>
                                                <% } %>
                                                <button class="btn btn-sm btn-danger" 
                                                        onclick="removeFromWishlist('<%= product._id %>')">
-                                                   <i class="fas fa-trash"></i> Remove
+                                                   <i class="fas fa-trash"></i> <span class="btn-text">Remove</span>
                                                </button>
                                            </td>
                                        </tr>
@@ -121,6 +122,7 @@
     max-width: 100px;
     height: auto;
     border-radius: 4px;
+    object-fit: cover;
 }
 
 .btn-sm {
@@ -145,6 +147,100 @@
     font-size: 0.875rem;
     color: #6c757d;
     margin-top: 5px;
+}
+
+/* Responsive styles */
+@media (max-width: 991px) {
+    .allpage {
+        margin-top: 150px;
+    }
+    
+    .wishlist-header {
+        padding: 15px;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .product-thumbnail img {
+        max-width: 80px;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .allpage {
+        margin-top: 120px;
+    }
+
+    .wishlist-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .wishlist-header h2 {
+        margin-bottom: 10px;
+    }
+
+    .wishlist-header button {
+        width: 100%;
+    }
+
+    .description-text {
+        display: none;
+    }
+
+    table.shopping-summery {
+        min-width: 600px; /* This forces horizontal scrolling for small screens */
+    }
+
+    .product-thumbnail img {
+        max-width: 60px;
+    }
+}
+
+@media (max-width: 575px) {
+    .btn-text {
+        display: none;
+    }
+
+    .btn-sm {
+        padding: 5px 8px;
+    }
+
+    .btn-sm i {
+        margin: 0;
+    }
+
+    .product-thumbnail img {
+        max-width: 50px;
+    }
+
+    .table th, .table td {
+        padding: 0.5rem 0.3rem;
+    }
+}
+
+/* Table responsiveness */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.shopping-summery th {
+    white-space: nowrap;
 }
 </style>
 

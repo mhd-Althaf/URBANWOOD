@@ -413,40 +413,47 @@ const postAddAddress = async (req, res) => {
 
 const editAddress = async (req, res) => {
     try {
-        const userId = req.session.user;
-        const { addressId } = req.params;
-        const { name, phone, addressType, landMark, city, state, pincode } = req.body;
-
-        const result = await Address.updateOne(
-            { userId, "address._id": addressId },
-            {
-                $set: {
-                    "address.$.name": name,
-                    "address.$.phone": phone,
-                    "address.$.addressType": addressType,
-                    "address.$.landMark": landMark,
-                    "address.$.city": city,
-                    "address.$.state": state,
-                    "address.$.pincode": pincode
-                }
-            }
-        );
-
-        if (result.modifiedCount === 0) {
-            return res.status(404).json({ success: false, message: "Address not found" });
+        const addressId = req.query.id;
+        if (!addressId) {
+            console.log("No address ID provided");
+            return res.redirect("/userProfile");
         }
-
-        res.json({ success: true, message: "Address updated successfully" });
+        
+        const userId = req.session.user;
+        console.log(`Looking for address with ID: ${addressId} for user: ${userId}`);
+        
+        const userAddress = await Address.findOne({
+            userId: userId,
+            "address._id": addressId
+        });
+        
+        if (!userAddress) {
+            console.log(`No address found with ID: ${addressId} for user: ${userId}`);
+            return res.redirect("/userProfile");
+        }
+        
+        // Find the specific address in the array
+        const address = userAddress.address.find(addr => addr._id.toString() === addressId);
+        
+        if (!address) {
+            console.log(`Address with ID: ${addressId} not found in user's addresses`);
+            return res.redirect("/userProfile");
+        }
+        
+        console.log(`Rendering edit-address.ejs with address: ${JSON.stringify(address)}`);
+        
+        // Render the edit address page with the found address
+        return res.render("user/edit-address", { address: address });
     } catch (error) {
-        console.error("Error updating address:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        console.error("Error in edit address:", error);
+        return res.redirect("/pageNotFound");
     }
 };
 
 const postEditAddress = async (req, res) => {
     try {
         const data = req.body;
-        const addressId = req.query.id;
+        const addressId = req.params.id;
         const user = req.session.user;
 
         const findAddress = await Address.findOne({
@@ -454,22 +461,20 @@ const postEditAddress = async (req, res) => {
         });
 
         if (!findAddress) {
-            return res.redirect("/pageNotFound"); 
+            return res.status(404).json({ success: false, message: "Address not found" });
         }
 
         await Address.updateOne(
-            {
-                "address._id": addressId 
-            },
+            { "address._id": addressId },
             {
                 $set: {
-                    "address.$": { 
+                    "address.$": {
                         _id: addressId,
                         addressType: data.addressType,
                         name: data.name,
                         city: data.city,
                         landMark: data.landMark,
-                        state: data.state, 
+                        state: data.state,
                         pincode: data.pincode,
                         phone: data.phone,
                         altPhone: data.altPhone
@@ -478,12 +483,14 @@ const postEditAddress = async (req, res) => {
             }
         );
 
-        res.redirect("/userProfile"); 
+        return res.status(200).json({ success: true });
     } catch (error) {
         console.error("Error in edit address:", error);
-        res.redirect("/pageNotFound"); 
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+
 const deleteAddress = async (req, res) => {
     try {
         const userId = req.session.user;

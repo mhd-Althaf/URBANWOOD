@@ -1,90 +1,328 @@
 <%-include("../../views/partials/user/header")%>
 
+<!--================Login Box Area =================-->
+<style>
+  /* Reset default margins and ensure full-width responsiveness */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-	<!--================Login Box Area =================-->
-	<style>
-		.forgot-password-link{
-            font-size:0.875rem;
-            color:#007bff;
-            text-decoration: none;
-          
-        }
-        .forgot-password-link:hover{
-            color: #0558b1;
-            text-decoration: underline;
-            
-        }
-	</style>
-	<section class="login_box_area section_gap">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-6">
-					<div class="login_box_img">
-						<img class="img-fluid" src="img/living with yellow shade.jpeg" alt="">
-						<div class="hover">
-							<h4>New to our website?</h4>
-							<p>Every day brings innovation, and just like science and technology, furniture evolves to
-								blend comfort, style, and functionality seamlessly</p>
-							<a class="primary-btn" href="/signup">Create an Account</a>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-6">
-					<div class="login_form_inner">
+  body {
+    overflow-x: hidden;
+    margin-top: 5%;
+}
 
-						<h3>Log in to enter</h3>
-						<form class="row login_form" action="/login" method="post" id="contactForm"
-							novalidate="novalidate">
-							<!-- Email Field -->
-							<div class="col-md-12 form-group">
-								<input type="email" class="form-control" id="email" value="fidha@321gmail.com" name="email"
-									placeholder="Enter your email"  />
-							</div>
-							<div id="error1" class="error-message"></div>
+  .login_box_area {
+    padding: 60px 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
 
-							<!-- Password Field -->
-							<div class="col-md-12 form-group">
-								<input type="password" class="form-control"  id="password" value="999399" name="password"
-									placeholder="Enter your Password"  />
-							</div>
-							<div id="error2" class="error-message">
-								<% if (locals.message && message.length> 0) { %>
-									<div class="alert alert-danger text-center">
-										<%= message %>
-									</div>
-									<% } %>
-							</div>
+  .container {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
 
-							<!-- Submit Button -->
-							<div class="col-md-12 form-group">
-								<button type="submit" value="submit" class="primary-btn">Log In</button>
-								<div class="form-group d-flex justify-content-center ">
-									<a href="/forgot-password" class="forgot-password-link ms-auto">Forgot Password</a>
-								</div>
-							</div>
-						</form>
-						<div class="google-btn">
-							<a href="/auth/google">
-								<img src="/img/icons-8-google-10.svg" alt="Google Icon">
-								Sign in with Google
-							</a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<!--================End Login Box Area =================-->
-	<script>
-		document.getElementById("contactForm").addEventListener("submit", function (e) {
-			const email = document.getElementById("email").value.trim();
-			const password = document.getElementById("password").value.trim();
+  .login_box_img {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    border-radius: 10px;
+    width: 100%;
+  }
 
-			if (!email || !password) {
-				e.preventDefault(); // Prevent form submission
-				alert("Please fill in all required fields.");
-			}
-		});
-	</script>
+  .login_box_img img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+
+  .login_box_img .hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .login_box_img:hover .hover {
+    opacity: 1;
+  }
+
+  .login_box_img .hover h4 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .login_box_img .hover p {
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .login_form_inner {
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }
+
+  .login_form_inner h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .form-control {
+    border-radius: 5px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .primary-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .forgot-password-link {
+    font-size: 0.875rem;
+    color: #007bff;
+    text-decoration: none;
+    margin-top: 10px;
+    display: inline-block;
+  }
+
+  .forgot-password-link:hover {
+    color: #0558b1;
+    text-decoration: underline;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    min-height: 20px;
+  }
+
+  .google-btn {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .google-btn a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+    width: auto;
+  }
+
+  .google-btn a img {
+    width: 20px;
+    margin-right: 10px;
+  }
+
+  .google-btn a:hover {
+    background-color: #f1f1f1;
+  }
+
+  /* Responsive Styles */
+  @media (max-width: 991px) {
+    .login_box_area {
+      padding: 40px 0;
+    }
+
+    .login_form_inner {
+      padding: 20px;
+    }
+
+    .login_box_img .hover h4 {
+      font-size: 1.3rem;
+    }
+
+    .login_box_img .hover p {
+      font-size: 0.85rem;
+    }
+
+    .login_box_img img {
+      height: 300px;
+      object-fit: cover;
+    }
+
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .login_box_img {
+      margin-bottom: 20px;
+    }
+
+    .login_box_img img {
+      height: 250px;
+    }
+
+    .login_form_inner {
+      padding: 15px;
+    }
+
+    .login_form_inner h3 {
+      font-size: 1.5rem;
+    }
+
+    .primary-btn {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+
+    .login_box_img .hover {
+      padding: 15px;
+    }
+
+    .login_box_img .hover h4 {
+      font-size: 1.2rem;
+    }
+
+    .login_box_img .hover p {
+      font-size: 0.8rem;
+    }
+
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .login_box_area {
+      padding: 20px 0;
+    }
+
+    .login_box_img img {
+      height: 200px;
+    }
+
+    .login_form_inner {
+      padding: 10px;
+    }
+
+    .login_form_inner h3 {
+      font-size: 1.3rem;
+    }
+
+    .form-control {
+      font-size: 0.85rem;
+    }
+
+    .google-btn a {
+      font-size: 0.85rem;
+      padding: 8px 15px;
+    }
+
+    .container {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+</style>
+
+<section class="login_box_area section_gap">
+  <div class="container">
+    <div class="row g-0">
+      <div class="col-lg-6 col-md-12 col-12">
+        <div class="login_box_img">
+          <img class="img-fluid" src="img/living with yellow shade.jpeg" alt="Living room with yellow shade">
+          <div class="hover">
+            <h4>New to our website?</h4>
+            <p>Every day brings innovation, and just like science and technology, furniture evolves to blend comfort, style, and functionality seamlessly</p>
+            <a class="primary-btn" href="/signup">Create an Account</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 col-md-12 col-12">
+        <div class="login_form_inner">
+          <h3>Log in to enter</h3>
+          <form class="row login_form" action="/login" method="post" id="contactForm" novalidate="novalidate">
+            <!-- Email Field -->
+            <div class="col-12 form-group">
+              <input type="email" class="form-control" id="email" value="fidha@321gmail.com" name="email" placeholder="Enter your email" required />
+            </div>
+            <div id="error1" class="error-message"></div>
+
+            <!-- Password Field -->
+            <div class="col-12 form-group">
+              <input type="password" class="form-control" id="password" value="999399" name="password" placeholder="Enter your Password" required />
+            </div>
+            <div id="error2" class="error-message">
+              <% if (locals.message && message.length > 0) { %>
+                <div class="alert alert-danger text-center">
+                  <%= message %>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Submit Button and Forgot Password -->
+            <div class="col-12 form-group">
+              <button type="submit" class="primary-btn">Log In</button>
+              <div class="d-flex justify-content-center">
+                <a href="/forgot-password" class="forgot-password-link">Forgot Password</a>
+              </div>
+            </div>
+          </form>
+          <div class="google-btn">
+            <a href="/auth/google">
+              <img src="/img/icons-8-google-10.svg" alt="Google Icon">
+              Sign in with Google
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!--================End Login Box Area =================-->
+
+<script>
+  document.getElementById("contactForm").addEventListener("submit", function (e) {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      e.preventDefault(); // Prevent form submission
+      alert("Please fill in all required fields.");
+    }
+  });
+</script>
 
 <%-include("../../views/partials/user/footer")%>

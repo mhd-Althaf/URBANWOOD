@@ -498,6 +498,10 @@
                     <input type="tel" id="phone" name="phone" class="form-control" required>
                 </div>
                 <div class="form-group">
+                    <label for="altPhone">Alt Phone Number</label>
+                    <input type="tel" id="altPhone" name="altPhone" class="form-control" required>
+                </div>
+                <div class="form-group">
                     <label for="addressType">Address Type</label>
                     <select id="addressType" name="addressType" class="form-control" required>
                         <option value="Home">Home</option>
@@ -659,6 +663,7 @@
             document.getElementById('addressId').value = addressId;
             document.getElementById('name').value = address.name;
             document.getElementById('phone').value = address.phone;
+            document.getElementById('altPhone').value = address.altPhone;
             document.getElementById('addressType').value = address.addressType;
             document.getElementById('landMark').value = address.landMark;
             document.getElementById('city').value = address.city;
@@ -680,6 +685,7 @@
             const data = {
                 name: formData.get('name'),
                 phone: formData.get('phone'),
+                altPhone: formData.get('altPhone'),
                 addressType: formData.get('addressType'),
                 landMark: formData.get('landMark'),
                 city: formData.get('city'),

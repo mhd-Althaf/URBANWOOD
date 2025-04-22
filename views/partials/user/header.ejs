@@ -31,18 +31,18 @@
 	<link rel="stylesheet" href="css/magnific-popup.css">
 	<link rel="stylesheet" href="css/main.css">
 	<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-   rel="stylesheet">
-   <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
-   <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
-   <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
-   <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
-   <link rel="stylesheet" href="css/nice-select.css" type="text/css">
-   <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
-   <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
-   <link rel="stylesheet" href="css/style.css" type="text/css">
-   <link rel="stylesheet" href="./user-assets/css/maind134.css">
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/drift-basic.min.css">
+		rel="stylesheet">
+	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+	<link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+	<link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
+	<link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+	<link rel="stylesheet" href="css/nice-select.css" type="text/css">
+	<link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+	<link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+	<link rel="stylesheet" href="css/style.css" type="text/css">
+	<link rel="stylesheet" href="./user-assets/css/maind134.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/drift-basic.min.css">
 
 	<style>
 		.header__nav__option .sign-in-link {
@@ -96,6 +96,18 @@
 			position: relative;
 			z-index: 500;
 		}
+
+		@media (max-width: 991px) {
+			.navbar-right .nav-item {
+				display: block !important;
+			}
+
+			.navbar-right .fa-cart-shopping,
+			.navbar-right .fa-heart {
+				display: inline-block !important;
+				font-size: 20px;
+			}
+		}
 	</style>
 </head>
 
@@ -107,7 +119,10 @@
 			<nav class="navbar navbar-expand-lg navbar-light main_box">
 				<div class="container">
 					<!-- Brand and toggle get grouped for better mobile display -->
-					<a class="navbar-brand logo_h" href="/"><img src="/img/Urbenwood_new.png" alt=""></a>
+					<a class="navbar-brand logo_h" href="/">
+						<img src="/img/Urbenwood_new.png" alt="" style="height: 60px; width: auto;">
+					  </a>
+					  
 					<button class="navbar-toggler" type="button" data-toggle="collapse"
 						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
 						aria-expanded="false" aria-label="Toggle navigation">
@@ -132,7 +147,7 @@
 										<% } else { %>
 											<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
 											<% } %>
-								</ul> 
+								</ul>
 
 							</li>
 							<li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
@@ -152,16 +167,16 @@
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
 							<li class="nav-item"><a href="/cart" class="btn border mx-2">
-								<i class="fas fa-cart-shopping text-primary"></i>
-								<!-- <span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span> -->
-							</a></li>
+									<i class="fas fa-cart-shopping text-primary"></i>
+									<!-- <span class="badge" id="cart-count"><%= typeof locals.cartCount !== 'undefined' ? locals.cartCount : 0 %></span> -->
+								</a></li>
 							<li class="nav-item"><a href="/wishlist" class="btn border mx-2">
-								<i class="fas fa-heart text-primary"></i>
-							</a></li>
+									<i class="fas fa-heart text-primary"></i>
+								</a></li>
 							<!-- <li class="nav-item">
 								<button class="search"><span class="lnr lnr-magnifier" id="search"></span></button>
 							</li> -->
-						</ul>	
+						</ul>
 					</div>
 				</div>
 			</nav>

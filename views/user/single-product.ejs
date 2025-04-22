@@ -370,7 +370,7 @@
 							<%= product.productName %>
 						</h3>
 						<div class="price-section">
-							<% if (totalOffer > 0) { %>
+							<% if (totalOffer > 0 && totalOffer < product.regularPrice) { %>
 								<span class="original-price">$<%= originalPrice %></span>
 								<span class="regular-price">$<%= product.regularPrice %></span>
 								<span class="discount-badge">Save $<%= totalOffer %></span>
