@@ -2,6 +2,27 @@
 <div class="main-panel">
     
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <form action="/admin/productGet" method="GET" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search by product name, category, price..." value="<%= locals.searchQuery || '' %>" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="mdi mdi-magnify"></i> Search
+                            </button>
+                            <% if (locals.searchQuery) { %>
+                                <a href="/admin/productGet" class="btn btn-secondary">
+                                    <i class="mdi mdi-close"></i> Clear
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -50,7 +71,7 @@
                     <ul class="pagination justify-content-center">
                         <% if (currentPage > 1) { %>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= search %>" aria-label="Previous">
+                                <a class="page-link" href="?page=<%= currentPage - 1 %><%= locals.searchQuery ? '&search=' + searchQuery : '' %>" aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
@@ -69,14 +90,14 @@
                                 </li>
                             <% } else { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %><%= locals.searchQuery ? '&search=' + searchQuery : '' %>"><%= i %></a>
                                 </li>
                             <% } %>
                         <% } %>
                         
                         <% if (currentPage < totalPages) { %>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= search %>" aria-label="Next">
+                                <a class="page-link" href="?page=<%= currentPage + 1 %><%= locals.searchQuery ? '&search=' + searchQuery : '' %>" aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>

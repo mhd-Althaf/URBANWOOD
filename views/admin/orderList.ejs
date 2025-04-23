@@ -12,76 +12,108 @@
   </style>
 </head>
 
-<div class="content-header">
-  <h2 class="content-title card-title">Order List</h2>
-</div>
+<div class="main-panel">
+  <div class="content-header">
+    <h2 class="content-title">Order List</h2>
+  </div>
 
-<div class="right mt-5">
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th scope="col"><b>Order ID</b></th>
-        <th scope="col"><b>Customer Name</b></th>
-        <th scope="col"><b>Total Price</b></th>
-        <th scope="col"><b>Status</b></th>
-        <th scope="col"><b>Payment Method</b></th>
-        <th scope="col"><b>Action</b></th>
-        <th scope="col"><b>Edit</b></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% for (let i = 0; i < orders.length; i++) { %>
-        <tr data-order-id="<%= orders[i]._id %>">
-          <td><%= orders[i].orderId %></td>
-          <td>
-            <% if (orders[i].userId) { %>
-              <%= orders[i].userId.name %>
-            <% } else { %>
-              N/A
-            <% } %>
-          </td>
-          <td>₹<%= orders[i].finalAmount.toFixed(2) %></td>
-          <td id="order-status-<%= orders[i]._id %>"><%= orders[i].status || "Pending" %></td>
-          <td><%= orders[i].paymentMethod || "N/A" %></td>
-          
-          <td id="order-status-container-<%= orders[i]._id %>">
-            <% let nextStatus = ""; 
-              if (orders[i].status === "Pending") { nextStatus = "Processing"; } 
-              else if (orders[i].status === "Processing") { nextStatus = "Shipped"; } 
-              else if (orders[i].status === "Shipped") { nextStatus = "Delivered"; } 
-            %>
-          
-            <% if (nextStatus) { %>
-              <button id="status-button-<%= orders[i]._id %>" class="btn btn-success"
-                onclick="changeOrderStatus('<%= orders[i]._id %>', '<%= nextStatus %>')">
-                <%= nextStatus %>
-              </button>
-            <% } else { %>
-              <span class="text-success">Delivered</span>
-            <% } %>
-          </td>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col"><b>Order ID</b></th>
+            <th scope="col"><b>Customer Name</b></th>
+            <th scope="col"><b>Total Price</b></th>
+            <th scope="col"><b>Status</b></th>
+            <th scope="col"><b>Payment Method</b></th>
+            <th scope="col"><b>Action</b></th>
+            <th scope="col"><b>Edit</b></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let i = 0; i < orders.length; i++) { %>
+            <tr data-order-id="<%= orders[i]._id %>">
+              <td><%= orders[i].orderId %></td>
+              <td>
+                <% if (orders[i].userId) { %>
+                  <%= orders[i].userId.name %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+              <td>₹<%= orders[i].finalAmount.toFixed(2) %></td>
+              <td id="order-status-<%= orders[i]._id %>"><%= orders[i].status || "Pending" %></td>
+              <td><%= orders[i].paymentMethod || "N/A" %></td>
+              
+              <td id="order-status-container-<%= orders[i]._id %>">
+                <% let nextStatus = ""; 
+                  if (orders[i].status === "Pending") { nextStatus = "Processing"; } 
+                  else if (orders[i].status === "Processing") { nextStatus = "Shipped"; } 
+                  else if (orders[i].status === "Shipped") { nextStatus = "Delivered"; } 
+                %>
+              
+                <% if (nextStatus) { %>
+                  <button id="status-button-<%= orders[i]._id %>" class="btn btn-success"
+                    onclick="changeOrderStatus('<%= orders[i]._id %>', '<%= nextStatus %>')">
+                    <%= nextStatus %>
+                  </button>
+                <% } else { %>
+                  <span class="text-success">Delivered</span>
+                <% } %>
+              </td>
 
-          <td>
-            <a href="/admin/orderDetailsAdmin?orderId=<%= orders[i].orderId %>" class="btn btn-info text-white">
-              View
-            </a>
-          </td>
-        </tr>
-      <% } %>
-    </tbody>
-  </table>
-</div>
+              <td>
+                <a href="/admin/orderDetailsAdmin?orderId=<%= orders[i].orderId %>" class="btn btn-info text-white">
+                  View
+                </a>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<div class="container mt-3">
-  <nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-          <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-        </li>
-      <% } %>
-    </ul>
-  </nav>
+  <div class="pagination-container mt-3">
+    <div class="d-flex justify-content-center align-items-center">
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=1" aria-label="First">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          <% } %>
+
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= totalPages %>" aria-label="Last">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
@@ -155,3 +187,21 @@ function changeOrderStatus(orderId, newStatus) {
   });
 }
 </script>
+
+<style>
+  .pagination-container {
+    margin: 20px 0;
+    padding: 0 15px;
+  }
+  .pagination {
+    margin: 0;
+  }
+  .page-link {
+    color: #333;
+    border-color: #dee2e6;
+  }
+  .page-item.active .page-link {
+    background-color: #333;
+    border-color: #333;
+  }
+</style>

@@ -1,8 +1,30 @@
 <%-include("../../views/partials/admin/header")%>
 <!-- partial -->
+ 
 <div class="main-panel">
     <!-- content-wrapper ends -->
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <form action="/admin/customers" method="GET" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search by username, email or phone" value="<%= locals.searchQuery || '' %>" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="mdi mdi-magnify"></i> Search
+                            </button>
+                            <% if (locals.searchQuery) { %>
+                                <a href="/admin/customers" class="btn btn-secondary">
+                                    <i class="mdi mdi-close"></i> Clear
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Table -->
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -45,7 +67,7 @@
             <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
                 <% for (let i = 1; i <= totalPages; i++) { %>
                     <li class="page item <%= (i === currentPage) ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                        <a class="page-link" href="?page=<%= i %><%= locals.searchQuery ? '&search=' + searchQuery : '' %>"><%= i %></a>
                     </li>
                 <% } %>
             </ul>

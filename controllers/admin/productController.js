@@ -117,12 +117,13 @@ const getAllProducts = async (req, res) => {
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
-        const limit = 5
+        const limit = parseInt(req.query.limit) || 5;
        
-
         const productQuery = {
             $or: [
                 { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
+                { description: { $regex: new RegExp(".*" + search + ".*", "i") } },
+                { status: { $regex: new RegExp(".*" + search + ".*", "i") } },
             ],
         };
 
@@ -131,9 +132,19 @@ const getAllProducts = async (req, res) => {
             if (category) {
                 productQuery.$or.push({ category: category._id });
             }
+            
+            // Try to match by price if search is a number
+            const searchNum = parseFloat(search);
+            if (!isNaN(searchNum)) {
+                productQuery.$or.push(
+                    { regularPrice: { $eq: searchNum } },
+                    { salePrice: { $eq: searchNum } }
+                );
+            }
         }
-
+        
         const productData = await Product.find(productQuery)
+            .sort({ createdOn: -1 }) 
             .skip((page - 1) * limit)
             .limit(limit)
             .populate("category")
@@ -146,8 +157,15 @@ const getAllProducts = async (req, res) => {
             data: productData,
             currentPage: page,
             totalPages: Math.ceil(count / limit),
+            totalProducts: count,
+            limit: limit,
+            hasPrevPage: page > 1,
+            hasNextPage: page < Math.ceil(count / limit),
+            prevPage: page - 1,
+            nextPage: page + 1,
+            lastPage: Math.ceil(count / limit),
             cat: categories,
-            search
+            searchQuery: search
         });
     } catch (error) {
         console.error("Error fetching products:", error);

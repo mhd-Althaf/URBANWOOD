@@ -410,9 +410,10 @@ const verifyPayment = async (req, res) => {
                     order.razorpaySignature = razorpay_signature;
                     
                     // Update order status to Processing if it was Pending
-                    if (order.status === "Pending") {
-                        order.status = "Processing";
-                    }
+                    // Commenting this out to maintain the Pending status
+                    // if (order.status === "Pending") {
+                    //   order.status = "Processing";
+                    // }
                     
                     await order.save();
                     console.log(`Order ${orderId} updated: Payment status = paid, Order status = ${order.status}`);
@@ -693,7 +694,11 @@ const cancelProduct = async (req, res) => {
         order.finalAmount = activeProductsFinalAmount;
         
         // Calculate order status based on active items
-        order.status = activeProductsCount === 0 ? "Cancelled" : "Processing";
+        // Only update to Cancelled if all items are cancelled
+        if (activeProductsCount === 0) {
+            order.status = "Cancelled";
+        }
+        // Keep the original status otherwise (don't force to "Processing")
         
         await order.save();
 
